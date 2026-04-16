@@ -273,7 +273,7 @@ fn table(columns: &[TableColumn], rows: &[std::collections::HashMap<String, serd
     if filterable {
         h.push_str(r#"<input type="text" class="c-table-filter" data-table-filter placeholder="Filter…">"#);
     }
-    h.push_str(r#"<table class="c-table" data-pseudo-table><thead><tr>"#);
+    h.push_str(r#"<table class="c-table" data-finro-table><thead><tr>"#);
     for col in columns {
         let sortable_attr = if col.sortable { " data-sortable" } else { "" };
         h.push_str(&format!(

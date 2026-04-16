@@ -9,7 +9,7 @@ mod theme;
 mod types;
 
 #[derive(Parser)]
-#[command(name = "pseudo", about = "Beautiful sites from simple YAML", version = "0.2.0")]
+#[command(name = "finro", about = "Beautiful sites from simple YAML", version = "0.2.0")]
 struct Cli {
     #[command(subcommand)]
     command: Command,

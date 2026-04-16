@@ -1,11 +1,11 @@
 [package]
-name = "pseudo"
+name = "finro"
 version = "0.1.0"
 edition = "2021"
 description = "Beautiful sites from simple YAML"
 
 [[bin]]
-name = "pseudo"
+name = "finro"
 path = "src/main.rs"
 
 [dependencies]

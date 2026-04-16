@@ -18,7 +18,7 @@ pub fn run(dir: &Path, out: &Path) -> Result<()> {
 
         if path.extension().map(|e| e == "yaml").unwrap_or(false) {
             let fname = path.file_name().unwrap_or_default();
-            if fname == "pseudo.yaml" {
+            if fname == "finro.yaml" {
                 continue;
             }
 
@@ -54,10 +54,10 @@ fn base_path_for(rel: &Path) -> String {
 }
 
 fn load_config(dir: &Path) -> Result<SiteConfig> {
-    let config_path = dir.join("pseudo.yaml");
+    let config_path = dir.join("finro.yaml");
     if config_path.exists() {
         let content = fs::read_to_string(&config_path)?;
-        serde_yaml::from_str(&content).context("parsing pseudo.yaml")
+        serde_yaml::from_str(&content).context("parsing finro.yaml")
     } else {
         Ok(SiteConfig::default())
     }
