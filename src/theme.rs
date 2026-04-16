@@ -236,7 +236,7 @@ body.shell-deck .deck-arrow:hover { color: var(--teal); }
 /* Meta */
 .c-meta {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1px;
   background: var(--card-border);
   border: 1px solid var(--card-border);
@@ -663,6 +663,7 @@ body.shell-document .doc-body strong { color: #fff; }
 .c-columns { display: grid; gap: 24px; }
 .c-column { display: flex; flex-direction: column; gap: 20px; }
 .c-column > *:last-child { margin-bottom: 0; }
+.c-columns-stretch .c-column > * { flex: 1; }
 
 /* Accordion */
 .c-accordion { display: flex; flex-direction: column; gap: 8px; }

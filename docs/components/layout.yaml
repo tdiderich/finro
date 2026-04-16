@@ -60,6 +60,9 @@ components:
       - type: markdown
         body: "Distribute components into equal-width columns. Each column is itself a list of components."
 
+      - type: markdown
+        body: "**Default** — columns stretch at the grid level, contents sit at natural height:"
+
       - type: columns
         columns:
           - - type: callout
@@ -69,16 +72,36 @@ components:
           - - type: callout
               variant: success
               title: Center
-              body: "Even widths, responsive collapse on narrow screens."
+              body: "Even widths, responsive collapse on narrow screens. One more line here so heights diverge."
           - - type: callout
               variant: warn
               title: Right
-              body: "Great for comparison layouts."
+              body: "Great for comparison layouts. Extra line here. And another."
+
+      - type: markdown
+        body: "**`equal_heights: true`** — children grow to fill their column so all three look balanced:"
+
+      - type: columns
+        equal_heights: true
+        columns:
+          - - type: callout
+              variant: info
+              title: Left
+              body: "Arbitrary components live inside each column."
+          - - type: callout
+              variant: success
+              title: Center
+              body: "Even widths, responsive collapse on narrow screens. One more line here so heights diverge."
+          - - type: callout
+              variant: warn
+              title: Right
+              body: "Great for comparison layouts. Extra line here. And another."
 
       - type: code
         language: yaml
         code: |
           - type: columns
+            equal_heights: true    # default false
             columns:
               - - type: callout
                   variant: info
@@ -88,10 +111,6 @@ components:
                   variant: success
                   title: Center
                   body: Center content
-              - - type: callout
-                  variant: warn
-                  title: Right
-                  body: Right content
 
   # ── timeline ──────────────────────────────
   - type: section

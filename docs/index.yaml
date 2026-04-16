@@ -96,6 +96,7 @@ components:
     heading: Three axes, orthogonal
     components:
       - type: columns
+        equal_heights: true
         columns:
           - - type: callout
               variant: info

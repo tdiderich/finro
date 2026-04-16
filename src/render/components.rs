@@ -19,7 +19,7 @@ pub fn render(c: &Component) -> Rendered {
         Component::Code { language, code } => code_block(language, code),
         Component::Tabs { tabs } => tabs_component(tabs),
         Component::Section { heading, eyebrow, components } => section(heading, eyebrow, components),
-        Component::Columns { columns } => columns_component(columns),
+        Component::Columns { columns, equal_heights } => columns_component(columns, *equal_heights),
         Component::Accordion { items } => accordion(items),
         Component::Image { src, alt, caption, max_width } => image(src, alt, caption, *max_width),
     }
@@ -376,10 +376,11 @@ fn section(heading: &Option<String>, eyebrow: &Option<String>, comps: &[Componen
 
 // ── Columns ───────────────────────────────────────
 
-fn columns_component(cols: &[Vec<Component>]) -> Rendered {
+fn columns_component(cols: &[Vec<Component>], equal_heights: bool) -> Rendered {
     let mut r = Rendered::default();
+    let class = if equal_heights { "c-columns c-columns-stretch" } else { "c-columns" };
     r.html.push_str(&format!(
-        r#"<div class="c-columns" style="grid-template-columns: repeat({}, 1fr)">"#,
+        r#"<div class="{class}" style="grid-template-columns: repeat({}, 1fr)">"#,
         cols.len().max(1)
     ));
     for col in cols {

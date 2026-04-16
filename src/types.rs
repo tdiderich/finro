@@ -116,6 +116,8 @@ pub enum Component {
     },
     Columns {
         columns: Vec<Vec<Component>>,
+        #[serde(default)]
+        equal_heights: bool,
     },
     Accordion {
         items: Vec<AccordionItem>,
@@ -282,10 +284,10 @@ pub enum CalloutVariant {
 impl CalloutVariant {
     pub fn class(&self) -> &'static str {
         match self {
-            CalloutVariant::Info => "callout-info",
-            CalloutVariant::Warn => "callout-warn",
-            CalloutVariant::Success => "callout-success",
-            CalloutVariant::Danger => "callout-danger",
+            CalloutVariant::Info => "c-callout-info",
+            CalloutVariant::Warn => "c-callout-warn",
+            CalloutVariant::Success => "c-callout-success",
+            CalloutVariant::Danger => "c-callout-danger",
         }
     }
 }
