@@ -1,0 +1,168 @@
+title: Component Primitives
+shell: standard
+
+components:
+  - type: header
+    title: Component Primitives
+    eyebrow: Demo
+    subtitle: Every reusable component available in pseudo
+
+  - type: section
+    eyebrow: Interactive
+    heading: Sortable & Filterable Table
+    components:
+      - type: table
+        filterable: true
+        columns:
+          - key: name
+            label: Customer
+            sortable: true
+          - key: tier
+            label: Tier
+            sortable: true
+          - key: users
+            label: Users
+            sortable: true
+            align: right
+          - key: coverage
+            label: Coverage
+            sortable: true
+            align: right
+          - key: health
+            label: Health
+        rows:
+          - name: Acme Corp
+            tier: Enterprise
+            users: 47
+            coverage: 94%
+            health: Healthy
+          - name: Beta Corp
+            tier: Mid-Market
+            users: 12
+            coverage: 41%
+            health: At Risk
+          - name: Gamma Inc
+            tier: Enterprise
+            users: 0
+            coverage: 0%
+            health: TBD
+          - name: Delta Labs
+            tier: Startup
+            users: 8
+            coverage: 88%
+            health: Healthy
+          - name: Echo Systems
+            tier: Enterprise
+            users: 120
+            coverage: 99%
+            health: Healthy
+
+  - type: section
+    eyebrow: Callouts
+    heading: Contextual Messages
+    components:
+      - type: callout
+        variant: info
+        title: Info
+        body: Plain informational callout with a teal accent bar on the left.
+
+      - type: callout
+        variant: success
+        title: Deployment complete
+        body: Scan coverage reached **99%** across all configured cloud accounts.
+
+      - type: callout
+        variant: warn
+        title: Attention needed
+        body: Renewal window opens in 30 days. Schedule the executive sync.
+
+      - type: callout
+        variant: danger
+        title: Critical
+        body: Credentials detected in public repository. See the [runbook](#).
+
+  - type: section
+    eyebrow: Tabs
+    heading: Progressive Disclosure
+    components:
+      - type: tabs
+        tabs:
+          - label: Overview
+            components:
+              - type: markdown
+                body: |
+                  Switch tabs to reveal different content. Tabs are purely client-side —
+                  no routing, no page reloads.
+          - label: Code
+            components:
+              - type: code
+                language: rust
+                code: |
+                  fn render(page: &Page, config: &SiteConfig) -> String {
+                      match page.shell {
+                          Shell::Deck => deck::render(page, config),
+                          _ => standard::wrap(page, config),
+                      }
+                  }
+          - label: Stats
+            components:
+              - type: stat_grid
+                columns: 3
+                stats:
+                  - label: Lines of Rust
+                    value: "~1,200"
+                    color: green
+                  - label: Components
+                    value: "17"
+                    color: default
+                  - label: Build Time
+                    value: 1.4s
+                    detail: Release build
+                    color: green
+
+  - type: section
+    eyebrow: Accordion
+    heading: Collapsible Sections
+    components:
+      - type: accordion
+        items:
+          - title: What is pseudo?
+            components:
+              - type: markdown
+                body: |
+                  A YAML-driven static site generator optimized for LLM authoring.
+                  You describe pages as a tree of typed components; the CLI renders
+                  beautiful HTML without anyone writing React.
+
+          - title: How do components compose?
+            components:
+              - type: markdown
+                body: |
+                  Each component has a `type:` field and its own props. `section`,
+                  `columns`, `tabs`, and `accordion` can nest other components.
+
+          - title: Who writes the files?
+            components:
+              - type: markdown
+                body: |
+                  Mostly LLMs — the format is designed to be trivial to generate.
+                  Humans review and edit.
+
+  - type: section
+    eyebrow: Layout
+    heading: Multi-column Row
+    components:
+      - type: columns
+        columns:
+          - - type: callout
+              variant: info
+              title: Column 1
+              body: Arbitrary components stack vertically inside each column.
+          - - type: callout
+              variant: success
+              title: Column 2
+              body: Width distributes evenly by default.
+          - - type: callout
+              variant: warn
+              title: Column 3
+              body: Collapses responsively on narrow screens.

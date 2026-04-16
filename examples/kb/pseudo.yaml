@@ -5,3 +5,5 @@ nav:
     href: index.html
   - label: Deployment Guide
     href: deployment-phases.html
+  - label: Primitives
+    href: demo/primitives.html

@@ -1,52 +1,64 @@
 title: Acme Corp — Q2 Business Review
-layout: qbr
-customer: Acme Corp
-date: April 2026
+shell: deck
+eyebrow: Acme Corp
+subtitle: April 2026
 
-success_outcomes:
-  - title: Vulnerability Detection
-    before: Manual review taking 2+ weeks per cycle
-    now_highlight: 4 hours
-    now_context: average time to full report
+slides:
+  - label: Success Outcomes
+    components:
+      - type: before_after
+        items:
+          - title: Vulnerability Detection
+            before: Manual review taking 2+ weeks per cycle
+            after: 4 hours
+            after_context: average time to full report
 
-  - title: Cloud Coverage
-    before: 12 AWS accounts monitored
-    now_highlight: 47 accounts
-    now_context: across 3 regions, zero blind spots
+          - title: Cloud Coverage
+            before: 12 AWS accounts monitored
+            after: 47 accounts
+            after_context: across 3 regions, zero blind spots
 
-  - title: Team Efficiency
-    before: 1 dedicated security analyst, full-time
-    now_highlight: 20% of their time
-    now_context: freed for strategic initiatives
+          - title: Team Efficiency
+            before: 1 dedicated security analyst, full-time
+            after: 20% of their time
+            after_context: freed for strategic initiatives
 
-phase_timeline:
-  - name: Planning
-    status: completed
-  - name: Initial Config
-    status: completed
-  - name: Optimization
-    status: active
-  - name: Ongoing Engagement
-    status: upcoming
+  - label: Deployment Progress
+    components:
+      - type: timeline
+        items:
+          - name: Planning
+            status: completed
+          - name: Initial Config
+            status: completed
+          - name: Optimization
+            status: active
+          - name: Ongoing Engagement
+            status: upcoming
 
-health_cards:
-  - label: Scan Coverage
-    value: 94%
-    detail: Above 90% target
-    color: green
-  - label: Mean Time to Detect
-    value: 4h
-    detail: Down from 2 weeks
-    color: green
-  - label: Open Issues
-    value: 2
-    detail: Minor config gaps
-    color: yellow
+      - type: stat_grid
+        columns: 3
+        stats:
+          - label: Scan Coverage
+            value: 94%
+            detail: Above 90% target
+            color: green
+          - label: Mean Time to Detect
+            value: 4h
+            detail: Down from 2 weeks
+            color: green
+          - label: Open Issues
+            value: "2"
+            detail: Minor config gaps
+            color: yellow
 
-next_steps:
-  - title: Expand to EU region
-    detail: Connect 8 additional AWS accounts in eu-west-1 by May 15
-  - title: Enable Slack alerting
-    detail: Route critical findings to #security-alerts — setup guide sent
-  - title: Schedule executive review
-    detail: Q2 review with CTO confirmed for May 14, 2026
+  - label: Next Steps
+    components:
+      - type: steps
+        items:
+          - title: Expand to EU region
+            detail: Connect 8 additional AWS accounts in eu-west-1 by May 15
+          - title: Enable Slack alerting
+            detail: Route critical findings to #security-alerts — setup guide sent
+          - title: Schedule executive review
+            detail: Q2 review with CTO confirmed for May 14, 2026

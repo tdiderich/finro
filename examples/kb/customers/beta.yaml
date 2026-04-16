@@ -1,47 +1,57 @@
 title: Beta Corp — Deployment Guide
-layout: article
+shell: standard
 nav_back:
   label: ← Portfolio
   href: ../index.html
 
-meta:
-  - key: Account Type
-    value: Mid-Market
-  - key: Overall Health
-    value: At Risk
-  - key: Region
-    value: Azure West US
-  - key: Active Users
-    value: "12"
-  - key: Last Updated
-    value: 2026-04-16
+components:
+  - type: header
+    title: Beta Corp — Deployment Guide
 
-body: |
-  ## Overview
+  - type: meta
+    fields:
+      - key: Account Type
+        value: Mid-Market
+      - key: Overall Health
+        value: At Risk
+      - key: Region
+        value: Azure West US
+      - key: Active Users
+        value: "12"
+      - key: Last Updated
+        value: 2026-04-16
 
-  Beta Corp deployed Maze in February 2026. Adoption has been slower than expected — primary contact changed in March.
+  - type: callout
+    variant: warn
+    title: Champion transition in progress
+    body: |
+      Previous champion left the company in March 2026. Re-onboarding with new contact
+      **Marcus T.** scheduled for next week. Adoption is currently below target.
 
-  ## Architecture
+  - type: markdown
+    body: |
+      ## Overview
 
-  - **Cloud Provider**: Azure West US
-  - **Auth Method**: Azure AD (OIDC)
-  - **Deployment Type**: SaaS multi-tenant
+      Beta Corp deployed Maze in February 2026. Adoption has been slower than expected —
+      primary contact changed in March.
 
-  ## Health Status
+      ## Architecture
 
-  | Metric | Value | Notes |
-  |--------|-------|-------|
-  | Uptime | 99.9% | Above SLA |
-  | Active Users | 12 | Below target of 30 |
-  | Open Tickets | 0 | |
-  | Scan Coverage | 41% | Needs attention |
+      - **Cloud Provider**: Azure West US
+      - **Auth Method**: Azure AD (OIDC)
+      - **Deployment Type**: SaaS multi-tenant
 
-  ## Open Items
+      ## Health Status
 
-  1. Schedule re-onboarding call with new champion (Marcus T.)
-  2. Review scan coverage gaps — Azure subscriptions not yet connected
-  3. Confirm renewal timeline (contract expires July 2026)
+      | Metric | Value | Notes |
+      |--------|-------|-------|
+      | Uptime | 99.9% | Above SLA |
+      | Active Users | 12 | Below target of 30 |
+      | Open Tickets | 0 | |
+      | Scan Coverage | 41% | Needs attention |
 
-  ## Notes
+      ## Open Items
 
-  > Previous champion left the company. New contact Marcus T. is responsive but needs re-education on the platform.
+      1. Schedule re-onboarding call with new champion (Marcus T.)
+      2. Review scan coverage gaps — Azure subscriptions not yet connected
+      3. Confirm renewal timeline (contract expires July 2026)
