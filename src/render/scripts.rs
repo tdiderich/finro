@@ -6,9 +6,29 @@ pub fn get(name: &str) -> Option<&'static str> {
         "accordion" => Some(ACCORDION),
         "deck" => Some(DECK),
         "nav" => Some(NAV),
+        "reload" => Some(RELOAD),
         _ => None,
     }
 }
+
+const RELOAD: &str = r#"
+(function () {
+  if (!/^https?:$/.test(location.protocol)) return;
+  var last = null;
+  function poll() {
+    fetch('/__pseudo_version__', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.text() : null; })
+      .then(function (v) {
+        if (v === null) return;
+        if (last === null) { last = v; return; }
+        if (last !== v) location.reload();
+      })
+      .catch(function () {});
+  }
+  setInterval(poll, 500);
+  poll();
+})();
+"#;
 
 const NAV: &str = r#"
 document.addEventListener('DOMContentLoaded', function () {

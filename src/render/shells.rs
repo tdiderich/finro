@@ -39,6 +39,7 @@ pub mod standard {
         let (nav, has_nav) = nav_html(config);
         let mut scripts = body.scripts.clone();
         if has_nav { scripts.push("nav"); }
+        scripts.push("reload");
 
         format!(
             r#"<!DOCTYPE html>
@@ -89,6 +90,9 @@ pub mod document {
             )
         } else { String::new() };
 
+        let mut scripts = body.scripts.clone();
+        scripts.push("reload");
+
         format!(
             r#"<!DOCTYPE html>
 <html lang="en">
@@ -111,7 +115,7 @@ pub mod document {
             nav_back = nav_back_html(page),
             doc_header = doc_header,
             body = body.html,
-            scripts = collect_scripts(&body.scripts),
+            scripts = collect_scripts(&scripts),
         )
     }
 }
@@ -140,6 +144,9 @@ pub mod deck {
     pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered) -> String {
         let eyebrow = page.eyebrow.as_deref().unwrap_or("");
         let subtitle = page.subtitle.as_deref().unwrap_or("");
+
+        let mut scripts = body.scripts.clone();
+        scripts.push("reload");
 
         format!(
             r#"<!DOCTYPE html>
@@ -176,7 +183,7 @@ pub mod deck {
             eyebrow = esc(eyebrow),
             subtitle = esc(subtitle),
             body = body.html,
-            scripts = collect_scripts(&body.scripts),
+            scripts = collect_scripts(&scripts),
         )
     }
 }
