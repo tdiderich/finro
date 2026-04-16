@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0C1120"/>
+      <stop offset="1" stop-color="#090D18"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="640" height="360" fill="url(#bg)"/>
+
+  <!-- Header -->
+  <line x1="0" y1="56" x2="640" y2="56" stroke="rgba(60,206,206,0.12)" stroke-width="1"/>
+  <text x="32" y="36" fill="#F0F0F7" opacity="0.7" font-size="13" font-weight="500">Technical Success Hub</text>
+  <text x="488" y="36" fill="#3CCECE" font-size="12" font-weight="500">Portfolio</text>
+  <text x="552" y="36" fill="rgba(255,255,255,0.5)" font-size="12" font-weight="500">Guide</text>
+
+  <!-- Page title -->
+  <text x="32" y="102" fill="#F0F0F7" font-size="20" font-weight="700">Customer Portfolio</text>
+  <text x="32" y="122" fill="#ABABC1" font-size="12">3 Active Deployments</text>
+
+  <!-- Card 1 (Healthy) -->
+  <g transform="translate(32, 152)">
+    <rect width="184" height="168" rx="12" fill="rgba(255,255,255,0.03)" stroke="rgba(60,206,206,0.28)" stroke-width="1"/>
+    <text x="20" y="36" fill="#F0F0F7" font-size="15" font-weight="600">Acme Corp</text>
+    <rect x="124" y="22" width="44" height="18" rx="9" fill="rgba(52,211,153,0.12)"/>
+    <text x="146" y="35" fill="#34D399" font-size="9" font-weight="700" text-anchor="middle" letter-spacing="0.8">HEALTHY</text>
+    <text x="20" y="68" fill="#ABABC1" font-size="12">Enterprise · AWS us-east-1</text>
+    <rect x="20" y="112" width="72" height="28" rx="6" fill="rgba(60,206,206,0.06)" stroke="rgba(60,206,206,0.22)" stroke-width="1"/>
+    <text x="56" y="130" fill="#3CCECE" font-size="11" font-weight="500" text-anchor="middle">Deploy Guide</text>
+    <rect x="100" y="112" width="40" height="28" rx="6" fill="rgba(60,206,206,0.06)" stroke="rgba(60,206,206,0.22)" stroke-width="1"/>
+    <text x="120" y="130" fill="#3CCECE" font-size="11" font-weight="500" text-anchor="middle">QBR</text>
+  </g>
+
+  <!-- Card 2 (At Risk) -->
+  <g transform="translate(228, 152)">
+    <rect width="184" height="168" rx="12" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+    <text x="20" y="36" fill="#F0F0F7" font-size="15" font-weight="600">Beta Corp</text>
+    <rect x="124" y="22" width="44" height="18" rx="9" fill="rgba(251,191,36,0.12)"/>
+    <text x="146" y="35" fill="#FBBF24" font-size="9" font-weight="700" text-anchor="middle" letter-spacing="0.6">AT RISK</text>
+    <text x="20" y="68" fill="#ABABC1" font-size="12">Mid-Market · Azure West</text>
+    <rect x="20" y="112" width="72" height="28" rx="6" fill="rgba(60,206,206,0.06)" stroke="rgba(60,206,206,0.22)" stroke-width="1"/>
+    <text x="56" y="130" fill="#3CCECE" font-size="11" font-weight="500" text-anchor="middle">Deploy Guide</text>
+  </g>
+
+  <!-- Card 3 (TBD) -->
+  <g transform="translate(424, 152)">
+    <rect width="184" height="168" rx="12" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+    <text x="20" y="36" fill="#F0F0F7" font-size="15" font-weight="600">Gamma Inc</text>
+    <rect x="140" y="22" width="28" height="18" rx="9" fill="rgba(255,255,255,0.06)"/>
+    <text x="154" y="35" fill="#ABABC1" font-size="9" font-weight="700" text-anchor="middle" letter-spacing="0.6">TBD</text>
+    <text x="20" y="68" fill="#ABABC1" font-size="12">Enterprise · GCP us-central1</text>
+    <rect x="20" y="112" width="72" height="28" rx="6" fill="rgba(60,206,206,0.06)" stroke="rgba(60,206,206,0.22)" stroke-width="1"/>
+    <text x="56" y="130" fill="#3CCECE" font-size="11" font-weight="500" text-anchor="middle">Deploy Guide</text>
+  </g>
+</svg>

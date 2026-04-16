@@ -4,128 +4,82 @@ shell: standard
 components:
   - type: header
     title: Examples
-    eyebrow: Patterns
-    subtitle: The three shells, what they're for, and what they look like.
+    eyebrow: Showcase
+    subtitle: Real sites built with finro. Click any tile to open the live page.
+
+  - type: image
+    src: assets/demo-dashboard.svg
+    alt: Sample finro dashboard with three customer cards
+    caption: The customer portfolio dashboard — a handful of lines of YAML produce this page.
+    max_width: 640
 
   - type: section
-    eyebrow: standard shell
-    heading: Sticky header + nav + container
+    eyebrow: Technical Success Hub
+    heading: A customer KB built from ~300 lines of YAML
     components:
       - type: markdown
         body: |
-          The default. Use for: dashboards, reference pages, knowledge-base articles,
-          blog-style content, landing pages. Site header stays fixed at the top; main
-          content flows in a 1200px container below.
-
-      - type: columns
-        columns:
-          - - type: callout
-              variant: info
-              title: Best for
-              body: |
-                - Multi-page KBs
-                - Team wikis
-                - Reference docs
-                - Blog-style content
-          - - type: callout
-              variant: info
-              title: YAML pattern
-              body: "`shell: standard` + `components: [...]` + optional `nav_back`"
-
-  - type: section
-    eyebrow: document shell
-    heading: Centered card, print-ready
-    components:
-      - type: markdown
-        body: |
-          A single centered card (720px wide) with a teal-bordered header. Designed for
-          content you'd print or PDF — meeting agendas, one-pagers, briefs, letters.
-          Print CSS strips the dark theme and outputs cleanly.
-
-      - type: columns
-        columns:
-          - - type: callout
-              variant: info
-              title: Best for
-              body: |
-                - Meeting agendas
-                - One-pagers
-                - Letters & briefs
-                - Anything you print
-          - - type: callout
-              variant: info
-              title: YAML pattern
-              body: "`shell: document` + `eyebrow` + `subtitle` → header bar. Body is `components: [...]`."
-
-  - type: section
-    eyebrow: deck shell
-    heading: Full-viewport slides, keyboard-navigated
-    components:
-      - type: markdown
-        body: |
-          Full-screen presentation mode. Arrow keys (← → ↑ ↓) navigate between slides.
-          Each slide holds its own components. The built-in "Download PDF" button uses
-          print CSS to output each slide as a landscape page.
-
-      - type: columns
-        columns:
-          - - type: callout
-              variant: info
-              title: Best for
-              body: |
-                - QBRs
-                - Executive reviews
-                - Pitch decks
-                - Anywhere you'd use Keynote
-          - - type: callout
-              variant: info
-              title: YAML pattern
-              body: "`shell: deck` + `eyebrow` + `subtitle` → top bar. Content is `slides: [{label, components}]`."
-
-  - type: section
-    eyebrow: Full site
-    heading: Technical Success Hub
-    components:
-      - type: markdown
-        body: |
-          The original site that motivated finro. A customer portfolio dashboard
-          linking to per-customer deployment guides, meeting agendas, and quarterly
-          business reviews — all generated from ~300 lines of YAML.
+          A working knowledge base for a technical success team. Portfolio dashboard at
+          the root, per-customer deployment guides, meeting agendas, and quarterly business
+          reviews. Each page type uses a different shell.
 
       - type: card_grid
         cards:
-          - title: Portfolio
+          - title: Customer Portfolio
             badge:
               label: standard
               color: default
-            description: Dashboard of customer cards with health badges
+            description: Dashboard grid of customer cards with health badges and quick links.
             links:
-              - label: Open →
+              - label: View →
                 href: ../examples/kb/_site/index.html
 
-          - title: Deployment Guide
+          - title: Deployment Phases
             badge:
               label: standard
               color: default
-            description: Interactive phase tracker with click-to-focus
+            description: Interactive 4-phase tracker. Click any phase to focus it.
             links:
-              - label: Open →
+              - label: View →
                 href: ../examples/kb/_site/deployment-phases.html
+
+          - title: Customer Detail
+            badge:
+              label: standard
+              color: default
+            description: Per-customer article with meta grid, health tables, and notes.
+            links:
+              - label: View →
+                href: ../examples/kb/_site/customers/acme.html
 
           - title: Meeting Agenda
             badge:
               label: document
               color: default
-            description: Centered card with print styling
+            description: Centered card, teal-bordered header, print-optimized.
             links:
-              - label: Open →
+              - label: View →
                 href: ../examples/kb/_site/agenda/acme.html
 
           - title: Q2 Business Review
             badge:
               label: deck
               color: default
-            description: Three-slide presentation with PDF export
+            description: 3-slide deck. Arrow keys to navigate. Download PDF exports all slides.
             links:
-              - label: Open →
+              - label: View →
                 href: ../examples/kb/_site/qbr/acme.html
+
+          - title: This docs site
+            badge:
+              label: meta
+              color: green
+            description: These docs were built with finro. Every component demos itself.
+            links:
+              - label: You're here
+                href: index.html
+
+  - type: callout
+    variant: info
+    title: Want to replicate this?
+    body: "The full source is at `examples/kb/` in the repo — 8 YAML files total, including the site config. Each file maps to one page of output."
