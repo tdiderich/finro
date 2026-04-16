@@ -1,0 +1,31 @@
+title: Customer Portfolio
+layout: dashboard
+subtitle: 3 Active Deployments
+
+cards:
+  - name: Acme Corp
+    badge: Healthy
+    badge_color: green
+    description: Enterprise — AWS us-east-1
+    links:
+      - label: Deployment Guide
+        href: customers/acme.html
+      - label: Agenda Ready
+        href: agenda/acme.html
+      - label: QBR Ready
+        href: qbr/acme.html
+
+  - name: Beta Corp
+    badge: At Risk
+    badge_color: yellow
+    description: Mid-Market — Azure
+    links:
+      - label: Deployment Guide
+        href: customers/beta.html
+
+  - name: Gamma Inc
+    badge: TBD
+    description: Enterprise — GCP
+    links:
+      - label: Deployment Guide
+        href: customers/gamma.html

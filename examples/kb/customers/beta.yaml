@@ -1,0 +1,47 @@
+title: Beta Corp — Deployment Guide
+layout: article
+nav_back:
+  label: ← Portfolio
+  href: ../index.html
+
+meta:
+  - key: Account Type
+    value: Mid-Market
+  - key: Overall Health
+    value: At Risk
+  - key: Region
+    value: Azure West US
+  - key: Active Users
+    value: "12"
+  - key: Last Updated
+    value: 2026-04-16
+
+body: |
+  ## Overview
+
+  Beta Corp deployed Maze in February 2026. Adoption has been slower than expected — primary contact changed in March.
+
+  ## Architecture
+
+  - **Cloud Provider**: Azure West US
+  - **Auth Method**: Azure AD (OIDC)
+  - **Deployment Type**: SaaS multi-tenant
+
+  ## Health Status
+
+  | Metric | Value | Notes |
+  |--------|-------|-------|
+  | Uptime | 99.9% | Above SLA |
+  | Active Users | 12 | Below target of 30 |
+  | Open Tickets | 0 | |
+  | Scan Coverage | 41% | Needs attention |
+
+  ## Open Items
+
+  1. Schedule re-onboarding call with new champion (Marcus T.)
+  2. Review scan coverage gaps — Azure subscriptions not yet connected
+  3. Confirm renewal timeline (contract expires July 2026)
+
+  ## Notes
+
+  > Previous champion left the company. New contact Marcus T. is responsive but needs re-education on the platform.

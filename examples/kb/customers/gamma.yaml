@@ -1,0 +1,39 @@
+title: Gamma Inc — Deployment Guide
+layout: article
+nav_back:
+  label: ← Portfolio
+  href: ../index.html
+
+meta:
+  - key: Account Type
+    value: Enterprise
+  - key: Overall Health
+    value: TBD
+  - key: Region
+    value: GCP us-central1
+  - key: Active Users
+    value: "0"
+  - key: Last Updated
+    value: 2026-04-16
+
+body: |
+  ## Overview
+
+  Gamma Inc signed in March 2026. Onboarding is scheduled to begin in May 2026.
+
+  ## Architecture
+
+  - **Cloud Provider**: GCP us-central1
+  - **Auth Method**: Google Workspace SSO (OIDC)
+  - **Deployment Type**: SaaS multi-tenant
+
+  ## Pre-Onboarding Checklist
+
+  1. Confirm GCP project IDs with IT team
+  2. Set up Google Workspace SSO integration
+  3. Identify champion and executive sponsor
+  4. Schedule kickoff call for May 5, 2026
+
+  ## Notes
+
+  > New logo — referred by Acme Corp. Champion TBD, initial contact is procurement lead Jordan K.

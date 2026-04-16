@@ -1,0 +1,31 @@
+title: Full Scale Deployment
+layout: phases
+
+phases:
+  - number: 1
+    name: Planning
+    bullets:
+      - Key use cases defined
+      - Short-term and long-term success metrics established
+      - General workflows for the team outlined
+      - Ownership of the deployment understood
+
+  - number: 2
+    name: Initial Configuration
+    bullets:
+      - Review the Maze dashboard and understand key features
+      - Walk through sample workflows to understand AI screening
+      - Configure initial screening assessments
+
+  - number: 3
+    name: Optimization & Automation
+    bullets:
+      - All integrations fully configured
+      - Maze investigations aligned with the team's workflow
+      - All users trained on Maze
+
+  - number: 4
+    name: Ongoing Engagement
+    bullets:
+      - Continued use case expansion
+      - Feature request and roadmap alignment

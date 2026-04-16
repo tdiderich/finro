@@ -1,0 +1,17 @@
+[package]
+name = "pseudo"
+version = "0.1.0"
+edition = "2021"
+description = "Beautiful sites from simple YAML"
+
+[[bin]]
+name = "pseudo"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"
+pulldown-cmark = "0.11"
+walkdir = "2"
+anyhow = "1"

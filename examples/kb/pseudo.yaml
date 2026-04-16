@@ -1,0 +1,7 @@
+name: Technical Success Hub
+theme: dark
+nav:
+  - label: Portfolio
+    href: index.html
+  - label: Deployment Guide
+    href: deployment-phases.html

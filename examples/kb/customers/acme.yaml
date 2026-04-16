@@ -1,0 +1,47 @@
+title: Acme Corp — Deployment Guide
+layout: article
+nav_back:
+  label: ← Portfolio
+  href: ../index.html
+
+meta:
+  - key: Account Type
+    value: Enterprise
+  - key: Overall Health
+    value: Healthy
+  - key: Region
+    value: AWS us-east-1
+  - key: Active Users
+    value: "47"
+  - key: Last Updated
+    value: 2026-04-16
+
+body: |
+  ## Overview
+
+  Acme Corp is running **Maze Enterprise** on their AWS infrastructure, deployed in Q1 2026 after a 6-week onboarding process.
+
+  ## Architecture
+
+  - **Cloud Provider**: AWS us-east-1
+  - **Auth Method**: SAML SSO via Okta
+  - **Deployment Type**: SaaS multi-tenant
+
+  ## Health Status
+
+  | Metric | Value | Notes |
+  |--------|-------|-------|
+  | Uptime | 99.9% | Above SLA |
+  | Active Users | 47 | Growing MoM |
+  | Open Tickets | 2 | Minor issues |
+  | Scan Coverage | 94% | On track |
+
+  ## Open Items
+
+  1. Configure automated scanning for new AWS sub-accounts
+  2. Enable Slack integration for alert routing
+  3. Schedule Q2 business review
+
+  ## Notes
+
+  > Champion is Sarah M. (VP Engineering). Executive sponsor is the CTO. Renewal in October 2026.

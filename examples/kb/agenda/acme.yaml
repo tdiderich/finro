@@ -1,0 +1,41 @@
+title: Acme Corp — Q2 Meeting Agenda
+layout: agenda
+customer: Acme Corp
+date: April 20, 2026
+nav_back:
+  label: ← Portfolio
+  href: ../index.html
+
+body: |
+  ## Attendees
+  - **Sarah M.** — VP Engineering, Acme Corp
+  - **Tyler M.** — Technical Success, Maze Security
+
+  ## Agenda
+
+  ### 1. Q1 Recap (10 min)
+  - Review scan coverage growth: 72% → 94%
+  - Celebrate: zero critical findings missed in Q1
+  - Address 2 open tickets from last session
+
+  ### 2. Platform Walkthrough (15 min)
+  - New: automated AWS sub-account discovery
+  - New: Slack alert routing (ready to configure)
+  - Demo: investigation workflow improvements
+
+  ### 3. Q2 Goals (15 min)
+  - Target: 100% scan coverage across all accounts
+  - Expand to EU region (8 new accounts)
+  - Enable automated remediation for P3/P4 findings
+
+  ### 4. Roadmap Preview (10 min)
+  - CSPM enhancements — GA in May
+  - API security scanning — beta in June
+  - Compliance reporting (SOC 2, ISO 27001) — Q3
+
+  ### 5. Open Q&A (10 min)
+
+  ## Action Items from Last Meeting
+  - **Sarah** — Share list of EU AWS account IDs *(due Apr 20)*
+  - **Tyler** — Send Slack integration setup guide *(done)*
+  - **Tyler** — Schedule Q2 executive review *(done — May 14)*
