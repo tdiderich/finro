@@ -7,25 +7,47 @@ components:
     eyebrow: YAML → beautiful static sites
     subtitle: A Rust CLI that turns structured YAML into themed HTML. Built for a world where LLMs are the primary authors.
 
-  - type: card_grid
-    cards:
-      - title: Get started
-        description: Install, scaffold a site, run the dev server.
-        links:
-          - label: Guide →
-            href: guide.html
+  - type: section
+    eyebrow: Use cases
+    heading: What to build with it
+    components:
+      - type: card_grid
+        cards:
+          - title: Documentation sites
+            badge:
+              label: standard
+              color: default
+            description: API refs, guides, onboarding docs. Tabs for code samples, sortable tables for references.
+            links:
+              - label: See example →
+                href: examples/doc.html
 
-      - title: Components
-        description: 17 primitives. Cards, tables, slides, callouts, everything.
-        links:
-          - label: Reference →
-            href: components/index.html
+          - title: Internal KBs & wikis
+            badge:
+              label: standard
+              color: default
+            description: Handbooks, runbooks, service catalogs. Card grids for navigation, tables for operational data.
+            links:
+              - label: See example →
+                href: examples/kb.html
 
-      - title: Examples
-        description: A customer portfolio, a meeting agenda, a QBR deck.
-        links:
-          - label: See examples →
-            href: examples.html
+          - title: Meeting agendas & briefs
+            badge:
+              label: document
+              color: default
+            description: One-pagers and pre-reads. Centered card layout, print-optimized, exports clean to PDF.
+            links:
+              - label: See example →
+                href: examples/agenda.html
+
+          - title: Decks & presentations
+            badge:
+              label: deck
+              color: default
+            description: QBRs, strategy reviews, pitch decks. Full-viewport slides with keyboard nav and PDF export.
+            links:
+              - label: See example →
+                href: examples/deck.html
 
   - type: section
     eyebrow: Why

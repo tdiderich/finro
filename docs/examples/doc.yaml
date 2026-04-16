@@ -1,0 +1,153 @@
+title: Webhooks API Reference
+shell: standard
+nav_back:
+  label: ← Back to finro
+  href: ../index.html
+
+components:
+  - type: header
+    title: Webhooks API
+    eyebrow: API Reference
+    subtitle: Receive real-time event notifications from your account.
+
+  - type: meta
+    fields:
+      - key: Version
+        value: "2.4"
+      - key: Status
+        value: Stable
+      - key: Last Updated
+        value: 2026-04-14
+      - key: SLA
+        value: 99.95%
+
+  - type: markdown
+    body: |
+      Webhooks push events to a URL you configure. Use them to keep external systems
+      in sync with state changes in your account — new users, payment events, subscription
+      changes, and more.
+
+  - type: section
+    eyebrow: Authentication
+    heading: Signing requests
+    components:
+      - type: markdown
+        body: |
+          Every webhook request includes an `X-Signature` header containing an
+          HMAC-SHA256 of the raw request body, keyed by your webhook secret.
+          Verify this signature before processing any event.
+
+      - type: code
+        language: python
+        code: |
+          import hmac, hashlib
+
+          def verify(body: bytes, signature: str, secret: str) -> bool:
+              expected = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
+              return hmac.compare_digest(expected, signature)
+
+  - type: section
+    eyebrow: Event types
+    heading: Supported events
+    components:
+      - type: table
+        filterable: true
+        columns:
+          - key: name
+            label: Event
+            sortable: true
+          - key: since
+            label: Since
+            sortable: true
+          - key: retries
+            label: Retries
+            sortable: true
+            align: right
+          - key: status
+            label: Status
+        rows:
+          - name: user.created
+            since: v1.0
+            retries: 3
+            status: GA
+          - name: user.deleted
+            since: v1.0
+            retries: 3
+            status: GA
+          - name: invoice.paid
+            since: v1.2
+            retries: 5
+            status: GA
+          - name: invoice.failed
+            since: v1.2
+            retries: 5
+            status: GA
+          - name: subscription.upgraded
+            since: v2.0
+            retries: 3
+            status: GA
+          - name: subscription.canceled
+            since: v2.0
+            retries: 3
+            status: GA
+          - name: trial.ending
+            since: v2.4
+            retries: 1
+            status: Beta
+
+  - type: section
+    eyebrow: Examples
+    heading: Integration snippets
+    components:
+      - type: tabs
+        tabs:
+          - label: Express.js
+            components:
+              - type: code
+                language: javascript
+                code: |
+                  app.post('/webhook', (req, res) => {
+                    if (!verify(req.rawBody, req.headers['x-signature'], SECRET)) {
+                      return res.status(401).end();
+                    }
+                    const event = req.body;
+                    handlers[event.type]?.(event.data);
+                    res.status(200).end();
+                  });
+
+          - label: Flask
+            components:
+              - type: code
+                language: python
+                code: |
+                  @app.route('/webhook', methods=['POST'])
+                  def webhook():
+                      if not verify(request.data, request.headers['X-Signature'], SECRET):
+                          return '', 401
+                      event = request.json
+                      handlers.get(event['type'], noop)(event['data'])
+                      return '', 200
+
+          - label: Go
+            components:
+              - type: code
+                language: go
+                code: |
+                  func webhookHandler(w http.ResponseWriter, r *http.Request) {
+                      body, _ := io.ReadAll(r.Body)
+                      if !verify(body, r.Header.Get("X-Signature"), secret) {
+                          http.Error(w, "unauthorized", http.StatusUnauthorized)
+                          return
+                      }
+                      var event Event
+                      json.Unmarshal(body, &event)
+                      handle(event)
+                      w.WriteHeader(http.StatusOK)
+                  }
+
+  - type: callout
+    variant: warn
+    title: Idempotency
+    body: |
+      Deliveries may retry on failure. Use the `event.id` field as an idempotency key —
+      we guarantee it's unique across all deliveries of the same event.

@@ -1,0 +1,115 @@
+title: Engineering Handbook
+shell: standard
+nav_back:
+  label: ← Back to finro
+  href: ../index.html
+
+components:
+  - type: header
+    title: Engineering Handbook
+    subtitle: Everything you need to ship at Acme
+
+  - type: callout
+    variant: warn
+    title: Active incident — checkout-api
+    body: "Investigating elevated error rates. See [incident-427](#) for live status. Incident commander: Juan R."
+
+  - type: section
+    eyebrow: Start here
+    heading: Handbook sections
+    components:
+      - type: card_grid
+        cards:
+          - title: Onboarding
+            badge:
+              label: Week 1
+              color: green
+            description: Setup, team intros, first-PR checklist, dev environment.
+            links:
+              - label: Open →
+                href: "#"
+
+          - title: Runbooks
+            description: On-call procedures, common incidents, escalation trees.
+            links:
+              - label: Open →
+                href: "#"
+
+          - title: Architecture
+            description: System diagrams, service ownership, API contracts.
+            links:
+              - label: Open →
+                href: "#"
+
+          - title: Release Process
+            description: CI/CD, staging checks, rollback procedures, release notes.
+            links:
+              - label: Open →
+                href: "#"
+
+          - title: Security
+            description: SSO, secret rotation, vuln disclosure, incident playbook.
+            links:
+              - label: Open →
+                href: "#"
+
+          - title: People & Policies
+            description: PTO, expenses, equipment, remote work, travel.
+            links:
+              - label: Open →
+                href: "#"
+
+  - type: section
+    eyebrow: Operational
+    heading: Service health (last 30 days)
+    components:
+      - type: table
+        filterable: true
+        columns:
+          - key: service
+            label: Service
+            sortable: true
+          - key: owner
+            label: Team
+            sortable: true
+          - key: uptime
+            label: Uptime
+            sortable: true
+            align: right
+          - key: errors
+            label: Error Rate
+            sortable: true
+            align: right
+          - key: oncall
+            label: Primary On-call
+        rows:
+          - service: auth-api
+            owner: Platform
+            uptime: 99.98%
+            errors: 0.04%
+            oncall: Maya C.
+          - service: checkout-api
+            owner: Payments
+            uptime: 99.92%
+            errors: 0.18%
+            oncall: Juan R.
+          - service: notification-worker
+            owner: Platform
+            uptime: 99.99%
+            errors: 0.01%
+            oncall: Maya C.
+          - service: search
+            owner: Discovery
+            uptime: 99.71%
+            errors: 0.42%
+            oncall: Priya S.
+          - service: image-processor
+            owner: Media
+            uptime: 99.85%
+            errors: 0.07%
+            oncall: Dev M.
+          - service: billing-worker
+            owner: Payments
+            uptime: 99.94%
+            errors: 0.06%
+            oncall: Juan R.

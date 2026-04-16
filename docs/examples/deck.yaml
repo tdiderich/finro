@@ -1,0 +1,64 @@
+title: Q1 Product Strategy Review
+shell: deck
+eyebrow: Q1 Review
+subtitle: April 2026
+
+slides:
+  - label: Wins
+    components:
+      - type: before_after
+        items:
+          - title: Time to first value
+            before: Users took 14 days on average to hit their first activation event
+            after: 2 days
+            after_context: after the new onboarding flow
+
+          - title: Mobile adoption
+            before: 12% of users on mobile, flat for 6 months
+            after: 38%
+            after_context: since the mobile app launch in January
+
+          - title: Enterprise pipeline
+            before: 4 enterprise deals in flight
+            after: $3.2M ACV
+            after_context: across 11 active enterprise deals
+
+  - label: Where we are
+    components:
+      - type: timeline
+        items:
+          - name: Discovery
+            status: completed
+          - name: Build
+            status: completed
+          - name: Polish
+            status: active
+          - name: Scale
+            status: upcoming
+
+      - type: stat_grid
+        columns: 3
+        stats:
+          - label: Monthly Active Users
+            value: 142K
+            detail: Up 28% QoQ
+            color: green
+          - label: Net Revenue
+            value: $4.8M
+            detail: Beat target by 11%
+            color: green
+          - label: Open P1s
+            value: "3"
+            detail: 2 already in progress
+            color: yellow
+
+  - label: What's next
+    components:
+      - type: steps
+        items:
+          - title: Ship mobile app GA
+            detail: May 15 — open public signups, turn on app-store marketing
+          - title: Enterprise SSO
+            detail: June 1 — unblocks the four biggest deals in the pipeline
+          - title: Pricing page rework
+            detail: May 30 — move away from "contact sales" CTA on self-serve tiers
