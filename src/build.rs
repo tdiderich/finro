@@ -27,9 +27,10 @@ pub fn run(dir: &Path, out: &Path) -> Result<()> {
             let page: Page = serde_yaml::from_str(&content)
                 .with_context(|| format!("parsing {:?}", path))?;
 
-            let html = render::render_page(&page, &config);
-
             let rel = path.strip_prefix(dir)?;
+            let base = base_path_for(rel);
+            let html = render::render_page(&page, &config, &base);
+
             let out_path = out.join(rel).with_extension("html");
             if let Some(parent) = out_path.parent() {
                 fs::create_dir_all(parent)?;
@@ -43,6 +44,13 @@ pub fn run(dir: &Path, out: &Path) -> Result<()> {
 
     println!("\n✓ {} page(s) → {}", count, out.display());
     Ok(())
+}
+
+fn base_path_for(rel: &Path) -> String {
+    let depth = rel.parent()
+        .map(|p| p.components().count())
+        .unwrap_or(0);
+    "../".repeat(depth)
 }
 
 fn load_config(dir: &Path) -> Result<SiteConfig> {

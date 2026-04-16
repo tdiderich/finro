@@ -1,6 +1,6 @@
 use crate::theme;
 use crate::types::{Page, Shell, SiteConfig, Slide};
-use super::{components, collect_scripts, esc, Rendered};
+use super::{components, collect_scripts, esc, resolve_href, Rendered};
 
 fn head(page: &Page, config: &SiteConfig) -> String {
     format!(
@@ -16,18 +16,26 @@ fn head(page: &Page, config: &SiteConfig) -> String {
     )
 }
 
-fn nav_html(config: &SiteConfig) -> (String, bool) {
+fn nav_html(config: &SiteConfig, base: &str) -> (String, bool) {
     let Some(links) = &config.nav else { return (String::new(), false) };
     if links.is_empty() { return (String::new(), false) }
     let mut out = String::from("<nav>");
     for link in links {
         out.push_str(&format!(
             r#"<a href="{}" class="nav-link">{}</a>"#,
-            esc(&link.href), esc(&link.label)
+            esc(&resolve_href(&link.href, base)), esc(&link.label)
         ));
     }
     out.push_str("</nav>");
     (out, true)
+}
+
+fn nav_back_html(page: &Page, base: &str) -> String {
+    let Some(nb) = &page.nav_back else { return String::new() };
+    format!(
+        r#"<a href="{}" class="nav-back">{}</a>"#,
+        esc(&resolve_href(&nb.href, base)), esc(&nb.label)
+    )
 }
 
 // ── Standard shell ────────────────────────────────
@@ -35,8 +43,8 @@ fn nav_html(config: &SiteConfig) -> (String, bool) {
 pub mod standard {
     use super::*;
 
-    pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered) -> String {
-        let (nav, has_nav) = nav_html(config);
+    pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered, base: &str) -> String {
+        let (nav, has_nav) = nav_html(config, base);
         let mut scripts = body.scripts.clone();
         if has_nav { scripts.push("nav"); }
         scripts.push("reload");
@@ -63,7 +71,7 @@ pub mod standard {
             cls = Shell::Standard.class(),
             site = esc(&config.name),
             nav = nav,
-            nav_back = nav_back_html(page),
+            nav_back = nav_back_html(page, base),
             body = body.html,
             scripts = collect_scripts(&scripts),
         )
@@ -75,7 +83,7 @@ pub mod standard {
 pub mod document {
     use super::*;
 
-    pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered) -> String {
+    pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered, base: &str) -> String {
         let eyebrow = page.eyebrow.as_deref().unwrap_or("");
         let subtitle = page.subtitle.as_deref().unwrap_or("");
 
@@ -112,7 +120,7 @@ pub mod document {
 </html>"#,
             head = head(page, config),
             cls = Shell::Document.class(),
-            nav_back = nav_back_html(page),
+            nav_back = nav_back_html(page, base),
             doc_header = doc_header,
             body = body.html,
             scripts = collect_scripts(&scripts),
@@ -141,7 +149,7 @@ pub mod deck {
         out.scripts.push("deck");
     }
 
-    pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered) -> String {
+    pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered, _base: &str) -> String {
         let eyebrow = page.eyebrow.as_deref().unwrap_or("");
         let subtitle = page.subtitle.as_deref().unwrap_or("");
 
@@ -188,12 +196,3 @@ pub mod deck {
     }
 }
 
-// ── Shared ────────────────────────────────────────
-
-fn nav_back_html(page: &Page) -> String {
-    let Some(nb) = &page.nav_back else { return String::new() };
-    format!(
-        r#"<a href="{}" class="nav-back">{}</a>"#,
-        esc(&nb.href), esc(&nb.label)
-    )
-}

@@ -32,9 +32,12 @@ const RELOAD: &str = r#"
 
 const NAV: &str = r#"
 document.addEventListener('DOMContentLoaded', function () {
-  var href = window.location.pathname.split('/').pop() || 'index.html';
+  var here = window.location.pathname.replace(/\/$/, '/index.html');
   document.querySelectorAll('.nav-link').forEach(function (a) {
-    if (a.getAttribute('href') === href) a.classList.add('nav-link-active');
+    try {
+      var target = new URL(a.href).pathname.replace(/\/$/, '/index.html');
+      if (target === here) a.classList.add('nav-link-active');
+    } catch (e) {}
   });
 });
 "#;
