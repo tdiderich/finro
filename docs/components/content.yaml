@@ -1,0 +1,183 @@
+title: Content components
+shell: standard
+nav_back:
+  label: ← Components
+  href: index.html
+
+components:
+  - type: header
+    title: Content components
+    eyebrow: Reference
+    subtitle: header, meta, markdown, code, image, callout
+
+  # ── header ─────────────────────────────────
+  - type: section
+    eyebrow: header
+    heading: Page title block
+    components:
+      - type: markdown
+        body: "Title with optional subtitle and eyebrow. Usually the first component on a page."
+
+      - type: header
+        title: Q2 Business Review
+        subtitle: Three deployments, 140 active users
+        eyebrow: Executive Summary
+
+      - type: code
+        language: yaml
+        code: |
+          - type: header
+            title: Q2 Business Review
+            subtitle: Three deployments, 140 active users
+            eyebrow: Executive Summary
+
+  # ── meta ───────────────────────────────────
+  - type: section
+    eyebrow: meta
+    heading: Key-value strip
+    components:
+      - type: markdown
+        body: "Horizontal grid of labeled values. Great for page metadata — author, date, status, version."
+
+      - type: meta
+        fields:
+          - key: Author
+            value: Tyler M.
+          - key: Last Updated
+            value: 2026-04-16
+          - key: Status
+            value: Active
+          - key: Version
+            value: "1.2"
+
+      - type: code
+        language: yaml
+        code: |
+          - type: meta
+            fields:
+              - key: Author
+                value: Tyler M.
+              - key: Last Updated
+                value: 2026-04-16
+              - key: Status
+                value: Active
+
+  # ── markdown ───────────────────────────────
+  - type: section
+    eyebrow: markdown
+    heading: Rich prose
+    components:
+      - type: markdown
+        body: "Parses standard CommonMark plus tables. All the usual: headings, lists, bold, italic, code spans, blockquotes, links, tables."
+
+      - type: markdown
+        body: |
+          ## Heading
+
+          Regular paragraph with **bold** and *italic* and `inline code`.
+
+          - Unordered list
+          - With a second item
+
+          | Metric | Value |
+          |--------|-------|
+          | Users | 47 |
+          | Coverage | 94% |
+
+          > Blockquote for emphasis.
+
+      - type: code
+        language: yaml
+        code: |
+          - type: markdown
+            body: |
+              ## Heading
+
+              Regular paragraph with **bold** and *italic*.
+
+              - Unordered list
+              - With a second item
+
+              | Metric | Value |
+              |--------|-------|
+              | Users | 47 |
+
+  # ── code ───────────────────────────────────
+  - type: section
+    eyebrow: code
+    heading: Syntax-styled code block
+    components:
+      - type: markdown
+        body: "A fenced code block as a standalone component. `language` is optional metadata; used as a data attribute for future syntax highlighting."
+
+      - type: code
+        language: rust
+        code: |
+          fn main() {
+              let site = Site::build("./my-site")?;
+              println!("wrote {} pages", site.pages.len());
+          }
+
+      - type: code
+        language: yaml
+        code: |
+          - type: code
+            language: rust
+            code: |
+              fn main() {
+                  let site = Site::build("./my-site")?;
+                  println!("wrote {} pages", site.pages.len());
+              }
+
+  # ── callout ────────────────────────────────
+  - type: section
+    eyebrow: callout
+    heading: Contextual message box
+    components:
+      - type: markdown
+        body: "Four variants — `info` (default), `success`, `warn`, `danger`. Title is optional. Body is markdown."
+
+      - type: callout
+        variant: info
+        title: Heads up
+        body: Neutral information with a teal accent bar.
+
+      - type: callout
+        variant: success
+        title: Deployed
+        body: Version **1.2** is live in production.
+
+      - type: callout
+        variant: warn
+        title: Attention
+        body: Renewal window opens in 30 days.
+
+      - type: callout
+        variant: danger
+        title: Action required
+        body: Credentials leaked — rotate immediately.
+
+      - type: code
+        language: yaml
+        code: |
+          - type: callout
+            variant: warn
+            title: Attention
+            body: Renewal window opens in 30 days.
+
+  # ── image ──────────────────────────────────
+  - type: section
+    eyebrow: image
+    heading: Images with caption
+    components:
+      - type: markdown
+        body: "Figure with optional caption and max-width constraint. `alt` is required for accessibility."
+
+      - type: code
+        language: yaml
+        code: |
+          - type: image
+            src: /screenshots/dashboard.png
+            alt: Dashboard screenshot
+            caption: The customer portfolio dashboard.
+            max_width: 600

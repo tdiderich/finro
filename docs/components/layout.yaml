@@ -1,0 +1,157 @@
+title: Layout components
+shell: standard
+nav_back:
+  label: ← Components
+  href: index.html
+
+components:
+  - type: header
+    title: Layout components
+    eyebrow: Reference
+    subtitle: section, columns, timeline, steps
+
+  # ── section ───────────────────────────────
+  - type: section
+    eyebrow: section
+    heading: Grouping with a heading
+    components:
+      - type: markdown
+        body: |
+          A titled block of nested components. Use it to organize long pages into
+          scannable chunks. `eyebrow` + `heading` optional. Nested `components:` can
+          hold any components.
+
+      - type: section
+        eyebrow: Example section
+        heading: Platform health
+        components:
+          - type: stat_grid
+            columns: 3
+            stats:
+              - label: Uptime
+                value: 99.9%
+                color: green
+              - label: Errors
+                value: "0.02%"
+                color: green
+              - label: Latency p95
+                value: 140ms
+                color: default
+          - type: markdown
+            body: "Everything above lives inside this section."
+
+      - type: code
+        language: yaml
+        code: |
+          - type: section
+            eyebrow: Example section
+            heading: Platform health
+            components:
+              - type: stat_grid
+                stats: [...]
+              - type: markdown
+                body: "Everything above lives inside this section."
+
+  # ── columns ───────────────────────────────
+  - type: section
+    eyebrow: columns
+    heading: Multi-column row
+    components:
+      - type: markdown
+        body: "Distribute components into equal-width columns. Each column is itself a list of components."
+
+      - type: columns
+        columns:
+          - - type: callout
+              variant: info
+              title: Left
+              body: "Arbitrary components live inside each column."
+          - - type: callout
+              variant: success
+              title: Center
+              body: "Even widths, responsive collapse on narrow screens."
+          - - type: callout
+              variant: warn
+              title: Right
+              body: "Great for comparison layouts."
+
+      - type: code
+        language: yaml
+        code: |
+          - type: columns
+            columns:
+              - - type: callout
+                  variant: info
+                  title: Left
+                  body: Left content
+              - - type: callout
+                  variant: success
+                  title: Center
+                  body: Center content
+              - - type: callout
+                  variant: warn
+                  title: Right
+                  body: Right content
+
+  # ── timeline ──────────────────────────────
+  - type: section
+    eyebrow: timeline
+    heading: Horizontal phase tracker
+    components:
+      - type: markdown
+        body: "A horizontal row of phases with status indicators. Each item is `completed`, `active`, or `upcoming`. No interaction — purely visual progress."
+
+      - type: timeline
+        items:
+          - name: Planning
+            status: completed
+          - name: Configuration
+            status: completed
+          - name: Optimization
+            status: active
+          - name: Ongoing
+            status: upcoming
+
+      - type: code
+        language: yaml
+        code: |
+          - type: timeline
+            items:
+              - name: Planning
+                status: completed    # completed | active | upcoming
+              - name: Configuration
+                status: completed
+              - name: Optimization
+                status: active
+              - name: Ongoing
+                status: upcoming
+
+  # ── steps ─────────────────────────────────
+  - type: section
+    eyebrow: steps
+    heading: Numbered or bulleted steps
+    components:
+      - type: markdown
+        body: "Ordered list of cards with title + optional detail. Numbered by default; set `numbered: false` for bullets."
+
+      - type: steps
+        items:
+          - title: Install the binary
+            detail: Build from source with cargo build --release.
+          - title: Create a site directory
+            detail: Any directory of .yaml files — finro walks it recursively.
+          - title: Run dev mode
+            detail: finro dev ./my-site watches and live-reloads at localhost:3000.
+
+      - type: code
+        language: yaml
+        code: |
+          - type: steps
+            numbered: true   # default; false for bullets
+            items:
+              - title: Install the binary
+                detail: Build from source with cargo build --release.
+              - title: Create a site directory
+                detail: Any directory of .yaml files.
+              - title: Run dev mode
+                detail: finro dev ./my-site

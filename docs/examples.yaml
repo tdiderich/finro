@@ -1,0 +1,131 @@
+title: Examples
+shell: standard
+
+components:
+  - type: header
+    title: Examples
+    eyebrow: Patterns
+    subtitle: The three shells, what they're for, and what they look like.
+
+  - type: section
+    eyebrow: standard shell
+    heading: Sticky header + nav + container
+    components:
+      - type: markdown
+        body: |
+          The default. Use for: dashboards, reference pages, knowledge-base articles,
+          blog-style content, landing pages. Site header stays fixed at the top; main
+          content flows in a 1200px container below.
+
+      - type: columns
+        columns:
+          - - type: callout
+              variant: info
+              title: Best for
+              body: |
+                - Multi-page KBs
+                - Team wikis
+                - Reference docs
+                - Blog-style content
+          - - type: callout
+              variant: info
+              title: YAML pattern
+              body: "`shell: standard` + `components: [...]` + optional `nav_back`"
+
+  - type: section
+    eyebrow: document shell
+    heading: Centered card, print-ready
+    components:
+      - type: markdown
+        body: |
+          A single centered card (720px wide) with a teal-bordered header. Designed for
+          content you'd print or PDF — meeting agendas, one-pagers, briefs, letters.
+          Print CSS strips the dark theme and outputs cleanly.
+
+      - type: columns
+        columns:
+          - - type: callout
+              variant: info
+              title: Best for
+              body: |
+                - Meeting agendas
+                - One-pagers
+                - Letters & briefs
+                - Anything you print
+          - - type: callout
+              variant: info
+              title: YAML pattern
+              body: "`shell: document` + `eyebrow` + `subtitle` → header bar. Body is `components: [...]`."
+
+  - type: section
+    eyebrow: deck shell
+    heading: Full-viewport slides, keyboard-navigated
+    components:
+      - type: markdown
+        body: |
+          Full-screen presentation mode. Arrow keys (← → ↑ ↓) navigate between slides.
+          Each slide holds its own components. The built-in "Download PDF" button uses
+          print CSS to output each slide as a landscape page.
+
+      - type: columns
+        columns:
+          - - type: callout
+              variant: info
+              title: Best for
+              body: |
+                - QBRs
+                - Executive reviews
+                - Pitch decks
+                - Anywhere you'd use Keynote
+          - - type: callout
+              variant: info
+              title: YAML pattern
+              body: "`shell: deck` + `eyebrow` + `subtitle` → top bar. Content is `slides: [{label, components}]`."
+
+  - type: section
+    eyebrow: Full site
+    heading: Technical Success Hub
+    components:
+      - type: markdown
+        body: |
+          The original site that motivated finro. A customer portfolio dashboard
+          linking to per-customer deployment guides, meeting agendas, and quarterly
+          business reviews — all generated from ~300 lines of YAML.
+
+      - type: card_grid
+        cards:
+          - title: Portfolio
+            badge:
+              label: standard
+              color: default
+            description: Dashboard of customer cards with health badges
+            links:
+              - label: Open →
+                href: ../examples/kb/_site/index.html
+
+          - title: Deployment Guide
+            badge:
+              label: standard
+              color: default
+            description: Interactive phase tracker with click-to-focus
+            links:
+              - label: Open →
+                href: ../examples/kb/_site/deployment-phases.html
+
+          - title: Meeting Agenda
+            badge:
+              label: document
+              color: default
+            description: Centered card with print styling
+            links:
+              - label: Open →
+                href: ../examples/kb/_site/agenda/acme.html
+
+          - title: Q2 Business Review
+            badge:
+              label: deck
+              color: default
+            description: Three-slide presentation with PDF export
+            links:
+              - label: Open →
+                href: ../examples/kb/_site/qbr/acme.html

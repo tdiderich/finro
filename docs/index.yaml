@@ -1,0 +1,111 @@
+title: finro — beautiful sites from simple YAML
+shell: standard
+
+components:
+  - type: header
+    title: finro
+    eyebrow: YAML → beautiful static sites
+    subtitle: A Rust CLI that turns structured YAML into themed HTML. Built for a world where LLMs are the primary authors.
+
+  - type: card_grid
+    cards:
+      - title: Get started
+        description: Install, scaffold a site, run the dev server.
+        links:
+          - label: Guide →
+            href: guide.html
+
+      - title: Components
+        description: 17 primitives. Cards, tables, slides, callouts, everything.
+        links:
+          - label: Reference →
+            href: components/index.html
+
+      - title: Examples
+        description: A customer portfolio, a meeting agenda, a QBR deck.
+        links:
+          - label: See examples →
+            href: examples.html
+
+  - type: section
+    eyebrow: Why
+    heading: Markdown isn't enough anymore
+    components:
+      - type: markdown
+        body: |
+          Markdown was designed for humans typing prose. It renders plain pages. That was fine
+          when humans wrote all the content.
+
+          Now LLMs write the content. And a plain markdown render — grey text on white, no
+          cards, no badges, no interactive tables — feels like a waste of what's possible.
+
+          finro is markdown's inverse: **the format is still trivial to generate, but the
+          output is genuinely beautiful**. Components are structured (LLM-friendly), themed,
+          and composable. No React. No framework. Single binary, zero runtime.
+
+  - type: section
+    eyebrow: 30 seconds
+    heading: This YAML…
+    components:
+      - type: code
+        language: yaml
+        code: |
+          title: Q2 Pipeline Review
+          shell: standard
+
+          components:
+            - type: header
+              title: Q2 Pipeline Review
+              subtitle: Three active opportunities
+
+            - type: stat_grid
+              columns: 3
+              stats:
+                - label: Total ACV
+                  value: $1.2M
+                  color: green
+                - label: Weighted
+                  value: $480K
+                  color: default
+                - label: At risk
+                  value: $200K
+                  color: yellow
+
+      - type: markdown
+        body: "…renders to this:"
+
+      - type: header
+        title: Q2 Pipeline Review
+        subtitle: Three active opportunities
+
+      - type: stat_grid
+        columns: 3
+        stats:
+          - label: Total ACV
+            value: $1.2M
+            color: green
+          - label: Weighted
+            value: $480K
+            color: default
+          - label: At risk
+            value: $200K
+            color: yellow
+
+  - type: section
+    eyebrow: Design
+    heading: Three axes, orthogonal
+    components:
+      - type: columns
+        columns:
+          - - type: callout
+              variant: info
+              title: Shell
+              body: "**How** the page is chromed. `standard` (site header + nav), `document` (centered card, print-ready), `deck` (full-viewport slides, keyboard-navigated)."
+          - - type: callout
+              variant: info
+              title: Page
+              body: "**What** the page is — just a title and an ordered list of components. Or for deck shell, a list of slides."
+          - - type: callout
+              variant: info
+              title: Components
+              body: "**Which** primitives compose the page. 17 typed components. Nesting for `section`, `tabs`, `columns`, `accordion`."

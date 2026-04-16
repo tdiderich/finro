@@ -1,0 +1,11 @@
+name: finro
+theme: dark
+nav:
+  - label: Home
+    href: index.html
+  - label: Guide
+    href: guide.html
+  - label: Components
+    href: components/index.html
+  - label: Examples
+    href: examples.html

@@ -1,0 +1,129 @@
+title: Guide
+shell: standard
+
+components:
+  - type: header
+    title: Guide
+    eyebrow: Getting started
+    subtitle: Install finro, scaffold a site, run the dev server.
+
+  - type: section
+    eyebrow: Install
+    heading: Build from source
+    components:
+      - type: markdown
+        body: |
+          finro is a single Rust binary. Clone the repo and build it.
+
+      - type: code
+        language: bash
+        code: |
+          git clone https://github.com/tyler-maze/finro
+          cd finro
+          cargo build --release
+
+          # Binary is now at target/release/finro
+          cp target/release/finro /usr/local/bin/
+
+  - type: section
+    eyebrow: File structure
+    heading: What a finro site looks like
+    components:
+      - type: markdown
+        body: |
+          Any directory of `.yaml` files. Optional `finro.yaml` at the root configures
+          the site name and nav. Every other `.yaml` file becomes a page.
+
+      - type: code
+        language: text
+        code: |
+          my-site/
+            finro.yaml              ← site config (name, nav)
+            index.yaml              ← home page → _site/index.html
+            guide.yaml              ← → _site/guide.html
+            reference/
+              api.yaml              ← → _site/reference/api.html
+              cli.yaml              ← → _site/reference/cli.html
+
+  - type: section
+    eyebrow: Site config
+    heading: finro.yaml
+    components:
+      - type: markdown
+        body: |
+          Shared across every page in the site. The nav links appear in the header of
+          every `shell: standard` page; their `href` values are rewritten per-page based
+          on directory depth so they work from anywhere in the site.
+
+      - type: code
+        language: yaml
+        code: |
+          name: My Knowledge Base
+          theme: dark
+          nav:
+            - label: Home
+              href: index.html
+            - label: Guide
+              href: guide.html
+            - label: Reference
+              href: reference/api.html
+
+  - type: section
+    eyebrow: Page structure
+    heading: Every page is a tree
+    components:
+      - type: markdown
+        body: |
+          A page has a `title`, a `shell`, and an ordered list of `components`. For `deck`
+          shell, replace `components` with `slides`, where each slide has its own components.
+
+      - type: code
+        language: yaml
+        code: |
+          title: Page Title
+          shell: standard
+          nav_back:
+            label: ← Back to home
+            href: index.html
+
+          components:
+            - type: header
+              title: Page Title
+
+            - type: markdown
+              body: |
+                Any **markdown** here. Tables, code, lists, blockquotes.
+
+            - type: callout
+              variant: success
+              title: Done
+              body: This page is ready.
+
+  - type: section
+    eyebrow: Run
+    heading: Build or watch
+    components:
+      - type: tabs
+        tabs:
+          - label: Dev
+            components:
+              - type: markdown
+                body: |
+                  Serves at `localhost:3000`, watches every `.yaml` file, rebuilds
+                  on change, live-reloads the browser.
+              - type: code
+                language: bash
+                code: finro dev ./my-site --port 3000
+
+          - label: Build
+            components:
+              - type: markdown
+                body: One-shot build to an output directory.
+              - type: code
+                language: bash
+                code: finro build ./my-site --out ./dist
+
+  - type: callout
+    variant: info
+    title: Next up
+    body: "Read the [components reference](components/index.html) to see every primitive."

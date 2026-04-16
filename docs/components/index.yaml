@@ -1,0 +1,63 @@
+title: Components
+shell: standard
+nav_back:
+  label: ← Home
+  href: ../index.html
+
+components:
+  - type: header
+    title: Components
+    eyebrow: Reference
+    subtitle: 17 primitives organized by purpose. Each shows the YAML you write and the output.
+
+  - type: card_grid
+    cards:
+      - title: Content
+        description: "header, meta, markdown, code, image, callout"
+        links:
+          - label: Open →
+            href: content.html
+
+      - title: Grids
+        description: "card_grid, stat_grid, selectable_grid, before_after"
+        links:
+          - label: Open →
+            href: grids.html
+
+      - title: Interactive
+        description: "table, tabs, accordion"
+        links:
+          - label: Open →
+            href: interactive.html
+
+      - title: Layout
+        description: "section, columns, timeline, steps"
+        links:
+          - label: Open →
+            href: layout.html
+
+  - type: section
+    eyebrow: Every component shares a pattern
+    heading: type + props
+    components:
+      - type: markdown
+        body: |
+          Every component in a page's `components:` list has a `type:` field (snake_case name)
+          and its own property fields. Nothing else. Consistent shape makes LLM generation
+          trivial — the model just picks the type and fills the props.
+
+      - type: code
+        language: yaml
+        code: |
+          components:
+            - type: header              # required: the component type
+              title: My Page            # component-specific props
+              subtitle: optional
+              eyebrow: optional
+
+            - type: card_grid
+              cards: [...]
+
+            - type: markdown
+              body: |
+                free-form prose

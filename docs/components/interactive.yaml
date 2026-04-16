@@ -1,0 +1,177 @@
+title: Interactive components
+shell: standard
+nav_back:
+  label: ← Components
+  href: index.html
+
+components:
+  - type: header
+    title: Interactive components
+    eyebrow: Reference
+    subtitle: table, tabs, accordion
+
+  # ── table ─────────────────────────────────
+  - type: section
+    eyebrow: table
+    heading: Sortable, filterable tables
+    components:
+      - type: markdown
+        body: |
+          Client-side sortable (per-column) and filterable (row-level text search).
+          `sortable: true` on a column enables the click-to-sort affordance; `filterable: true`
+          on the table adds a search box above.
+
+          Rows are a list of maps keyed by column `key`. Sort tries numeric parsing first
+          (stripping `$`, `%`, `,`) then falls back to string compare.
+
+      - type: table
+        filterable: true
+        columns:
+          - key: customer
+            label: Customer
+            sortable: true
+          - key: acv
+            label: ACV
+            sortable: true
+            align: right
+          - key: stage
+            label: Stage
+            sortable: true
+          - key: close
+            label: Close date
+        rows:
+          - customer: Acme Corp
+            acv: $480,000
+            stage: Closed Won
+            close: 2026-04-15
+          - customer: Beta Corp
+            acv: $120,000
+            stage: Negotiation
+            close: 2026-05-30
+          - customer: Gamma Inc
+            acv: $850,000
+            stage: Discovery
+            close: 2026-07-10
+          - customer: Delta Labs
+            acv: $45,000
+            stage: Closed Won
+            close: 2026-03-01
+
+      - type: code
+        language: yaml
+        code: |
+          - type: table
+            filterable: true
+            columns:
+              - key: customer
+                label: Customer
+                sortable: true
+              - key: acv
+                label: ACV
+                sortable: true
+                align: right     # left | right | center
+            rows:
+              - customer: Acme Corp
+                acv: $480,000
+              - customer: Beta Corp
+                acv: $120,000
+
+  # ── tabs ──────────────────────────────────
+  - type: section
+    eyebrow: tabs
+    heading: Tabbed panels
+    components:
+      - type: markdown
+        body: "Progressive disclosure. Tab labels as buttons, panels below. First tab shows by default. Each tab's `components:` can contain anything — including nested tabs or accordions."
+
+      - type: tabs
+        tabs:
+          - label: Summary
+            components:
+              - type: markdown
+                body: "High-level pitch lives here."
+
+          - label: Details
+            components:
+              - type: stat_grid
+                columns: 2
+                stats:
+                  - label: Built in
+                    value: 1 day
+                    color: green
+                  - label: Lines of code
+                    value: "~2,200"
+                    color: default
+
+          - label: FAQ
+            components:
+              - type: accordion
+                items:
+                  - title: Can tabs contain other components?
+                    components:
+                      - type: markdown
+                        body: Yes — any component, including accordions like this one.
+                  - title: What about nested tabs?
+                    components:
+                      - type: markdown
+                        body: Also supported, but usually a sign you should split pages.
+
+      - type: code
+        language: yaml
+        code: |
+          - type: tabs
+            tabs:
+              - label: Summary
+                components:
+                  - type: markdown
+                    body: "High-level pitch lives here."
+              - label: Details
+                components:
+                  - type: stat_grid
+                    stats: [...]
+
+  # ── accordion ─────────────────────────────
+  - type: section
+    eyebrow: accordion
+    heading: Collapsible sections
+    components:
+      - type: markdown
+        body: "Click-to-expand sections. All closed by default. Each item contains any components."
+
+      - type: accordion
+        items:
+          - title: What if I need a component that doesn't exist yet?
+            components:
+              - type: markdown
+                body: |
+                  Open an issue or add it — each component is ~30 lines of Rust
+                  plus CSS. See `src/render/components.rs` for the pattern.
+
+          - title: Can I theme the colors?
+            components:
+              - type: markdown
+                body: |
+                  Not yet — theming lives in `src/theme.rs` as a single CSS
+                  constant. A theme config file is planned.
+
+          - title: Does it work without a server?
+            components:
+              - type: markdown
+                body: |
+                  Yes — `finro build` produces plain HTML files. Open them
+                  directly with `file://` URLs. Nav and interactive components
+                  all work locally.
+
+      - type: code
+        language: yaml
+        code: |
+          - type: accordion
+            items:
+              - title: Question 1
+                components:
+                  - type: markdown
+                    body: Answer content.
+              - title: Question 2
+                components:
+                  - type: markdown
+                    body: Answer content.

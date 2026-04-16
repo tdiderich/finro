@@ -1,0 +1,188 @@
+title: Grid components
+shell: standard
+nav_back:
+  label: ← Components
+  href: index.html
+
+components:
+  - type: header
+    title: Grid components
+    eyebrow: Reference
+    subtitle: card_grid, stat_grid, selectable_grid, before_after
+
+  # ── card_grid ─────────────────────────────
+  - type: section
+    eyebrow: card_grid
+    heading: Responsive card grid
+    components:
+      - type: markdown
+        body: "The bread-and-butter component. Each card has a title, optional badge, description, and set of links. Grid auto-fills based on `min_width` (default 320px)."
+
+      - type: card_grid
+        cards:
+          - title: Acme Corp
+            badge:
+              label: Healthy
+              color: green
+            description: Enterprise — AWS us-east-1
+            links:
+              - label: View
+                href: "#"
+
+          - title: Beta Corp
+            badge:
+              label: At Risk
+              color: yellow
+            description: Mid-Market — Azure
+            links:
+              - label: View
+                href: "#"
+
+          - title: Gamma Inc
+            badge:
+              label: TBD
+            description: Enterprise — GCP
+            links:
+              - label: View
+                href: "#"
+
+      - type: code
+        language: yaml
+        code: |
+          - type: card_grid
+            min_width: 320  # optional, default 320
+            cards:
+              - title: Acme Corp
+                badge:
+                  label: Healthy
+                  color: green    # green | yellow | red | default
+                description: Enterprise — AWS us-east-1
+                links:
+                  - label: View
+                    href: /acme
+              - title: Beta Corp
+                ...
+
+  # ── stat_grid ─────────────────────────────
+  - type: section
+    eyebrow: stat_grid
+    heading: Metric tiles
+    components:
+      - type: markdown
+        body: "A row of big numbers with labels and optional detail. Each stat gets a colored top accent. Use `columns:` to set how many fit per row (default 3)."
+
+      - type: stat_grid
+        columns: 3
+        stats:
+          - label: Active Users
+            value: "1,284"
+            detail: Up 12% MoM
+            color: green
+          - label: Revenue
+            value: $480K
+            detail: Weighted pipeline
+            color: default
+          - label: Churn
+            value: 3.2%
+            detail: Above 2% target
+            color: yellow
+
+      - type: code
+        language: yaml
+        code: |
+          - type: stat_grid
+            columns: 3
+            stats:
+              - label: Active Users
+                value: "1,284"
+                detail: Up 12% MoM
+                color: green   # green | yellow | red | default
+              - label: Revenue
+                value: $480K
+                ...
+
+  # ── selectable_grid ───────────────────────
+  - type: section
+    eyebrow: selectable_grid
+    heading: Click-to-select card grid
+    components:
+      - type: markdown
+        body: |
+          Interactive grid — clicking a card selects it and (by default) dims the others.
+          Useful for phase trackers, decision trees, multi-step explainers.
+
+          Options: `interaction` is `single_select` (default), `multi_select`, or `none`.
+          `connector` is `none` (default) or `dots_line` to add a numbered dots row across
+          the top.
+
+      - type: selectable_grid
+        interaction: single_select
+        connector: dots_line
+        cards:
+          - eyebrow: Phase 1
+            title: Planning
+            bullets:
+              - Define success metrics
+              - Identify use cases
+          - eyebrow: Phase 2
+            title: Configuration
+            bullets:
+              - Connect integrations
+              - Configure scanning
+          - eyebrow: Phase 3
+            title: Optimization
+            bullets:
+              - Train the team
+              - Align workflows
+          - eyebrow: Phase 4
+            title: Ongoing
+            bullets:
+              - Expand use cases
+              - Roadmap alignment
+
+      - type: code
+        language: yaml
+        code: |
+          - type: selectable_grid
+            interaction: single_select    # single_select | multi_select | none
+            connector: dots_line          # none | dots_line
+            cards:
+              - eyebrow: Phase 1
+                title: Planning
+                bullets:
+                  - Define success metrics
+                  - Identify use cases
+              - eyebrow: Phase 2
+                ...
+
+  # ── before_after ──────────────────────────
+  - type: section
+    eyebrow: before_after
+    heading: Transformation stack
+    components:
+      - type: markdown
+        body: "Stack of before/after cards with a highlighted metric. Designed for QBR-style 'what changed' storytelling."
+
+      - type: before_after
+        items:
+          - title: Deployment time
+            before: Manual process, 2 weeks per release
+            after: 4 hours
+            after_context: fully automated pipeline
+
+          - title: Team size
+            before: 3 engineers on platform work
+            after: 1 engineer
+            after_context: rest freed for product
+
+      - type: code
+        language: yaml
+        code: |
+          - type: before_after
+            items:
+              - title: Deployment time
+                before: Manual process, 2 weeks per release
+                after: 4 hours
+                after_context: fully automated pipeline
+              - title: Team size
+                ...
