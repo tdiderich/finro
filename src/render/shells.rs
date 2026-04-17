@@ -12,7 +12,7 @@ fn head(page: &Page, config: &SiteConfig) -> String {
 </head>"#,
         title = esc(&page.title),
         site = esc(&config.name),
-        css = theme::CSS,
+        css = theme::render_css(&config.resolved_theme()),
     )
 }
 

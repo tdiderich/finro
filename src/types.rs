@@ -482,14 +482,27 @@ pub struct NavLink {
 #[derive(Deserialize)]
 pub struct SiteConfig {
     pub name: String,
-    #[allow(dead_code)]
     pub theme: Option<String>,
+    #[serde(default)]
+    pub colors: std::collections::HashMap<String, String>,
     pub nav: Option<Vec<NavLink>>,
+}
+
+impl SiteConfig {
+    pub fn resolved_theme(&self) -> crate::theme::Theme {
+        let base = self.theme.as_deref().unwrap_or("dark");
+        crate::theme::Theme::named(base).with_overrides(&self.colors)
+    }
 }
 
 impl Default for SiteConfig {
     fn default() -> Self {
-        SiteConfig { name: String::from("My Site"), theme: None, nav: None }
+        SiteConfig {
+            name: String::from("My Site"),
+            theme: None,
+            colors: std::collections::HashMap::new(),
+            nav: None,
+        }
     }
 }
 

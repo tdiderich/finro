@@ -1,18 +1,146 @@
-pub const CSS: &str = r#"
-:root {
-  --bg: #090D18;
-  --card-bg: rgba(255, 255, 255, 0.03);
-  --card-border: rgba(255, 255, 255, 0.06);
-  --card-hover-border: rgba(60, 206, 206, 0.3);
-  --teal: #3CCECE;
-  --snow: #F0F0F7;
-  --muted: #4C556A;
-  --light-muted: #ABABC1;
-  --header-border: rgba(60, 206, 206, 0.1);
-  --green: #34D399;
-  --yellow: #FBBF24;
-  --red: #F87171;
+use std::collections::HashMap;
+
+/// A theme is a set of named color tokens. Any page rendered with this theme
+/// gets its CSS `:root` block populated from these tokens; the rest of the CSS
+/// references them via `var(--token)` so component styles are theme-agnostic.
+#[derive(Clone)]
+pub struct Theme {
+    pub bg: String,
+    pub surface: String,          // card backgrounds (low-contrast overlay)
+    pub surface_strong: String,   // stronger surface (code, kbd)
+    pub border: String,           // default border color
+    pub border_strong: String,    // stronger/active border
+    pub accent: String,           // primary brand color (teal by default)
+    pub accent_soft: String,      // accent on a translucent background
+    pub text: String,             // primary text
+    pub text_muted: String,       // secondary text
+    pub text_subtle: String,      // tertiary (labels, captions)
+    pub overlay_hover: String,    // hover/active surface overlay
+    pub green: String,
+    pub yellow: String,
+    pub red: String,
+    pub header_border: String,
 }
+
+impl Theme {
+    pub fn named(name: &str) -> Theme {
+        match name {
+            "light" => light(),
+            _ => dark(),
+        }
+    }
+
+    /// Apply a map of user overrides on top of this theme. Keys that don't
+    /// match any known token are silently ignored.
+    pub fn with_overrides(mut self, colors: &HashMap<String, String>) -> Theme {
+        macro_rules! apply {
+            ($key:literal, $field:ident) => {
+                if let Some(v) = colors.get($key) { self.$field = v.clone(); }
+            };
+        }
+        apply!("bg", bg);
+        apply!("surface", surface);
+        apply!("surface_strong", surface_strong);
+        apply!("border", border);
+        apply!("border_strong", border_strong);
+        apply!("accent", accent);
+        apply!("accent_soft", accent_soft);
+        apply!("text", text);
+        apply!("text_muted", text_muted);
+        apply!("text_subtle", text_subtle);
+        apply!("overlay_hover", overlay_hover);
+        apply!("green", green);
+        apply!("yellow", yellow);
+        apply!("red", red);
+        apply!("header_border", header_border);
+        self
+    }
+
+    fn root_block(&self) -> String {
+        format!(
+            ":root {{\
+             --bg: {bg};\
+             --card-bg: {surface};\
+             --card-border: {border};\
+             --card-hover-border: {border_strong};\
+             --teal: {accent};\
+             --accent-soft: {accent_soft};\
+             --snow: {text};\
+             --muted: {text_subtle};\
+             --light-muted: {text_muted};\
+             --header-border: {header_border};\
+             --surface-strong: {surface_strong};\
+             --overlay-hover: {overlay_hover};\
+             --green: {green};\
+             --yellow: {yellow};\
+             --red: {red};\
+             }}\n",
+            bg = self.bg,
+            surface = self.surface,
+            surface_strong = self.surface_strong,
+            border = self.border,
+            border_strong = self.border_strong,
+            accent = self.accent,
+            accent_soft = self.accent_soft,
+            text = self.text,
+            text_muted = self.text_muted,
+            text_subtle = self.text_subtle,
+            overlay_hover = self.overlay_hover,
+            green = self.green,
+            yellow = self.yellow,
+            red = self.red,
+            header_border = self.header_border,
+        )
+    }
+}
+
+pub fn dark() -> Theme {
+    Theme {
+        bg: "#090D18".into(),
+        surface: "rgba(255, 255, 255, 0.03)".into(),
+        surface_strong: "rgba(255, 255, 255, 0.06)".into(),
+        border: "rgba(255, 255, 255, 0.06)".into(),
+        border_strong: "rgba(60, 206, 206, 0.3)".into(),
+        accent: "#3CCECE".into(),
+        accent_soft: "rgba(60, 206, 206, 0.06)".into(),
+        text: "#F0F0F7".into(),
+        text_muted: "#ABABC1".into(),
+        text_subtle: "#4C556A".into(),
+        overlay_hover: "rgba(255, 255, 255, 0.05)".into(),
+        green: "#34D399".into(),
+        yellow: "#FBBF24".into(),
+        red: "#F87171".into(),
+        header_border: "rgba(60, 206, 206, 0.1)".into(),
+    }
+}
+
+pub fn light() -> Theme {
+    Theme {
+        bg: "#FAFAFC".into(),
+        surface: "rgba(0, 0, 0, 0.02)".into(),
+        surface_strong: "rgba(0, 0, 0, 0.05)".into(),
+        border: "rgba(0, 0, 0, 0.08)".into(),
+        border_strong: "rgba(20, 184, 184, 0.5)".into(),
+        accent: "#14B8B8".into(),
+        accent_soft: "rgba(20, 184, 184, 0.06)".into(),
+        text: "#0F172A".into(),
+        text_muted: "#475569".into(),
+        text_subtle: "#94A3B8".into(),
+        overlay_hover: "rgba(0, 0, 0, 0.04)".into(),
+        green: "#059669".into(),
+        yellow: "#D97706".into(),
+        red: "#DC2626".into(),
+        header_border: "rgba(20, 184, 184, 0.2)".into(),
+    }
+}
+
+pub fn render_css(theme: &Theme) -> String {
+    let mut out = theme.root_block();
+    out.push_str(STATIC_CSS);
+    out
+}
+
+const STATIC_CSS: &str = r#"
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
