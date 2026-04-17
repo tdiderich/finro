@@ -79,3 +79,37 @@ pub(super) fn collect_scripts(names: &[&'static str]) -> String {
     }
     out
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn esc_escapes_html_special_chars() {
+        assert_eq!(esc("hello"), "hello");
+        assert_eq!(esc("<script>"), "&lt;script&gt;");
+        assert_eq!(esc("\"q\""), "&quot;q&quot;");
+        assert_eq!(esc("a & b"), "a &amp; b");
+    }
+
+    #[test]
+    fn resolve_href_passes_through_absolute_urls() {
+        assert_eq!(resolve_href("https://example.com", "../"), "https://example.com");
+        assert_eq!(resolve_href("http://example.com", "../"), "http://example.com");
+    }
+
+    #[test]
+    fn resolve_href_passes_through_root_relative_and_fragments() {
+        assert_eq!(resolve_href("/foo", "../"), "/foo");
+        assert_eq!(resolve_href("#anchor", "../"), "#anchor");
+        assert_eq!(resolve_href("mailto:hi@example.com", "../"), "mailto:hi@example.com");
+        assert_eq!(resolve_href("tel:+15551234", "../"), "tel:+15551234");
+    }
+
+    #[test]
+    fn resolve_href_prepends_base_for_relative() {
+        assert_eq!(resolve_href("index.html", ""), "index.html");
+        assert_eq!(resolve_href("index.html", "../"), "../index.html");
+        assert_eq!(resolve_href("sub/page.html", "../../"), "../../sub/page.html");
+    }
+}

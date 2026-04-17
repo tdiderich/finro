@@ -572,3 +572,33 @@ pub fn value_to_string(v: &serde_yaml::Value) -> String {
         serde_yaml::Value::Tagged(t) => value_to_string(&t.value),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn value_to_string_handles_all_scalar_types() {
+        use serde_yaml::Value;
+        assert_eq!(value_to_string(&Value::Null), "");
+        assert_eq!(value_to_string(&Value::Bool(true)), "true");
+        assert_eq!(value_to_string(&Value::Number(42.into())), "42");
+        assert_eq!(value_to_string(&Value::String("hi".into())), "hi");
+    }
+
+    #[test]
+    fn sem_color_class_suffix() {
+        assert_eq!(SemColor::Default.class_suffix(), "default");
+        assert_eq!(SemColor::Green.class_suffix(), "green");
+        assert_eq!(SemColor::Yellow.class_suffix(), "yellow");
+        assert_eq!(SemColor::Red.class_suffix(), "red");
+        assert_eq!(SemColor::Teal.class_suffix(), "teal");
+    }
+
+    #[test]
+    fn sem_color_hex_values() {
+        assert_eq!(SemColor::Green.hex(), "#34D399");
+        assert_eq!(SemColor::Red.hex(), "#F87171");
+        assert_eq!(SemColor::Default.hex(), "#3CCECE");
+    }
+}

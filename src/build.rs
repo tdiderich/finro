@@ -114,3 +114,23 @@ fn load_config(dir: &Path) -> Result<SiteConfig> {
         Ok(SiteConfig::default())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn base_path_at_root_is_empty() {
+        assert_eq!(base_path_for(Path::new("index.yaml")), "");
+    }
+
+    #[test]
+    fn base_path_one_level_deep() {
+        assert_eq!(base_path_for(Path::new("customers/acme.yaml")), "../");
+    }
+
+    #[test]
+    fn base_path_two_levels_deep() {
+        assert_eq!(base_path_for(Path::new("a/b/c.yaml")), "../../");
+    }
+}
