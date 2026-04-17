@@ -4,7 +4,7 @@ mod shells;
 
 use crate::types::{Page, Shell, SiteConfig};
 
-pub fn render_page(page: &Page, config: &SiteConfig, base: &str) -> String {
+pub fn render_page(page: &Page, config: &SiteConfig, base: &str, source_href: &str) -> String {
     let mut rendered = Rendered::default();
 
     match page.shell {
@@ -23,9 +23,9 @@ pub fn render_page(page: &Page, config: &SiteConfig, base: &str) -> String {
     }
 
     match page.shell {
-        Shell::Standard => shells::standard::wrap(page, config, rendered, base),
-        Shell::Document => shells::document::wrap(page, config, rendered, base),
-        Shell::Deck => shells::deck::wrap(page, config, rendered, base),
+        Shell::Standard => shells::standard::wrap(page, config, rendered, base, source_href),
+        Shell::Document => shells::document::wrap(page, config, rendered, base, source_href),
+        Shell::Deck => shells::deck::wrap(page, config, rendered, base, source_href),
     }
 }
 

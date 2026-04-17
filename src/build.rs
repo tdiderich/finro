@@ -39,11 +39,21 @@ pub fn run(dir: &Path, out: &Path) -> Result<()> {
                 .with_context(|| format!("parsing {:?}", path))?;
 
             let base = base_path_for(rel);
-            let html = render::render_page(&page, &config, &base);
+            // source_href is the YAML filename, same-directory relative
+            let source_href = rel.file_name()
+                .map(|f| f.to_string_lossy().into_owned())
+                .unwrap_or_default();
+            let html = render::render_page(&page, &config, &base, &source_href);
 
             let out_path = out.join(rel).with_extension("html");
             if let Some(parent) = out_path.parent() { fs::create_dir_all(parent)?; }
             fs::write(&out_path, html)?;
+
+            // Also copy the source YAML into the output so the "View source"
+            // link (and llms.txt, and anyone curious) can fetch it directly.
+            let yaml_out = out.join(rel);
+            fs::copy(path, &yaml_out)?;
+
             println!("  {}", out_path.display());
             pages += 1;
         } else {

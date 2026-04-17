@@ -38,11 +38,12 @@ fn nav_html(config: &SiteConfig, base: &str) -> (String, bool) {
 pub mod standard {
     use super::*;
 
-    pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered, base: &str) -> String {
+    pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered, base: &str, source_href: &str) -> String {
         let (nav, has_nav) = nav_html(config, base);
         let mut scripts = body.scripts.clone();
         if has_nav { scripts.push("nav"); }
         scripts.push("reload");
+        let view_src = view_source_html(source_href);
 
         format!(
             r#"<!DOCTYPE html>
@@ -58,6 +59,7 @@ pub mod standard {
 <main class="container main-content">
 {body}
 </main>
+{view_src}
 {scripts}
 </body>
 </html>"#,
@@ -66,6 +68,7 @@ pub mod standard {
             site = esc(&config.name),
             nav = nav,
             body = body.html,
+            view_src = view_src,
             scripts = collect_scripts(&scripts),
         )
     }
@@ -76,7 +79,7 @@ pub mod standard {
 pub mod document {
     use super::*;
 
-    pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered, base: &str) -> String {
+    pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered, base: &str, source_href: &str) -> String {
         let eyebrow = page.eyebrow.as_deref().unwrap_or("");
         let subtitle = page.subtitle.as_deref().unwrap_or("");
 
@@ -93,6 +96,7 @@ pub mod document {
 
         let mut scripts = body.scripts.clone();
         scripts.push("reload");
+        let view_src = view_source_html(source_href);
 
         format!(
             r#"<!DOCTYPE html>
@@ -107,6 +111,7 @@ pub mod document {
 <footer class="doc-footer"></footer>
 </article>
 </div>
+{view_src}
 {scripts}
 </body>
 </html>"#,
@@ -114,6 +119,7 @@ pub mod document {
             cls = Shell::Document.class(),
             doc_header = doc_header,
             body = body.html,
+            view_src = view_src,
             scripts = collect_scripts(&scripts),
         )
     }
@@ -140,7 +146,7 @@ pub mod deck {
         out.scripts.push("deck");
     }
 
-    pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered, base: &str) -> String {
+    pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered, base: &str, _source_href: &str) -> String {
         let eyebrow = page.eyebrow.as_deref().unwrap_or("");
         let subtitle = page.subtitle.as_deref().unwrap_or("");
 
@@ -187,3 +193,14 @@ pub mod deck {
     }
 }
 
+
+fn view_source_html(source_href: &str) -> String {
+    if source_href.is_empty() { return String::new(); }
+    format!(
+        r##"<a class="view-source" href="{src}" title="View raw YAML source">
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+  <span>View source</span>
+</a>"##,
+        src = esc(source_href)
+    )
+}

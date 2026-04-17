@@ -1108,6 +1108,34 @@ body.shell-document .doc-body strong { color: #fff; }
 /* Icon component (standalone) */
 /* SVG styling is handled via the render; no extra CSS needed */
 
+/* View source link (bottom-right floating pill) */
+.view-source {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--light-muted);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 100px;
+  text-decoration: none;
+  backdrop-filter: blur(8px);
+  transition: all 0.15s;
+  z-index: 50;
+}
+.view-source:hover {
+  color: var(--teal);
+  border-color: var(--card-hover-border);
+}
+@media print {
+  .view-source { display: none !important; }
+}
+
 /* ──────────────────── Print ──────────────────── */
 
 @page { size: landscape; margin: 0.5in; }
