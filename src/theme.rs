@@ -1106,23 +1106,48 @@ body.shell-document .doc-body strong { color: #fff; }
 
 /* ──────────────────── Print ──────────────────── */
 
-@page { size: landscape; margin: 0.5in; }
+/* Default @page — portrait content pages; deck forces landscape full-bleed */
+@page { margin: 0.5in; }
 @page deck-page { size: landscape; margin: 0; }
 body.shell-deck { page: deck-page; }
+
 @media print {
   .no-print { display: none !important; }
-  body.shell-document .site-bar { display: none !important; }
-  body.shell-document { background: #fff !important; color: #000 !important; }
+  .view-source { display: none !important; }
+
+  /* ── Shared: preserve accent colors, drop the site bar ── */
+  *, *::before, *::after { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .site-bar { display: none !important; }
+
+  /* ── Standard shell ── (dark theme preserved) ── */
+  html, body.shell-standard { background: var(--bg) !important; }
+  body.shell-standard { min-height: auto !important; }
+  body.shell-standard .main-content { padding-top: 20px !important; padding-bottom: 20px !important; }
+  /* Avoid awkward page breaks inside structured blocks */
+  body.shell-standard .c-card,
+  body.shell-standard .c-stat,
+  body.shell-standard .c-callout,
+  body.shell-standard .c-step,
+  body.shell-standard .c-ba-card,
+  body.shell-standard .c-meta-item,
+  body.shell-standard .c-empty-state { break-inside: avoid; page-break-inside: avoid; }
+  body.shell-standard h1, body.shell-standard h2, body.shell-standard h3 { break-after: avoid; page-break-after: avoid; }
+
+  /* ── Document shell ── (clean white-paper print) ── */
+  body.shell-document { background: #fff !important; color: #000 !important; min-height: auto !important; }
+  body.shell-document .doc-root { padding: 0 !important; max-width: 100% !important; }
   body.shell-document .doc-card { box-shadow: none !important; border: none !important; background: transparent !important; max-width: 100% !important; padding: 0 !important; }
   body.shell-document .doc-body { color: #000 !important; }
   body.shell-document .doc-body strong { color: #000 !important; }
   body.shell-document .doc-body h1, body.shell-document .doc-body h2 { color: #000 !important; }
+  body.shell-document .c-step,
+  body.shell-document .c-callout,
+  body.shell-document .c-card { break-inside: avoid; page-break-inside: avoid; }
 
-  html, body.shell-deck { background: var(--bg) !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  body.shell-deck * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  /* ── Deck shell ── (already working — landscape full-bleed via @page deck-page) ── */
+  html:has(body.shell-deck), body.shell-deck { background: var(--bg) !important; }
   body.shell-deck { height: auto !important; overflow: visible !important; }
   body.shell-deck .deck-root { position: static !important; height: auto !important; }
-  body.shell-deck .site-bar { display: none !important; }
   body.shell-deck .deck-viewport { overflow: visible !important; height: auto !important; }
   body.shell-deck .deck-track { transform: none !important; flex-direction: column !important; height: auto !important; }
   body.shell-deck .deck-slide { min-width: 100% !important; height: auto !important; page-break-after: always; overflow: visible !important; }
