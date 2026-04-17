@@ -568,7 +568,6 @@ a.c-card { color: inherit; }
 
 /* Markdown */
 .c-markdown {
-  max-width: 720px;
   color: var(--light-muted);
   font-size: 15px;
   line-height: 1.75;
