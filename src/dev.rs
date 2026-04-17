@@ -11,7 +11,7 @@ use tiny_http::{Header, Method, Response, Server};
 use crate::build;
 
 pub fn run(dir: &Path, out: &Path, port: u16) -> Result<()> {
-    build::run(dir, out)?;
+    build::run(dir, out, false)?;
 
     let version = Arc::new(AtomicU64::new(1));
 
@@ -69,7 +69,7 @@ fn watch_loop(dir: PathBuf, out: PathBuf, version: Arc<AtomicU64>) {
         last_build = Instant::now();
 
         print!("  rebuild…");
-        match build::run(&dir, &out) {
+        match build::run(&dir, &out, false) {
             Ok(_) => {
                 version.fetch_add(1, Ordering::SeqCst);
                 println!(" ✓");

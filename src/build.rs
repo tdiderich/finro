@@ -3,10 +3,11 @@ use std::fs;
 use std::path::Path;
 use walkdir::WalkDir;
 
+use crate::minify;
 use crate::render;
 use crate::types::{Page, SiteConfig};
 
-pub fn run(dir: &Path, out: &Path) -> Result<()> {
+pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
     let config = load_config(dir)?;
     fs::create_dir_all(out)?;
 
@@ -43,7 +44,10 @@ pub fn run(dir: &Path, out: &Path) -> Result<()> {
             let source_href = rel.file_name()
                 .map(|f| f.to_string_lossy().into_owned())
                 .unwrap_or_default();
-            let html = render::render_page(&page, &config, &base, &source_href);
+            let mut html = render::render_page(&page, &config, &base, &source_href);
+            if release {
+                html = minify::minify_html(&html);
+            }
 
             let out_path = out.join(rel).with_extension("html");
             if let Some(parent) = out_path.parent() { fs::create_dir_all(parent)?; }
@@ -66,9 +70,11 @@ pub fn run(dir: &Path, out: &Path) -> Result<()> {
     }
 
     if assets > 0 {
-        println!("\n✓ {} page(s), {} asset(s) → {}", pages, assets, out.display());
+        println!("\n✓ {} page(s), {} asset(s) → {}{}", pages, assets, out.display(),
+            if release { " (minified)" } else { "" });
     } else {
-        println!("\n✓ {} page(s) → {}", pages, out.display());
+        println!("\n✓ {} page(s) → {}{}", pages, out.display(),
+            if release { " (minified)" } else { "" });
     }
     Ok(())
 }

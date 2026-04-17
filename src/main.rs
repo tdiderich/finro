@@ -5,6 +5,7 @@ use std::path::PathBuf;
 mod build;
 mod dev;
 mod icons;
+mod minify;
 mod render;
 mod theme;
 mod types;
@@ -24,6 +25,9 @@ enum Command {
         dir: PathBuf,
         #[arg(short, long, default_value = "_site")]
         out: PathBuf,
+        /// Minify HTML, CSS, and JS in the output
+        #[arg(short, long)]
+        release: bool,
     },
     /// Watch source, rebuild on change, serve at localhost:PORT
     Dev {
@@ -38,7 +42,7 @@ enum Command {
 
 fn main() -> Result<()> {
     match Cli::parse().command {
-        Command::Build { dir, out } => build::run(&dir, &out),
+        Command::Build { dir, out, release } => build::run(&dir, &out, release),
         Command::Dev { dir, out, port } => dev::run(&dir, &out, port),
     }
 }
