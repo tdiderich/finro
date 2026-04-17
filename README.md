@@ -102,7 +102,13 @@ Live versions of each of these (and ~30 more components) are at https://tdideric
 
 ## For LLMs
 
-`AGENTS.md` is the authoring guide — point Claude/GPT/Codex at it when generating finro YAML. `finro init` also scaffolds an `AGENTS.md` + `llms.txt` into new sites so agents find them automatically.
+`AGENTS.md` is the authoring guide — point Claude/GPT/Codex at it when generating finro YAML. Or have the agent run:
+
+```bash
+finro agents
+```
+
+which prints the guide bundled with the installed binary (so it always matches the version in use) with a preamble linking to the hosted component catalog. `finro init` also scaffolds an `AGENTS.md` + `llms.txt` into new sites so agents find them without being told.
 
 ## License
 

@@ -2,6 +2,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
+mod agents;
 mod build;
 mod dev;
 mod icons;
@@ -44,6 +45,8 @@ enum Command {
     Init {
         name: String,
     },
+    /// Print the LLM authoring guide (full AGENTS.md to stdout)
+    Agents,
 }
 
 fn main() -> Result<()> {
@@ -51,5 +54,6 @@ fn main() -> Result<()> {
         Command::Build { dir, out, release } => build::run(&dir, &out, release),
         Command::Dev { dir, out, port } => dev::run(&dir, &out, port),
         Command::Init { name } => init::run(&name),
+        Command::Agents => agents::run(),
     }
 }
