@@ -235,6 +235,16 @@ components:
           subtitle: April 2026   # → right-side label
 
           slides:
+            - label: Cover          # set hide_label: true for a title slide with no "COVER" eyebrow
+              hide_label: true
+              components:
+                - type: image
+                  src: /assets/logo.svg
+                  max_width: 96
+                  align: center
+                - type: header
+                  title: "Q3 Business Review"
+                  align: center
             - label: Outcomes
               components: [...]
 

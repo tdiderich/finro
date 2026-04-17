@@ -277,7 +277,7 @@ body.shell-deck .deck-track {
   height: 100%;
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-body.shell-deck .deck-slide { min-width: 100%; height: 100%; overflow-y: auto; }
+body.shell-deck .deck-slide { min-width: 100%; height: 100%; overflow: hidden; }
 body.shell-deck .deck-inner {
   max-width: 900px;
   margin: 0 auto;
@@ -287,6 +287,12 @@ body.shell-deck .deck-inner {
   min-height: 100%;
   gap: 20px;
 }
+body.shell-deck .deck-slide-cover .deck-inner {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+body.shell-deck .deck-slide-cover .c-header-title { font-size: 40px; }
 body.shell-deck .deck-label {
   font-size: 13px;
   font-weight: 600;
@@ -334,6 +340,8 @@ body.shell-deck .deck-arrow:hover { color: var(--teal); }
 
 /* Header component */
 .c-header { }
+.c-header.align-center { text-align: center; }
+.c-header.align-right { text-align: right; }
 .c-header-eyebrow {
   font-size: 11px;
   font-weight: 600;
@@ -366,6 +374,19 @@ body.shell-deck .deck-arrow:hover { color: var(--teal); }
 
 /* Card Grid */
 .c-card-grid { display: grid; gap: 20px; }
+.c-card-grid-arrow { display: flex; flex-direction: row; align-items: stretch; gap: 16px; grid-template-columns: unset !important; }
+.c-card-grid-arrow .c-card { flex: 1 1 0; min-width: 0; }
+.c-card-arrow {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--light-muted);
+  font-size: 24px;
+  font-weight: 300;
+  user-select: none;
+  padding: 0 4px;
+}
 .c-card {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
@@ -378,6 +399,14 @@ body.shell-deck .deck-arrow:hover { color: var(--teal); }
 }
 a.c-card { color: inherit; }
 .c-card:hover { border-color: var(--card-hover-border); }
+.c-card-teal { border-color: rgba(var(--accent-rgb), 0.35); }
+.c-card-teal:hover { border-color: rgba(var(--accent-rgb), 0.6); }
+.c-card-green { border-color: rgba(52, 211, 153, 0.35); }
+.c-card-green:hover { border-color: rgba(52, 211, 153, 0.6); }
+.c-card-yellow { border-color: rgba(251, 191, 36, 0.35); }
+.c-card-yellow:hover { border-color: rgba(251, 191, 36, 0.6); }
+.c-card-red { border-color: rgba(248, 113, 113, 0.4); }
+.c-card-red:hover { border-color: rgba(248, 113, 113, 0.65); }
 .c-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .c-card-title { font-size: 18px; font-weight: 600; }
 .c-card-desc { font-size: 14px; color: var(--light-muted); line-height: 1.5; }
@@ -449,6 +478,8 @@ a.c-card { color: inherit; }
   color: var(--teal);
 }
 .c-sel-cards { display: grid; gap: 16px; }
+.c-sel-cards-arrow { display: flex; flex-direction: row; align-items: stretch; gap: 16px; }
+.c-sel-cards-arrow .sel-card { flex: 1 1 0; min-width: 0; }
 .sel-card {
   text-align: left;
   background: rgba(var(--text-rgb), 0.02);
@@ -466,6 +497,10 @@ a.c-card { color: inherit; }
   border-color: rgba(var(--accent-rgb), 0.35);
 }
 .sel-card.sel-dimmed { opacity: 0.35; }
+.sel-card-teal { border-color: rgba(var(--accent-rgb), 0.35); }
+.sel-card-green { border-color: rgba(52, 211, 153, 0.35); }
+.sel-card-yellow { border-color: rgba(251, 191, 36, 0.35); }
+.sel-card-red { border-color: rgba(248, 113, 113, 0.4); }
 .c-sel-eyebrow {
   font-size: 11px; font-weight: 600;
   color: var(--teal);
@@ -764,6 +799,9 @@ body.shell-document .doc-body strong { color: #fff; }
 
 /* Section */
 .c-section { }
+.c-section.align-center { text-align: center; }
+.c-section.align-center .c-section-header { align-items: center; }
+.c-section.align-right { text-align: right; }
 .c-section-header { margin-bottom: 24px; }
 .c-section-eyebrow {
   font-size: 11px;
@@ -820,6 +858,8 @@ body.shell-document .doc-body strong { color: #fff; }
 
 /* Image */
 .c-image { margin: 0; }
+.c-image.align-center { margin-left: auto; margin-right: auto; align-self: center; }
+.c-image.align-right { margin-left: auto; margin-right: 0; align-self: flex-end; }
 .c-image img { width: 100%; height: auto; border-radius: 8px; display: block; }
 .c-image figcaption {
   font-size: 13px;

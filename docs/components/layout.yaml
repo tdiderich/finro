@@ -24,7 +24,8 @@ components:
         body: |
           A titled block of nested components. Use it to organize long pages into
           scannable chunks. `eyebrow` + `heading` optional. Nested `components:` can
-          hold any components.
+          hold any components. Add `align: center | right` to align the eyebrow,
+          heading, and text content within the section.
 
       - type: section
         eyebrow: Example section

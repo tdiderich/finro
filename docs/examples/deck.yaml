@@ -1,64 +1,130 @@
-title: Q1 Product Strategy Review
+title: Why finro
 shell: deck
-eyebrow: Q1 Review
-subtitle: April 2026
+eyebrow: finro
+subtitle: A tour in 7 slides
 
 slides:
-  - label: Wins
+  - label: Cover
+    hide_label: true
     components:
+      - type: image
+        src: /assets/favicon.svg
+        alt: finro
+        max_width: 96
+        align: center
+      - type: header
+        title: "Why finro"
+        subtitle: "YAML in, themed static HTML out"
+        align: center
+
+  - label: The problem
+    components:
+      - type: header
+        title: Docs, decks, and dashboards all want a static site
       - type: before_after
         items:
-          - title: Time to first value
-            before: Users took 14 days on average to hit their first activation event
-            after: 2 days
-            after_context: after the new onboarding flow
+          - title: The usual tradeoff
+            before: Markdown is fast to write but rarely renders like a real product page
+            after: A custom Next.js app
+            after_context: that nobody wants to maintain for a docs site
 
-          - title: Mobile adoption
-            before: 12% of users on mobile, flat for 6 months
-            after: 38%
-            after_context: since the mobile app launch in January
+          - title: Slide tools
+            before: PowerPoint/Keynote lock content into binary files and one operator
+            after: A YAML file per slide
+            after_context: committed alongside the code it describes
 
-          - title: Enterprise pipeline
-            before: 4 enterprise deals in flight
-            after: $3.2M ACV
-            after_context: across 11 active enterprise deals
+          - title: Internal tools
+            before: A random Flask app spun up for a one-off internal dashboard
+            after: A YAML emitter + finro
+            after_context: whoever writes the data can ship the UI
 
-  - label: Where we are
+  - label: How it works
     components:
-      - type: timeline
-        items:
-          - name: Discovery
-            status: completed
-          - name: Build
-            status: completed
-          - name: Polish
-            status: active
-          - name: Scale
-            status: upcoming
+      - type: header
+        title: YAML in, HTML out
+        subtitle: "Four steps, no frontend build system"
+      - type: card_grid
+        connector: arrow
+        cards:
+          - title: Write YAML
+            description: One file per page. Structured components, not free-form HTML.
+          - title: "`finro build`"
+            description: A single Rust binary walks the directory and renders each page.
+          - title: Themed output
+            description: Every page picks up the site's theme, shell, and nav — no per-page boilerplate.
+          - title: Ship static HTML
+            description: Drop it on S3, Pages, Vercel, or any host that serves files.
 
+  - label: What you get
+    components:
+      - type: header
+        title: What finro gives you out of the box
       - type: stat_grid
-        columns: 3
+        columns: 4
         stats:
-          - label: Monthly Active Users
-            value: 142K
-            detail: Up 28% QoQ
+          - label: Components
+            value: "30+"
+            detail: Cards, decks, tables, timelines, stats, more
+            color: default
+          - label: Runtime JS deps
+            value: "0"
+            detail: Inline scripts only for tabs, accordions, deck nav
             color: green
-          - label: Net Revenue
-            value: $4.8M
-            detail: Beat target by 11%
+          - label: Build artifact
+            value: 1 binary
+            detail: "`cargo install` and go"
+            color: default
+          - label: Themes
+            value: "2 + overrides"
+            detail: Dark, light, plus any color token you want to pin
+            color: default
+
+  - label: Three shells
+    components:
+      - type: header
+        title: One framework, three surfaces
+      - type: card_grid
+        cards:
+          - title: standard
+            badge:
+              label: docs, landing, dashboards
+            description: Scroll page with a site-bar, nav, components. This page uses it.
+            color: teal
+          - title: document
+            badge:
+              label: briefs, one-pagers
+            description: Centered card, print-optimized, exports clean to PDF. No nav.
             color: green
-          - label: Open P1s
-            value: "3"
-            detail: 2 already in progress
+          - title: deck
+            badge:
+              label: slides
+            description: Full-viewport slides with keyboard nav and PDF export.
             color: yellow
 
-  - label: What's next
+  - label: Using it today
     components:
+      - type: header
+        title: Real sites, no frontend team
+      - type: blockquote
+        body: "Built finro and replaced an app in less than a day."
+        attribution: Tyler Diderich
+      - type: callout
+        variant: info
+        title: This deck is itself a finro deck
+        body: Open `examples/deck.yaml` to see the 30 lines of YAML behind these slides.
+
+  - label: Get started
+    components:
+      - type: header
+        title: Get running in under a minute
       - type: steps
+        numbered: true
         items:
-          - title: Ship mobile app GA
-            detail: May 15 — open public signups, turn on app-store marketing
-          - title: Enterprise SSO
-            detail: June 1 — unblocks the four biggest deals in the pipeline
-          - title: Pricing page rework
-            detail: May 30 — move away from "contact sales" CTA on self-serve tiers
+          - title: Install
+            detail: "`cargo install --git https://github.com/tdiderich/finro`"
+          - title: Scaffold
+            detail: "`finro init my-site` — drops a starter `finro.yaml` and `index.yaml`"
+          - title: Dev loop
+            detail: "`finro dev my-site --port 3000` — live reload on YAML change"
+          - title: Ship
+            detail: "`finro build my-site --out dist --release` — minified HTML/CSS, ready to upload"

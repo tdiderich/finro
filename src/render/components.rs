@@ -6,9 +6,9 @@ use super::{esc, Rendered};
 
 pub fn render(c: &Component) -> Rendered {
     match c {
-        Component::Header { title, subtitle, eyebrow } => header(title, subtitle, eyebrow),
+        Component::Header { title, subtitle, eyebrow, align } => header(title, subtitle, eyebrow, *align),
         Component::Meta { fields } => meta(fields),
-        Component::CardGrid { cards, min_width } => card_grid(cards, *min_width),
+        Component::CardGrid { cards, min_width, connector } => card_grid(cards, *min_width, *connector),
         Component::SelectableGrid { cards, interaction, connector } => selectable_grid(cards, *interaction, *connector),
         Component::Timeline { items } => timeline(items),
         Component::StatGrid { stats, columns } => stat_grid(stats, *columns),
@@ -19,10 +19,10 @@ pub fn render(c: &Component) -> Rendered {
         Component::Callout { variant, title, body, links } => callout(*variant, title, body, links.as_deref()),
         Component::Code { language, code } => code_block(language, code),
         Component::Tabs { tabs } => tabs_component(tabs),
-        Component::Section { heading, eyebrow, components } => section(heading, eyebrow, components),
+        Component::Section { heading, eyebrow, components, align } => section(heading, eyebrow, components, *align),
         Component::Columns { columns, equal_heights } => columns_component(columns, *equal_heights),
         Component::Accordion { items } => accordion(items),
-        Component::Image { src, alt, caption, max_width } => image(src, alt, caption, *max_width),
+        Component::Image { src, alt, caption, max_width, align } => image(src, alt, caption, *max_width, *align),
         // Phase 1 additions
         Component::Badge { label, color } => badge(label, *color),
         Component::Tag { label, color } => tag(label, *color),
@@ -47,8 +47,8 @@ fn sem_color_class(c: SemColor) -> &'static str {
 
 // ── Header ────────────────────────────────────────
 
-fn header(title: &str, subtitle: &Option<String>, eyebrow: &Option<String>) -> Rendered {
-    let mut h = String::from(r#"<div class="c-header">"#);
+fn header(title: &str, subtitle: &Option<String>, eyebrow: &Option<String>, align: Align) -> Rendered {
+    let mut h = format!(r#"<div class="c-header {}">"#, align.class());
     if let Some(e) = eyebrow {
         h.push_str(&format!(r#"<div class="c-header-eyebrow">{}</div>"#, esc(e)));
     }
@@ -76,15 +76,26 @@ fn meta(fields: &[MetaField]) -> Rendered {
 
 // ── Card Grid ─────────────────────────────────────
 
-fn card_grid(cards: &[Card], min_width: Option<u32>) -> Rendered {
+fn card_grid(cards: &[Card], min_width: Option<u32>, connector: Connector) -> Rendered {
     let mw = min_width.unwrap_or(320);
-    let mut h = format!(
-        r#"<div class="c-card-grid" style="grid-template-columns: repeat(auto-fill, minmax({mw}px, 1fr))">"#
-    );
-    for card in cards {
+    let is_arrow = matches!(connector, Connector::Arrow);
+    let mut h = if is_arrow {
+        String::from(r#"<div class="c-card-grid c-card-grid-arrow">"#)
+    } else {
+        format!(
+            r#"<div class="c-card-grid" style="grid-template-columns: repeat(auto-fill, minmax({mw}px, 1fr))">"#
+        )
+    };
+    for (i, card) in cards.iter().enumerate() {
+        if is_arrow && i > 0 {
+            h.push_str(r#"<div class="c-card-arrow" aria-hidden="true">→</div>"#);
+        }
         let tag = if card.href.is_some() { "a" } else { "div" };
         let href_attr = card.href.as_ref().map(|h| format!(r#" href="{}""#, esc(h))).unwrap_or_default();
-        h.push_str(&format!(r#"<{tag} class="c-card"{href_attr}>"#));
+        h.push_str(&format!(
+            r#"<{tag} class="c-card c-card-{color}"{href_attr}>"#,
+            color = sem_color_class(card.color),
+        ));
         h.push_str(r#"<div class="c-card-top">"#);
         h.push_str(&format!(r#"<h2 class="c-card-title">{}</h2>"#, esc(&card.title)));
         if let Some(b) = &card.badge {
@@ -123,6 +134,7 @@ fn selectable_grid(cards: &[SelectableCard], interaction: Interaction, connector
         Interaction::MultiSelect => "multi_select",
         Interaction::None => "none",
     };
+    let is_arrow = matches!(connector, Connector::Arrow);
 
     let mut h = format!(
         r#"<div class="c-selectable-grid" data-selectable-grid data-interaction="{interaction_attr}">"#
@@ -139,13 +151,23 @@ fn selectable_grid(cards: &[SelectableCard], interaction: Interaction, connector
         h.push_str("</div>");
     }
 
-    h.push_str(&format!(
-        r#"<div class="c-sel-cards" style="grid-template-columns: repeat({}, 1fr)">"#,
-        cards.len().max(1)
-    ));
+    if is_arrow {
+        h.push_str(r#"<div class="c-sel-cards c-sel-cards-arrow">"#);
+    } else {
+        h.push_str(&format!(
+            r#"<div class="c-sel-cards" style="grid-template-columns: repeat({}, 1fr)">"#,
+            cards.len().max(1)
+        ));
+    }
     for (i, card) in cards.iter().enumerate() {
+        if is_arrow && i > 0 {
+            h.push_str(r#"<div class="c-card-arrow" aria-hidden="true">→</div>"#);
+        }
         let n = i + 1;
-        h.push_str(&format!(r#"<button class="sel-card" data-n="{n}">"#));
+        h.push_str(&format!(
+            r#"<button class="sel-card sel-card-{color}" data-n="{n}">"#,
+            color = sem_color_class(card.color),
+        ));
         let eyebrow = card.eyebrow.as_deref()
             .map(|s| s.to_string())
             .unwrap_or_else(|| format!("Item {n}"));
@@ -367,9 +389,9 @@ fn tabs_component(tabs: &[Tab]) -> Rendered {
 
 // ── Section ───────────────────────────────────────
 
-fn section(heading: &Option<String>, eyebrow: &Option<String>, comps: &[Component]) -> Rendered {
+fn section(heading: &Option<String>, eyebrow: &Option<String>, comps: &[Component], align: Align) -> Rendered {
     let mut r = Rendered::default();
-    r.html.push_str(r#"<section class="c-section">"#);
+    r.html.push_str(&format!(r#"<section class="c-section {}">"#, align.class()));
     if eyebrow.is_some() || heading.is_some() {
         r.html.push_str(r#"<div class="c-section-header">"#);
         if let Some(e) = eyebrow {
@@ -431,11 +453,12 @@ fn accordion(items: &[AccordionItem]) -> Rendered {
 
 // ── Image ─────────────────────────────────────────
 
-fn image(src: &str, alt: &Option<String>, caption: &Option<String>, max_width: Option<u32>) -> Rendered {
+fn image(src: &str, alt: &Option<String>, caption: &Option<String>, max_width: Option<u32>, align: Align) -> Rendered {
     let alt_txt = alt.as_deref().unwrap_or("");
     let style = max_width.map(|w| format!(r#" style="max-width: {w}px""#)).unwrap_or_default();
     let mut h = format!(
-        r#"<figure class="c-image"{style}><img src="{src}" alt="{alt}">"#,
+        r#"<figure class="c-image {align}"{style}><img src="{src}" alt="{alt}">"#,
+        align = align.class(),
         style = style,
         src = esc(src),
         alt = esc(alt_txt),

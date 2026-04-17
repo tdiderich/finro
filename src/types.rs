@@ -40,6 +40,10 @@ pub struct Page {
 pub struct Slide {
     pub label: String,
     pub components: Vec<Component>,
+    /// Hide the top-left "OVERVIEW"-style label on this slide. Typically used
+    /// for a cover/title slide where the centered title is the only text.
+    #[serde(default)]
+    pub hide_label: bool,
 }
 
 // ── Components ───────────────────────────────────────
@@ -51,6 +55,8 @@ pub enum Component {
         title: String,
         subtitle: Option<String>,
         eyebrow: Option<String>,
+        #[serde(default)]
+        align: Align,
     },
     Meta {
         fields: Vec<MetaField>,
@@ -59,6 +65,8 @@ pub enum Component {
         cards: Vec<Card>,
         #[serde(default)]
         min_width: Option<u32>,
+        #[serde(default)]
+        connector: Connector,
     },
     SelectableGrid {
         cards: Vec<SelectableCard>,
@@ -110,6 +118,8 @@ pub enum Component {
         heading: Option<String>,
         eyebrow: Option<String>,
         components: Vec<Component>,
+        #[serde(default)]
+        align: Align,
     },
     Columns {
         columns: Vec<Vec<Component>>,
@@ -124,6 +134,8 @@ pub enum Component {
         alt: Option<String>,
         caption: Option<String>,
         max_width: Option<u32>,
+        #[serde(default)]
+        align: Align,
     },
     Badge {
         label: String,
@@ -211,6 +223,8 @@ pub struct Card {
     pub description: Option<String>,
     pub links: Option<Vec<Link>>,
     pub href: Option<String>,
+    #[serde(default)]
+    pub color: SemColor,
 }
 
 #[derive(Deserialize)]
@@ -267,6 +281,8 @@ pub struct SelectableCard {
     pub eyebrow: Option<String>,
     pub bullets: Option<Vec<String>>,
     pub body: Option<String>,
+    #[serde(default)]
+    pub color: SemColor,
 }
 
 #[derive(Deserialize, Default, Clone, Copy)]
@@ -284,6 +300,7 @@ pub enum Connector {
     #[default]
     None,
     DotsLine,
+    Arrow,
 }
 
 #[derive(Deserialize)]

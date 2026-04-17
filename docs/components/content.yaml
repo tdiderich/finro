@@ -180,7 +180,8 @@ components:
           Figure with optional caption and `max_width` constraint. `alt` is required for
           accessibility. Any non-`.yaml` file in the source directory — `.svg`, `.png`,
           `.jpg`, etc. — is copied verbatim into the output directory, so just reference
-          it by relative path.
+          it by relative path. Use `align: center | right` to place the image inside
+          its flow (defaults to left).
 
       - type: image
         src: ../assets/demo-dashboard.svg
@@ -196,6 +197,7 @@ components:
             alt: Dashboard screenshot
             caption: The customer portfolio dashboard.
             max_width: 600
+            align: center
 
   # ── blockquote ─────────────────────────────
   - type: section

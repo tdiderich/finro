@@ -3,7 +3,11 @@ use crate::types::{Page, Shell, SiteConfig, Slide};
 use super::{components, collect_scripts, esc, resolve_href, Rendered};
 
 fn head(page: &Page, config: &SiteConfig, base: &str) -> String {
-    let favicon = config.favicon.as_ref().map(|f| f.render(base)).unwrap_or_default();
+    let theme = config.resolved_theme();
+    let favicon = match config.favicon.as_ref() {
+        Some(f) => f.render(base),
+        None => default_favicon(&theme),
+    };
     format!(
         r#"<head>
 <meta charset="UTF-8">
@@ -15,8 +19,19 @@ fn head(page: &Page, config: &SiteConfig, base: &str) -> String {
         title = esc(&page.title),
         site = esc(&config.name),
         favicon = favicon,
-        css = theme::render_css(&config.resolved_theme()),
+        css = theme::render_css(&theme),
     )
+}
+
+/// When a site doesn't declare a `favicon:`, synthesize one from theme colors.
+/// Produces the finro "F" mark as an inline data-URI SVG — accent on bg.
+fn default_favicon(theme: &theme::Theme) -> String {
+    let svg = format!(
+        r##"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='{bg}'/><path d='M 10 9 L 22 9 L 22 12 L 13 12 L 13 15 L 20 15 L 20 18 L 13 18 L 13 23 L 10 23 Z' fill='{accent}'/></svg>"##,
+        bg = theme.bg, accent = theme.accent
+    );
+    let encoded = svg.replace('#', "%23").replace('<', "%3C").replace('>', "%3E").replace(' ', "%20");
+    format!(r#"<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,{encoded}">"#)
 }
 
 fn nav_html(config: &SiteConfig, base: &str) -> (String, bool) {
@@ -147,9 +162,16 @@ pub mod deck {
     pub fn render(_page: &Page, _config: &SiteConfig, slides: &[Slide], out: &mut Rendered) {
         out.html.push_str(r#"<div class="deck-viewport"><div class="deck-track">"#);
         for slide in slides {
+            let (label_html, slide_cls) = if slide.hide_label {
+                (String::new(), " deck-slide-cover")
+            } else {
+                (format!(r#"<div class="deck-label">{}</div>"#, esc(&slide.label)), "")
+            };
             out.html.push_str(&format!(
-                r#"<div class="deck-slide" data-label="{}"><div class="deck-inner"><div class="deck-label">{}</div>"#,
-                esc(&slide.label), esc(&slide.label)
+                r#"<div class="deck-slide{cls}" data-label="{label}"><div class="deck-inner">{label_html}"#,
+                cls = slide_cls,
+                label = esc(&slide.label),
+                label_html = label_html,
             ));
             for c in &slide.components {
                 out.extend(components::render(c));

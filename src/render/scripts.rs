@@ -146,6 +146,24 @@ const DECK: &str = r#"
   var next = document.getElementById('deck-next');
   var labels = Array.from(slides).map(function (s) { return s.dataset.label; });
   var current = 0;
+  function fit() {
+    slides.forEach(function (slide) {
+      var inner = slide.querySelector('.deck-inner');
+      if (!inner) return;
+      // Reset any previous transform so we measure natural content.
+      inner.style.transform = '';
+      inner.style.transformOrigin = '';
+      var availH = slide.clientHeight;
+      if (!availH) return;
+      var needH = inner.scrollHeight;
+      if (!needH) return;
+      var k = availH / needH;
+      if (k >= 0.99) return; // already fits, leave at natural size
+      k = Math.max(0.4, k);
+      inner.style.transformOrigin = 'top center';
+      inner.style.transform = 'scale(' + k + ')';
+    });
+  }
   function go(n) {
     current = Math.max(0, Math.min(slides.length - 1, n));
     track.style.transform = 'translateX(-' + (current * 100) + '%)';
@@ -154,6 +172,8 @@ const DECK: &str = r#"
     else { prev.style.visibility = 'visible'; prev.textContent = '← ' + labels[current - 1]; }
     if (current === slides.length - 1) { next.style.visibility = 'hidden'; }
     else { next.style.visibility = 'visible'; next.textContent = labels[current + 1] + ' →'; }
+    // Re-fit in case the just-revealed slide measured 0 while hidden.
+    requestAnimationFrame(fit);
   }
   prev.addEventListener('click', function () { go(current - 1); });
   next.addEventListener('click', function () { go(current + 1); });
@@ -161,6 +181,17 @@ const DECK: &str = r#"
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(current + 1);
     if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') go(current - 1);
   });
+  var fitTimer;
+  window.addEventListener('resize', function () {
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(fit, 80);
+  });
   go(0);
+  // Wait for fonts/images to settle before measuring.
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(fit);
+  }
+  window.addEventListener('load', fit);
+  setTimeout(fit, 100);
 })();
 "#;
