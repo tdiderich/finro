@@ -3,6 +3,10 @@ name = "finro"
 version = "0.3.0"
 edition = "2021"
 description = "Beautiful sites from simple YAML"
+license = "MIT"
+repository = "https://github.com/tdiderich/finro"
+homepage = "https://tdiderich.github.io/finro/"
+readme = "README.md"
 
 [[bin]]
 name = "finro"
