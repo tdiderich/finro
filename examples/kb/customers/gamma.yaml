@@ -1,10 +1,14 @@
 title: Gamma Inc — Deployment Guide
 shell: standard
-nav_back:
-  label: ← Portfolio
-  href: ../index.html
 
 components:
+  - type: breadcrumb
+    items:
+      - label: Portfolio
+        href: ../index.html
+      - label: Customers
+      - label: Gamma Inc
+
   - type: header
     title: Gamma Inc — Deployment Guide
 

@@ -1,0 +1,91 @@
+title: Navigation
+shell: standard
+
+components:
+  - type: breadcrumb
+    items:
+      - label: Home
+        href: ../index.html
+      - label: Components
+        href: index.html
+      - label: Navigation
+
+  - type: header
+    title: Navigation components
+    eyebrow: Reference
+    subtitle: breadcrumb, button_group
+
+  # ── breadcrumb ─────────────────────────────
+  - type: section
+    eyebrow: breadcrumb
+    heading: Hierarchical location
+    components:
+      - type: markdown
+        body: |
+          Multi-hop navigation trail. The last item (no `href`) is treated as the
+          current page. Replaces the old page-level `nav_back` field.
+
+      - type: breadcrumb
+        items:
+          - label: Home
+            href: "#"
+          - label: Reference
+            href: "#"
+          - label: Components
+            href: "#"
+          - label: Navigation
+
+      - type: code
+        language: yaml
+        code: |
+          - type: breadcrumb
+            items:
+              - label: Home
+                href: /
+              - label: Reference
+                href: /reference
+              - label: Components
+                href: /reference/components
+              - label: Navigation    # last item: no href (current page)
+
+  # ── button_group ───────────────────────────
+  - type: section
+    eyebrow: button_group
+    heading: CTA row
+    components:
+      - type: markdown
+        body: |
+          Row of linked buttons. Three variants — `primary` (solid teal), `secondary`
+          (outlined), `ghost` (no border). Set `external: true` to add a `↗` icon and
+          open in a new tab. Optional `icon:` names any bundled lucide icon.
+
+      - type: button_group
+        buttons:
+          - label: Get started
+            href: "#"
+            variant: primary
+          - label: Documentation
+            href: "#"
+            variant: secondary
+          - label: View on GitHub
+            href: https://github.com/tdiderich/finro
+            variant: secondary
+            external: true
+            icon: github
+          - label: Skip
+            href: "#"
+            variant: ghost
+
+      - type: code
+        language: yaml
+        code: |
+          - type: button_group
+            buttons:
+              - label: Get started
+                href: /guide
+                variant: primary       # primary | secondary | ghost
+              - label: View on GitHub
+                href: https://github.com/...
+                variant: secondary
+                external: true         # adds ↗ and target=_blank
+                icon: github           # any bundled lucide icon name

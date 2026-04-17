@@ -30,14 +30,6 @@ fn nav_html(config: &SiteConfig, base: &str) -> (String, bool) {
     (out, true)
 }
 
-fn nav_back_html(page: &Page, base: &str) -> String {
-    let Some(nb) = &page.nav_back else { return String::new() };
-    format!(
-        r#"<a href="{}" class="nav-back">{}</a>"#,
-        esc(&resolve_href(&nb.href, base)), esc(&nb.label)
-    )
-}
-
 // ── Standard shell ────────────────────────────────
 
 pub mod standard {
@@ -61,7 +53,6 @@ pub mod standard {
   </div>
 </header>
 <main class="container main-content">
-{nav_back}
 {body}
 </main>
 {scripts}
@@ -71,7 +62,6 @@ pub mod standard {
             cls = Shell::Standard.class(),
             site = esc(&config.name),
             nav = nav,
-            nav_back = nav_back_html(page, base),
             body = body.html,
             scripts = collect_scripts(&scripts),
         )
@@ -83,7 +73,7 @@ pub mod standard {
 pub mod document {
     use super::*;
 
-    pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered, base: &str) -> String {
+    pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered, _base: &str) -> String {
         let eyebrow = page.eyebrow.as_deref().unwrap_or("");
         let subtitle = page.subtitle.as_deref().unwrap_or("");
 
@@ -107,7 +97,6 @@ pub mod document {
 {head}
 <body class="{cls}">
 <div class="doc-root">
-{nav_back}
 <article class="doc-card">
 {doc_header}<div class="doc-body">
 {body}
@@ -120,7 +109,6 @@ pub mod document {
 </html>"#,
             head = head(page, config),
             cls = Shell::Document.class(),
-            nav_back = nav_back_html(page, base),
             doc_header = doc_header,
             body = body.html,
             scripts = collect_scripts(&scripts),

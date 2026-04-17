@@ -82,11 +82,14 @@ components:
         code: |
           title: Page Title
           shell: standard
-          nav_back:
-            label: ← Back to home
-            href: index.html
 
           components:
+            - type: breadcrumb
+              items:
+                - label: Home
+                  href: index.html
+                - label: Page Title
+
             - type: header
               title: Page Title
 

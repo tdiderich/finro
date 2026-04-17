@@ -1,0 +1,191 @@
+title: Indicators & signaling
+shell: standard
+
+components:
+  - type: breadcrumb
+    items:
+      - label: Home
+        href: ../index.html
+      - label: Components
+        href: index.html
+      - label: Indicators
+
+  - type: header
+    title: Indicators & signaling
+    eyebrow: Reference
+    subtitle: badge, tag, status, progress_bar, kbd, divider
+
+  # ── badge ──────────────────────────────────
+  - type: section
+    eyebrow: badge
+    heading: Short colored label
+    components:
+      - type: markdown
+        body: "Tiny label with a color variant. Use inside cards, next to titles, or anywhere you need a status pip. 5 variants:"
+
+      - type: columns
+        equal_heights: true
+        columns:
+          - - type: badge
+              label: Default
+          - - type: badge
+              label: Healthy
+              color: green
+          - - type: badge
+              label: At risk
+              color: yellow
+          - - type: badge
+              label: Critical
+              color: red
+          - - type: badge
+              label: Beta
+              color: teal
+
+      - type: code
+        language: yaml
+        code: |
+          - type: badge
+            label: Healthy
+            color: green        # default | green | yellow | red | teal
+
+  # ── tag ────────────────────────────────────
+  - type: section
+    eyebrow: tag
+    heading: Monospace label
+    components:
+      - type: markdown
+        body: "Pill-shaped decorative tag. Outlined, monospace. Great for categories, topic chips, or code-like labels."
+
+      - type: button_group
+        buttons: []
+      - type: columns
+        columns:
+          - - type: tag
+              label: design-system
+          - - type: tag
+              label: breaking
+              color: red
+          - - type: tag
+              label: v2
+              color: teal
+          - - type: tag
+              label: stable
+              color: green
+
+      - type: code
+        language: yaml
+        code: |
+          - type: tag
+            label: design-system
+            color: teal          # default | green | yellow | red | teal
+
+  # ── status ─────────────────────────────────
+  - type: section
+    eyebrow: status
+    heading: Dot + label
+    components:
+      - type: markdown
+        body: "A colored dot next to a label — the classic Operational / Degraded / Down pattern."
+
+      - type: columns
+        columns:
+          - - type: status
+              label: Operational
+              color: green
+          - - type: status
+              label: Degraded
+              color: yellow
+          - - type: status
+              label: Down
+              color: red
+          - - type: status
+              label: Scheduled maintenance
+              color: teal
+
+      - type: code
+        language: yaml
+        code: |
+          - type: status
+            label: Operational
+            color: green          # default | green | yellow | red | teal
+
+  # ── progress_bar ───────────────────────────
+  - type: section
+    eyebrow: progress_bar
+    heading: Horizontal progress
+    components:
+      - type: markdown
+        body: "Linear progress fill with optional label, percentage readout, and trailing detail. Purely static — no indeterminate animation."
+
+      - type: progress_bar
+        value: 94
+        label: Scan coverage
+        color: green
+        detail: 94 of 100 accounts connected
+
+      - type: progress_bar
+        value: 41
+        label: Adoption
+        color: yellow
+        detail: Target 70% by end of Q2
+
+      - type: progress_bar
+        value: 12
+        label: Spam flags
+        color: red
+
+      - type: code
+        language: yaml
+        code: |
+          - type: progress_bar
+            value: 94                  # 0-100
+            label: Scan coverage       # optional
+            color: green               # default | green | yellow | red | teal
+            detail: 94 of 100 accounts # optional
+
+  # ── kbd ────────────────────────────────────
+  - type: section
+    eyebrow: kbd
+    heading: Keyboard keys
+    components:
+      - type: markdown
+        body: "Inline keyboard key styling. Pass a list of keys — they render joined by `+`. Great in docs and shortcut hints."
+
+      - type: columns
+        columns:
+          - - type: kbd
+              keys: [Cmd, K]
+          - - type: kbd
+              keys: [Ctrl, Shift, P]
+          - - type: kbd
+              keys: ["/"]
+
+      - type: code
+        language: yaml
+        code: |
+          - type: kbd
+            keys: [Cmd, K]    # renders as Cmd+K
+
+  # ── divider ────────────────────────────────
+  - type: section
+    eyebrow: divider
+    heading: Horizontal rule
+    components:
+      - type: markdown
+        body: "Plain horizontal line or line-with-centered-label to break up long pages."
+
+      - type: divider
+
+      - type: markdown
+        body: "_Plain divider above, labeled below:_"
+
+      - type: divider
+        label: Operational data
+
+      - type: code
+        language: yaml
+        code: |
+          - type: divider             # plain hr
+
+          - type: divider             # labeled
+            label: Operational data

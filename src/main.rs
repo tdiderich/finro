@@ -4,6 +4,7 @@ use std::path::PathBuf;
 
 mod build;
 mod dev;
+mod icons;
 mod render;
 mod theme;
 mod types;

@@ -1,14 +1,19 @@
 title: Grid components
 shell: standard
-nav_back:
-  label: ← Components
-  href: index.html
 
 components:
+  - type: breadcrumb
+    items:
+      - label: Home
+        href: ../index.html
+      - label: Components
+        href: index.html
+      - label: Grids
+
   - type: header
     title: Grid components
     eyebrow: Reference
-    subtitle: card_grid, stat_grid, selectable_grid, before_after
+    subtitle: card_grid, stat_grid, selectable_grid, before_after, avatar_group, definition_list
 
   # ── card_grid ─────────────────────────────
   - type: section
@@ -186,3 +191,99 @@ components:
                 after_context: fully automated pipeline
               - title: Team size
                 ...
+
+  # ── avatar ─────────────────────────────────
+  - type: section
+    eyebrow: avatar
+    heading: Profile / person
+    components:
+      - type: markdown
+        body: "Circular profile image with initials fallback. Four sizes — `sm`, `md`, `lg`, `xl`. Optional `subtitle` renders inline."
+
+      - type: columns
+        columns:
+          - - type: avatar
+              name: Sarah Martinez
+              size: sm
+          - - type: avatar
+              name: Marcus Thompson
+              size: md
+          - - type: avatar
+              name: Priya Shah
+              size: lg
+          - - type: avatar
+              name: Dev Menon
+              size: xl
+
+      - type: avatar
+        name: Sarah Martinez
+        size: md
+        subtitle: VP Engineering · Acme Corp
+
+      - type: code
+        language: yaml
+        code: |
+          - type: avatar
+            name: Sarah Martinez      # initials fallback
+            src: /avatars/sarah.png   # optional image
+            size: md                  # sm | md | lg | xl
+            subtitle: VP Engineering  # optional inline text
+
+  # ── avatar_group ───────────────────────────
+  - type: section
+    eyebrow: avatar_group
+    heading: Overlapping avatar stack
+    components:
+      - type: markdown
+        body: "Stack of avatars with configurable overflow indicator. Great for team pages, attendee lists, or indicating shared ownership."
+
+      - type: avatar_group
+        size: md
+        max: 4
+        avatars:
+          - name: Sarah Martinez
+          - name: Marcus Thompson
+          - name: Priya Shah
+          - name: Dev Menon
+          - name: Juan Rodriguez
+          - name: Maya Chen
+
+      - type: code
+        language: yaml
+        code: |
+          - type: avatar_group
+            size: md
+            max: 4                # overflow shows "+N"
+            avatars:
+              - name: Sarah Martinez
+              - name: Marcus Thompson
+              - name: Priya Shah
+              - name: Dev Menon
+              - name: Juan Rodriguez
+
+  # ── definition_list ────────────────────────
+  - type: section
+    eyebrow: definition_list
+    heading: Term / definition pairs
+    components:
+      - type: markdown
+        body: "Native `<dl>` semantics — perfect for glossaries, API parameter references, acronym explainers."
+
+      - type: definition_list
+        items:
+          - term: ACV
+            definition: Annual contract value — total yearly revenue from a customer's signed contract.
+          - term: SLA
+            definition: Service level agreement — contractual uptime and performance guarantees.
+          - term: MTTR
+            definition: Mean time to resolve — average duration from incident detection to full resolution.
+
+      - type: code
+        language: yaml
+        code: |
+          - type: definition_list
+            items:
+              - term: ACV
+                definition: Annual contract value.
+              - term: SLA
+                definition: Service level agreement.

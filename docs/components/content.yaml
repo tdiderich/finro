@@ -1,14 +1,19 @@
 title: Content components
 shell: standard
-nav_back:
-  label: ← Components
-  href: index.html
 
 components:
+  - type: breadcrumb
+    items:
+      - label: Home
+        href: ../index.html
+      - label: Components
+        href: index.html
+      - label: Content
+
   - type: header
     title: Content components
     eyebrow: Reference
-    subtitle: header, meta, markdown, code, image, callout
+    subtitle: header, meta, markdown, code, image, callout, blockquote, kbd
 
   # ── header ─────────────────────────────────
   - type: section
@@ -191,3 +196,22 @@ components:
             alt: Dashboard screenshot
             caption: The customer portfolio dashboard.
             max_width: 600
+
+  # ── blockquote ─────────────────────────────
+  - type: section
+    eyebrow: blockquote
+    heading: Testimonial / pulled quote
+    components:
+      - type: markdown
+        body: "Standalone styled quote with optional attribution. Different from a quote inside a markdown block — this one is decorative, for testimonials or pulled quotes."
+
+      - type: blockquote
+        body: The best product we've shipped in years. Our team went from monitoring 12 accounts to 47 in under a month.
+        attribution: Sarah M., VP Engineering at Acme
+
+      - type: code
+        language: yaml
+        code: |
+          - type: blockquote
+            body: The best product we've shipped in years.
+            attribution: Sarah M., VP Engineering at Acme

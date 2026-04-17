@@ -2,11 +2,14 @@ title: Acme Corp — Q2 Meeting Agenda
 shell: document
 eyebrow: Meeting Agenda
 subtitle: Acme Corp
-nav_back:
-  label: ← Portfolio
-  href: ../index.html
 
 components:
+  - type: breadcrumb
+    items:
+      - label: Portfolio
+        href: ../index.html
+      - label: Acme Corp
+
   - type: markdown
     body: |
       ## Attendees

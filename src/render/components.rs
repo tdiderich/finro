@@ -1,5 +1,6 @@
 use pulldown_cmark::{html as md_html, Options, Parser as MdParser};
 
+use crate::icons;
 use crate::types::*;
 use super::{esc, Rendered};
 
@@ -22,7 +23,26 @@ pub fn render(c: &Component) -> Rendered {
         Component::Columns { columns, equal_heights } => columns_component(columns, *equal_heights),
         Component::Accordion { items } => accordion(items),
         Component::Image { src, alt, caption, max_width } => image(src, alt, caption, *max_width),
+        // Phase 1 additions
+        Component::Badge { label, color } => badge(label, *color),
+        Component::Tag { label, color } => tag(label, *color),
+        Component::Divider { label } => divider(label),
+        Component::Kbd { keys } => kbd(keys),
+        Component::Status { label, color } => status(label, *color),
+        Component::Breadcrumb { items } => breadcrumb(items),
+        Component::ButtonGroup { buttons } => button_group(buttons),
+        Component::DefinitionList { items } => definition_list(items),
+        Component::Blockquote { body, attribution } => blockquote(body, attribution),
+        Component::Avatar { name, src, size, subtitle } => avatar(name, src, *size, subtitle),
+        Component::AvatarGroup { avatars, size, max } => avatar_group(avatars, *size, *max),
+        Component::ProgressBar { value, label, color, detail } => progress_bar(*value, label, *color, detail),
+        Component::EmptyState { title, body, action, icon } => empty_state(title, body, action, icon),
+        Component::Icon { name, size, color } => icon_component(name, *size, *color),
     }
+}
+
+fn sem_color_class(c: SemColor) -> &'static str {
+    c.class_suffix()
 }
 
 // ── Header ────────────────────────────────────────
@@ -70,7 +90,7 @@ fn card_grid(cards: &[Card], min_width: Option<u32>) -> Rendered {
         if let Some(b) = &card.badge {
             h.push_str(&format!(
                 r#"<span class="c-badge c-badge-{color}">{label}</span>"#,
-                color = badge_color_class(b.color),
+                color = sem_color_class(b.color),
                 label = esc(&b.label)
             ));
         }
@@ -94,14 +114,6 @@ fn card_grid(cards: &[Card], min_width: Option<u32>) -> Rendered {
     Rendered::new(h)
 }
 
-fn badge_color_class(c: BadgeColor) -> &'static str {
-    match c {
-        BadgeColor::Green => "green",
-        BadgeColor::Yellow => "yellow",
-        BadgeColor::Red => "red",
-        BadgeColor::Default => "default",
-    }
-}
 
 // ── Selectable Grid ───────────────────────────────
 
@@ -184,15 +196,9 @@ fn stat_grid(stats: &[Stat], columns: u32) -> Rendered {
         r#"<div class="c-stat-grid" style="grid-template-columns: repeat({columns}, 1fr)">"#
     );
     for s in stats {
-        let color = match s.color {
-            StatColor::Green => "#34D399",
-            StatColor::Yellow => "#FBBF24",
-            StatColor::Red => "#F87171",
-            StatColor::Default => "#3CCECE",
-        };
         h.push_str(&format!(
             r#"<div class="c-stat" style="--stat-color: {color}"><div class="c-stat-label">{label}</div><div class="c-stat-value">{value}</div>"#,
-            color = color,
+            color = s.color.hex(),
             label = esc(&s.label),
             value = esc(&s.value),
         ));
@@ -433,3 +439,300 @@ fn image(src: &str, alt: &Option<String>, caption: &Option<String>, max_width: O
     h.push_str("</figure>");
     Rendered::new(h)
 }
+
+// ═════════════════════════════════════════════════════════════════════════
+// Phase 1 additions
+// ═════════════════════════════════════════════════════════════════════════
+
+// ── Badge ────────────────────────────────────────
+
+fn badge(label: &str, color: SemColor) -> Rendered {
+    Rendered::new(format!(
+        r#"<span class="c-badge c-badge-{color}">{label}</span>"#,
+        color = sem_color_class(color),
+        label = esc(label)
+    ))
+}
+
+// ── Tag ──────────────────────────────────────────
+
+fn tag(label: &str, color: SemColor) -> Rendered {
+    Rendered::new(format!(
+        r#"<span class="c-tag c-tag-{color}">{label}</span>"#,
+        color = sem_color_class(color),
+        label = esc(label)
+    ))
+}
+
+// ── Divider ──────────────────────────────────────
+
+fn divider(label: &Option<String>) -> Rendered {
+    match label {
+        Some(l) => Rendered::new(format!(
+            r#"<div class="c-divider c-divider-labeled"><span class="c-divider-line"></span><span class="c-divider-label">{}</span><span class="c-divider-line"></span></div>"#,
+            esc(l)
+        )),
+        None => Rendered::new(r#"<hr class="c-divider">"#.to_string()),
+    }
+}
+
+// ── Kbd ──────────────────────────────────────────
+
+fn kbd(keys: &[String]) -> Rendered {
+    let mut h = String::from(r#"<span class="c-kbd-group">"#);
+    for (i, k) in keys.iter().enumerate() {
+        if i > 0 {
+            h.push_str(r#"<span class="c-kbd-sep">+</span>"#);
+        }
+        h.push_str(&format!(r#"<kbd class="c-kbd">{}</kbd>"#, esc(k)));
+    }
+    h.push_str("</span>");
+    Rendered::new(h)
+}
+
+// ── Status ───────────────────────────────────────
+
+fn status(label: &str, color: SemColor) -> Rendered {
+    Rendered::new(format!(
+        r#"<span class="c-status c-status-{color}"><span class="c-status-dot"></span><span>{label}</span></span>"#,
+        color = sem_color_class(color),
+        label = esc(label)
+    ))
+}
+
+// ── Breadcrumb ───────────────────────────────────
+
+fn breadcrumb(items: &[BreadcrumbItem]) -> Rendered {
+    let mut h = String::from(r#"<nav class="c-breadcrumb" aria-label="Breadcrumb"><ol>"#);
+    for (i, item) in items.iter().enumerate() {
+        if i > 0 {
+            h.push_str(r#"<li class="c-breadcrumb-sep" aria-hidden="true">/</li>"#);
+        }
+        h.push_str(r#"<li class="c-breadcrumb-item">"#);
+        match &item.href {
+            Some(href) => {
+                h.push_str(&format!(
+                    r#"<a href="{}">{}</a>"#,
+                    esc(href), esc(&item.label)
+                ));
+            }
+            None => {
+                h.push_str(&format!(
+                    r#"<span aria-current="page">{}</span>"#,
+                    esc(&item.label)
+                ));
+            }
+        }
+        h.push_str("</li>");
+    }
+    h.push_str("</ol></nav>");
+    Rendered::new(h)
+}
+
+// ── Button Group ─────────────────────────────────
+
+fn button_group(buttons: &[ButtonConfig]) -> Rendered {
+    let mut h = String::from(r#"<div class="c-button-group">"#);
+    for b in buttons {
+        let variant_class = match b.variant {
+            ButtonVariant::Primary => "c-button-primary",
+            ButtonVariant::Secondary => "c-button-secondary",
+            ButtonVariant::Ghost => "c-button-ghost",
+        };
+        let target = if b.external { r#" target="_blank" rel="noopener""# } else { "" };
+        h.push_str(&format!(
+            r#"<a href="{href}" class="c-button {variant}"{target}>"#,
+            href = esc(&b.href),
+            variant = variant_class,
+            target = target
+        ));
+        if let Some(icon_name) = &b.icon {
+            h.push_str(&format!(
+                r#"<span class="c-button-icon">{}</span>"#,
+                icons::render(icon_name, 14, "currentColor")
+            ));
+        }
+        h.push_str(&format!(r#"<span>{}</span>"#, esc(&b.label)));
+        if b.external {
+            h.push_str(&format!(
+                r#"<span class="c-button-icon">{}</span>"#,
+                icons::render("arrow-up-right", 14, "currentColor")
+            ));
+        }
+        h.push_str("</a>");
+    }
+    h.push_str("</div>");
+    Rendered::new(h)
+}
+
+// ── Definition List ──────────────────────────────
+
+fn definition_list(items: &[DefinitionItem]) -> Rendered {
+    let mut h = String::from(r#"<dl class="c-definition-list">"#);
+    for i in items {
+        h.push_str(&format!(
+            r#"<div class="c-dl-row"><dt class="c-dl-term">{term}</dt><dd class="c-dl-def">{def}</dd></div>"#,
+            term = esc(&i.term),
+            def = esc(&i.definition)
+        ));
+    }
+    h.push_str("</dl>");
+    Rendered::new(h)
+}
+
+// ── Blockquote ───────────────────────────────────
+
+fn blockquote(body: &str, attribution: &Option<String>) -> Rendered {
+    let mut h = format!(
+        r#"<figure class="c-blockquote"><blockquote><p>{}</p></blockquote>"#,
+        esc(body)
+    );
+    if let Some(a) = attribution {
+        h.push_str(&format!(
+            r#"<figcaption class="c-blockquote-attribution">— {}</figcaption>"#,
+            esc(a)
+        ));
+    }
+    h.push_str("</figure>");
+    Rendered::new(h)
+}
+
+// ── Avatar ───────────────────────────────────────
+
+fn initials(name: &str) -> String {
+    name.split_whitespace()
+        .take(2)
+        .filter_map(|w| w.chars().next())
+        .map(|c| c.to_ascii_uppercase())
+        .collect()
+}
+
+fn avatar(name: &str, src: &Option<String>, size: AvatarSize, subtitle: &Option<String>) -> Rendered {
+    let size_class = size.class_suffix();
+    let wrapper_open = if subtitle.is_some() {
+        format!(r#"<div class="c-avatar-row"><div class="c-avatar c-avatar-{size_class}">"#)
+    } else {
+        format!(r#"<div class="c-avatar c-avatar-{size_class}">"#)
+    };
+    let mut h = wrapper_open;
+    match src {
+        Some(s) => {
+            h.push_str(&format!(
+                r#"<img src="{}" alt="{}">"#,
+                esc(s), esc(name)
+            ));
+        }
+        None => {
+            h.push_str(&format!(
+                r#"<span class="c-avatar-initials">{}</span>"#,
+                esc(&initials(name))
+            ));
+        }
+    }
+    h.push_str("</div>");
+    if let Some(sub) = subtitle {
+        h.push_str(&format!(
+            r#"<div class="c-avatar-meta"><div class="c-avatar-name">{}</div><div class="c-avatar-sub">{}</div></div></div>"#,
+            esc(name), esc(sub)
+        ));
+    }
+    Rendered::new(h)
+}
+
+// ── Avatar Group ─────────────────────────────────
+
+fn avatar_group(avatars: &[AvatarConfig], size: AvatarSize, max: usize) -> Rendered {
+    let size_class = size.class_suffix();
+    let mut h = format!(r#"<div class="c-avatar-group c-avatar-group-{size_class}">"#);
+    let visible = avatars.len().min(max);
+    for a in avatars.iter().take(visible) {
+        h.push_str(&format!(r#"<div class="c-avatar c-avatar-{size_class}" title="{}">"#, esc(&a.name)));
+        match &a.src {
+            Some(s) => h.push_str(&format!(r#"<img src="{}" alt="{}">"#, esc(s), esc(&a.name))),
+            None => h.push_str(&format!(
+                r#"<span class="c-avatar-initials">{}</span>"#,
+                esc(&initials(&a.name))
+            )),
+        }
+        h.push_str("</div>");
+    }
+    if avatars.len() > max {
+        let remaining = avatars.len() - max;
+        h.push_str(&format!(
+            r#"<div class="c-avatar c-avatar-{size_class} c-avatar-more"><span class="c-avatar-initials">+{}</span></div>"#,
+            remaining
+        ));
+    }
+    h.push_str("</div>");
+    Rendered::new(h)
+}
+
+// ── Progress Bar ─────────────────────────────────
+
+fn progress_bar(value: u8, label: &Option<String>, color: SemColor, detail: &Option<String>) -> Rendered {
+    let clamped = value.min(100);
+    let color_class = sem_color_class(color);
+
+    let mut h = String::from(r#"<div class="c-progress">"#);
+    if label.is_some() || detail.is_some() {
+        h.push_str(r#"<div class="c-progress-labels">"#);
+        if let Some(l) = label {
+            h.push_str(&format!(r#"<span class="c-progress-label">{}</span>"#, esc(l)));
+        } else {
+            h.push_str(r#"<span></span>"#);
+        }
+        h.push_str(&format!(r#"<span class="c-progress-value">{}%</span>"#, clamped));
+        h.push_str("</div>");
+    }
+    h.push_str(&format!(
+        r#"<div class="c-progress-track" role="progressbar" aria-valuenow="{v}" aria-valuemin="0" aria-valuemax="100"><div class="c-progress-fill c-progress-fill-{color}" style="width: {v}%"></div></div>"#,
+        v = clamped, color = color_class
+    ));
+    if let Some(d) = detail {
+        h.push_str(&format!(r#"<div class="c-progress-detail">{}</div>"#, esc(d)));
+    }
+    h.push_str("</div>");
+    Rendered::new(h)
+}
+
+// ── Empty State ──────────────────────────────────
+
+fn empty_state(title: &str, body: &Option<String>, action: &Option<EmptyStateAction>, icon: &Option<String>) -> Rendered {
+    let mut h = String::from(r#"<div class="c-empty-state">"#);
+    let icon_name = icon.as_deref().unwrap_or("inbox");
+    h.push_str(&format!(
+        r#"<div class="c-empty-state-icon">{}</div>"#,
+        icons::render(icon_name, 32, "currentColor")
+    ));
+    h.push_str(&format!(
+        r#"<h3 class="c-empty-state-title">{}</h3>"#,
+        esc(title)
+    ));
+    if let Some(b) = body {
+        h.push_str(&format!(
+            r#"<p class="c-empty-state-body">{}</p>"#,
+            esc(b)
+        ));
+    }
+    if let Some(a) = action {
+        h.push_str(&format!(
+            r#"<a href="{href}" class="c-button c-button-primary">{label}</a>"#,
+            href = esc(&a.href),
+            label = esc(&a.label)
+        ));
+    }
+    h.push_str("</div>");
+    Rendered::new(h)
+}
+
+// ── Icon ─────────────────────────────────────────
+
+fn icon_component(name: &str, size: IconSize, color: SemColor) -> Rendered {
+    let px = size.pixels();
+    let color_value = match color {
+        SemColor::Default => "currentColor".to_string(),
+        _ => color.hex().to_string(),
+    };
+    Rendered::new(icons::render(name, px, &color_value))
+}
+

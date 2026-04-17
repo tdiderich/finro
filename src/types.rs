@@ -29,15 +29,8 @@ pub struct Page {
     pub shell: Shell,
     pub eyebrow: Option<String>,
     pub subtitle: Option<String>,
-    pub nav_back: Option<NavBack>,
     pub components: Option<Vec<Component>>,
     pub slides: Option<Vec<Slide>>,
-}
-
-#[derive(Deserialize)]
-pub struct NavBack {
-    pub label: String,
-    pub href: String,
 }
 
 #[derive(Deserialize)]
@@ -128,6 +121,75 @@ pub enum Component {
         caption: Option<String>,
         max_width: Option<u32>,
     },
+    Badge {
+        label: String,
+        #[serde(default)]
+        color: SemColor,
+    },
+    Tag {
+        label: String,
+        #[serde(default)]
+        color: SemColor,
+    },
+    Divider {
+        label: Option<String>,
+    },
+    Kbd {
+        keys: Vec<String>,
+    },
+    Status {
+        label: String,
+        #[serde(default)]
+        color: SemColor,
+    },
+    Breadcrumb {
+        items: Vec<BreadcrumbItem>,
+    },
+    ButtonGroup {
+        buttons: Vec<ButtonConfig>,
+    },
+    DefinitionList {
+        items: Vec<DefinitionItem>,
+    },
+    Blockquote {
+        body: String,
+        attribution: Option<String>,
+    },
+    Avatar {
+        name: String,
+        src: Option<String>,
+        #[serde(default)]
+        size: AvatarSize,
+        subtitle: Option<String>,
+    },
+    AvatarGroup {
+        avatars: Vec<AvatarConfig>,
+        #[serde(default)]
+        size: AvatarSize,
+        #[serde(default = "default_avatar_max")]
+        max: usize,
+    },
+    ProgressBar {
+        value: u8,
+        label: Option<String>,
+        #[serde(default)]
+        color: SemColor,
+        detail: Option<String>,
+    },
+    EmptyState {
+        title: String,
+        body: Option<String>,
+        action: Option<EmptyStateAction>,
+        #[serde(default)]
+        icon: Option<String>,
+    },
+    Icon {
+        name: String,
+        #[serde(default)]
+        size: IconSize,
+        #[serde(default)]
+        color: SemColor,
+    },
 }
 
 // ── Supporting types ─────────────────────────────────
@@ -151,17 +213,42 @@ pub struct Card {
 pub struct Badge {
     pub label: String,
     #[serde(default)]
-    pub color: BadgeColor,
+    pub color: SemColor,
 }
 
+/// Unified semantic color palette used by badge, tag, status, progress_bar,
+/// and the stat color accents. Keeps all colored decoration consistent.
 #[derive(Deserialize, Default, Clone, Copy)]
 #[serde(rename_all = "snake_case")]
-pub enum BadgeColor {
+pub enum SemColor {
+    #[default]
+    Default,
     Green,
     Yellow,
     Red,
-    #[default]
-    Default,
+    Teal,
+}
+
+impl SemColor {
+    pub fn class_suffix(&self) -> &'static str {
+        match self {
+            SemColor::Default => "default",
+            SemColor::Green => "green",
+            SemColor::Yellow => "yellow",
+            SemColor::Red => "red",
+            SemColor::Teal => "teal",
+        }
+    }
+
+    pub fn hex(&self) -> &'static str {
+        match self {
+            SemColor::Default => "#3CCECE",
+            SemColor::Green => "#34D399",
+            SemColor::Yellow => "#FBBF24",
+            SemColor::Red => "#F87171",
+            SemColor::Teal => "#3CCECE",
+        }
+    }
 }
 
 #[derive(Deserialize)]
@@ -215,17 +302,7 @@ pub struct Stat {
     pub value: String,
     pub detail: Option<String>,
     #[serde(default)]
-    pub color: StatColor,
-}
-
-#[derive(Deserialize, Default, Clone, Copy)]
-#[serde(rename_all = "snake_case")]
-pub enum StatColor {
-    Green,
-    Yellow,
-    Red,
-    #[default]
-    Default,
+    pub color: SemColor,
 }
 
 #[derive(Deserialize)]
@@ -304,6 +381,96 @@ pub struct AccordionItem {
     pub components: Vec<Component>,
 }
 
+// ── New component supporting types ───────────────────
+
+#[derive(Deserialize)]
+pub struct BreadcrumbItem {
+    pub label: String,
+    pub href: Option<String>,
+}
+
+#[derive(Deserialize, Default, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum ButtonVariant {
+    #[default]
+    Primary,
+    Secondary,
+    Ghost,
+}
+
+#[derive(Deserialize)]
+pub struct ButtonConfig {
+    pub label: String,
+    pub href: String,
+    #[serde(default)]
+    pub variant: ButtonVariant,
+    #[serde(default)]
+    pub external: bool,
+    pub icon: Option<String>,
+}
+
+#[derive(Deserialize, Default, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum IconSize {
+    Xs,
+    Sm,
+    #[default]
+    Md,
+    Lg,
+    Xl,
+}
+
+impl IconSize {
+    pub fn pixels(&self) -> u32 {
+        match self {
+            IconSize::Xs => 12,
+            IconSize::Sm => 14,
+            IconSize::Md => 16,
+            IconSize::Lg => 20,
+            IconSize::Xl => 24,
+        }
+    }
+}
+
+#[derive(Deserialize)]
+pub struct DefinitionItem {
+    pub term: String,
+    pub definition: String,
+}
+
+#[derive(Deserialize)]
+pub struct AvatarConfig {
+    pub name: String,
+    pub src: Option<String>,
+}
+
+#[derive(Deserialize, Default, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum AvatarSize {
+    Sm,
+    #[default]
+    Md,
+    Lg,
+    Xl,
+}
+
+impl AvatarSize {
+    pub fn class_suffix(&self) -> &'static str {
+        match self {
+            AvatarSize::Sm => "sm",
+            AvatarSize::Md => "md",
+            AvatarSize::Lg => "lg",
+            AvatarSize::Xl => "xl",
+        }
+    }
+}
+
+#[derive(Deserialize)]
+pub struct EmptyStateAction {
+    pub label: String,
+    pub href: String,
+}
+
 // ── Site config ──────────────────────────────────────
 
 #[derive(Deserialize)]
@@ -330,6 +497,7 @@ impl Default for SiteConfig {
 
 fn default_stat_columns() -> u32 { 3 }
 fn default_true() -> bool { true }
+fn default_avatar_max() -> usize { 5 }
 
 pub fn value_to_string(v: &serde_yaml::Value) -> String {
     match v {

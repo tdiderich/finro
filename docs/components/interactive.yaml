@@ -1,10 +1,15 @@
 title: Interactive components
 shell: standard
-nav_back:
-  label: ← Components
-  href: index.html
 
 components:
+  - type: breadcrumb
+    items:
+      - label: Home
+        href: ../index.html
+      - label: Components
+        href: index.html
+      - label: Interactive
+
   - type: header
     title: Interactive components
     eyebrow: Reference

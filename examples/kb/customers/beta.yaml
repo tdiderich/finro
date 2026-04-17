@@ -1,10 +1,14 @@
 title: Beta Corp — Deployment Guide
 shell: standard
-nav_back:
-  label: ← Portfolio
-  href: ../index.html
 
 components:
+  - type: breadcrumb
+    items:
+      - label: Portfolio
+        href: ../index.html
+      - label: Customers
+      - label: Beta Corp
+
   - type: header
     title: Beta Corp — Deployment Guide
 

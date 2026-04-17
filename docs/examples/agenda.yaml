@@ -2,11 +2,14 @@ title: Q2 Planning Meeting
 shell: document
 eyebrow: Meeting Agenda
 subtitle: Q2 Planning
-nav_back:
-  label: ← Back to finro
-  href: ../index.html
 
 components:
+  - type: breadcrumb
+    items:
+      - label: Home
+        href: ../index.html
+      - label: Q2 Planning Meeting
+
   - type: markdown
     body: |
       ## Attendees

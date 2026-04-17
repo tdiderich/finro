@@ -1,14 +1,19 @@
 title: Layout components
 shell: standard
-nav_back:
-  label: ← Components
-  href: index.html
 
 components:
+  - type: breadcrumb
+    items:
+      - label: Home
+        href: ../index.html
+      - label: Components
+        href: index.html
+      - label: Layout
+
   - type: header
     title: Layout components
     eyebrow: Reference
-    subtitle: section, columns, timeline, steps
+    subtitle: section, columns, divider, timeline, steps, progress_bar, empty_state
 
   # ── section ───────────────────────────────
   - type: section
@@ -174,3 +179,34 @@ components:
                 detail: Any directory of .yaml files.
               - title: Run dev mode
                 detail: finro dev ./my-site
+
+  # ── empty_state ────────────────────────────
+  - type: section
+    eyebrow: empty_state
+    heading: Zero-data placeholder
+    components:
+      - type: markdown
+        body: "For pages or sections that have nothing to show yet. Icon, title, description, optional CTA. Any bundled lucide icon name works in the `icon:` field."
+
+      - type: empty_state
+        title: No customers yet
+        body: Add your first customer to see them here with health badges, deployment guides, and meeting agendas.
+        action:
+          label: Add customer
+          href: "#"
+
+      - type: empty_state
+        title: All caught up
+        icon: check-circle
+        body: Zero open issues in this portfolio.
+
+      - type: code
+        language: yaml
+        code: |
+          - type: empty_state
+            title: No customers yet
+            body: Add your first customer to see them here.
+            icon: inbox                 # any bundled lucide icon
+            action:
+              label: Add customer
+              href: /customers/new
