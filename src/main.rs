@@ -5,6 +5,8 @@ use std::path::PathBuf;
 mod build;
 mod dev;
 mod icons;
+mod init;
+mod llms;
 mod minify;
 mod render;
 mod theme;
@@ -38,11 +40,16 @@ enum Command {
         #[arg(short, long, default_value_t = 3000)]
         port: u16,
     },
+    /// Scaffold a new finro site in <NAME>/
+    Init {
+        name: String,
+    },
 }
 
 fn main() -> Result<()> {
     match Cli::parse().command {
         Command::Build { dir, out, release } => build::run(&dir, &out, release),
         Command::Dev { dir, out, port } => dev::run(&dir, &out, port),
+        Command::Init { name } => init::run(&name),
     }
 }

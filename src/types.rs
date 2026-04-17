@@ -31,6 +31,9 @@ pub struct Page {
     pub subtitle: Option<String>,
     pub components: Option<Vec<Component>>,
     pub slides: Option<Vec<Slide>>,
+    /// Exclude this page from llms.txt. Useful for drafts.
+    #[serde(default)]
+    pub unlisted: bool,
 }
 
 #[derive(Deserialize)]

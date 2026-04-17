@@ -3,6 +3,7 @@ use std::fs;
 use std::path::Path;
 use walkdir::WalkDir;
 
+use crate::llms::{self, PageEntry};
 use crate::minify;
 use crate::render;
 use crate::types::{Page, SiteConfig};
@@ -17,6 +18,7 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
 
     let mut pages = 0;
     let mut assets = 0;
+    let mut entries: Vec<PageEntry> = Vec::new();
 
     for entry in WalkDir::new(dir).follow_links(true).into_iter().filter_entry(|e| {
         !e.path().canonicalize()
@@ -58,6 +60,18 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
             let yaml_out = out.join(rel);
             fs::copy(path, &yaml_out)?;
 
+            // Collect metadata for llms.txt (unless marked unlisted)
+            if !page.unlisted {
+                let html_path = rel.with_extension("html").to_string_lossy().to_string();
+                let yaml_path = rel.to_string_lossy().to_string();
+                entries.push(PageEntry {
+                    title: page.title.clone(),
+                    subtitle: page.subtitle.clone(),
+                    html_path,
+                    yaml_path,
+                });
+            }
+
             println!("  {}", out_path.display());
             pages += 1;
         } else {
@@ -67,6 +81,11 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
             fs::copy(path, &out_path)?;
             assets += 1;
         }
+    }
+
+    // Emit llms.txt
+    if !entries.is_empty() {
+        llms::write(out, &config, &entries)?;
     }
 
     if assets > 0 {
