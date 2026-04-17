@@ -1,0 +1,261 @@
+title: Deploy
+shell: standard
+
+components:
+  - type: header
+    title: Deploy
+    eyebrow: Any static host works
+    subtitle: A finro build is just HTML, CSS, JS, and copied assets. Anything that serves files on the internet can host it.
+
+  - type: callout
+    variant: info
+    title: One build, many hosts
+    body: "Run `finro build . --out dist --release` once. The `dist/` directory is your whole site — self-contained, no server runtime. Everything below is just how to upload that directory somewhere with a URL."
+
+  - type: section
+    eyebrow: Recipes
+    heading: Pick a host
+    components:
+      - type: tabs
+        tabs:
+          - label: Vercel
+            components:
+              - type: markdown
+                body: |
+                  Zero config. Install the CLI, point it at a built directory.
+
+              - type: code
+                language: bash
+                code: |
+                  finro build . --out dist --release
+
+                  # One-time:
+                  npm i -g vercel
+                  vercel login
+
+                  # Deploy (first time prompts to link a project):
+                  vercel --prod dist
+
+              - type: markdown
+                body: |
+                  For Git-driven deploys, check in a `vercel.json`:
+
+              - type: code
+                language: json
+                code: |
+                  {
+                    "buildCommand": "cargo install --git https://github.com/tdiderich/finro && finro build . --out dist --release",
+                    "outputDirectory": "dist",
+                    "framework": null
+                  }
+
+          - label: Netlify
+            components:
+              - type: markdown
+                body: |
+                  Same drill — Netlify treats any directory as a static site.
+
+              - type: code
+                language: bash
+                code: |
+                  finro build . --out dist --release
+
+                  # One-time:
+                  npm i -g netlify-cli
+                  netlify login
+
+                  # Deploy:
+                  netlify deploy --prod --dir=dist
+
+              - type: markdown
+                body: |
+                  For Git-driven builds, add a `netlify.toml`:
+
+              - type: code
+                language: toml
+                code: |
+                  [build]
+                    command = "cargo install --git https://github.com/tdiderich/finro && finro build . --out dist --release"
+                    publish = "dist"
+
+          - label: Cloudflare Pages
+            components:
+              - type: markdown
+                body: |
+                  Free, fast edge hosting with a generous free tier.
+
+              - type: code
+                language: bash
+                code: |
+                  finro build . --out dist --release
+
+                  # One-time:
+                  npm i -g wrangler
+                  wrangler login
+
+                  # Deploy:
+                  wrangler pages deploy dist --project-name my-site
+
+              - type: markdown
+                body: |
+                  For Git-driven builds in the Cloudflare dashboard, set:
+                  **Build command**: `cargo install --git https://github.com/tdiderich/finro && finro build . --out dist --release` ·
+                  **Output directory**: `dist`
+
+          - label: GitHub Pages
+            components:
+              - type: markdown
+                body: |
+                  Free, ties cleanly to a repo. Save this as
+                  `.github/workflows/deploy.yml`:
+
+              - type: code
+                language: yaml
+                code: |
+                  name: Deploy to GitHub Pages
+                  on:
+                    push: { branches: [main] }
+                    workflow_dispatch:
+                  permissions:
+                    pages: write
+                    id-token: write
+                  jobs:
+                    build:
+                      runs-on: ubuntu-latest
+                      steps:
+                        - uses: actions/checkout@v4
+                        - uses: dtolnay/rust-toolchain@stable
+                        - run: cargo install --git https://github.com/tdiderich/finro
+                        - run: finro build . --out dist --release
+                        - uses: actions/upload-pages-artifact@v3
+                          with: { path: dist }
+                    deploy:
+                      needs: build
+                      runs-on: ubuntu-latest
+                      environment:
+                        name: github-pages
+                        url: ${{ steps.deployment.outputs.page_url }}
+                      steps:
+                        - id: deployment
+                          uses: actions/deploy-pages@v4
+
+          - label: AWS S3 + CloudFront
+            components:
+              - type: markdown
+                body: |
+                  Most boilerplate, most control. One-time setup creates a
+                  bucket, a CloudFront distribution, and an origin access
+                  policy. Then every deploy is just `aws s3 sync`.
+
+              - type: code
+                language: bash
+                code: |
+                  # One-time setup (replace names):
+                  BUCKET=my-finro-site
+                  REGION=us-east-1
+
+                  aws s3api create-bucket --bucket $BUCKET --region $REGION
+                  aws s3 website s3://$BUCKET --index-document index.html
+
+                  # (Create a CloudFront distribution in the console pointing
+                  #  at this bucket, with a default root object of index.html.)
+
+              - type: code
+                language: bash
+                code: |
+                  # Every deploy:
+                  finro build . --out dist --release
+                  aws s3 sync dist/ s3://$BUCKET --delete \
+                      --cache-control "public, max-age=300"
+
+                  # Invalidate the CDN cache:
+                  aws cloudfront create-invalidation \
+                      --distribution-id $CF_ID --paths "/*"
+
+              - type: callout
+                variant: info
+                title: Tip
+                body: "Serve `*.html` with a short max-age (300s) and hash-named assets with a long one — but finro doesn't hash asset filenames, so keep everything short-lived or add a cache-busting query string to `src=` paths in YAML."
+
+          - label: Firebase Hosting
+            components:
+              - type: code
+                language: bash
+                code: |
+                  # One-time:
+                  npm i -g firebase-tools
+                  firebase login
+                  firebase init hosting     # choose "existing files", public = dist
+
+              - type: code
+                language: bash
+                code: |
+                  # Every deploy:
+                  finro build . --out dist --release
+                  firebase deploy --only hosting
+
+              - type: markdown
+                body: |
+                  Your `firebase.json` should look something like:
+
+              - type: code
+                language: json
+                code: |
+                  {
+                    "hosting": {
+                      "public": "dist",
+                      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
+                    }
+                  }
+
+          - label: Self-hosted
+            components:
+              - type: markdown
+                body: |
+                  Any web server that serves static files works. Nginx
+                  example — copy the build and reload:
+
+              - type: code
+                language: bash
+                code: |
+                  finro build . --out dist --release
+                  rsync -a --delete dist/ user@host:/var/www/my-site/
+                  ssh user@host "sudo nginx -s reload"
+
+              - type: code
+                language: nginx
+                code: |
+                  server {
+                    listen 443 ssl http2;
+                    server_name example.com;
+
+                    root /var/www/my-site;
+                    index index.html;
+
+                    # finro emits plain .html files — this lets /guide
+                    # resolve to /guide.html automatically
+                    location / {
+                      try_files $uri $uri.html $uri/ =404;
+                    }
+                  }
+
+  - type: section
+    eyebrow: Gotchas
+    heading: Things to watch for
+    components:
+      - type: card_grid
+        min_width: 280
+        cards:
+          - title: Relative asset paths
+            description: "finro rewrites nav hrefs per-page based on directory depth, so `index.html` works from any subfolder. Avoid hand-written absolute URLs like `/foo` unless you know the deploy path will match."
+          - title: Trailing slashes
+            description: "Some hosts serve `/guide/` but not `/guide.html` (or vice versa) by default. Test after deploy, or add a rewrite rule if links break."
+          - title: Cache headers
+            description: "HTML pages can change on every build. Default to short cache lifetimes (5 min) for `.html` unless you're sure nothing links to a stale version."
+          - title: Minify for prod
+            description: "Always pass `--release` on production builds — it strips whitespace from HTML/CSS/inline JS, shrinking pages by ~40%."
+
+  - type: callout
+    variant: success
+    title: Nothing fancy required
+    body: "If your host can serve a folder of static files, it can serve a finro build. If it can't, it's probably not worth the headache — pick one of the recipes above."

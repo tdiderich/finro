@@ -1,0 +1,194 @@
+title: Generating pages from an API
+shell: standard
+eyebrow: Examples
+subtitle: Hacker News walkthrough
+
+components:
+  - type: header
+    title: Generating pages from an API
+    eyebrow: Pattern
+    subtitle: Any script that writes a string can drive finro. Here's a 20-line one that pulls the Hacker News top 30.
+
+  - type: button_group
+    buttons:
+      - label: See the live output →
+        href: hackernews-live.html
+        variant: primary
+      - label: HN API docs ↗
+        href: https://github.com/HackerNews/API
+        variant: secondary
+
+  - type: section
+    eyebrow: The idea
+    heading: Why this works
+    components:
+      - type: markdown
+        body: |
+          finro reads `.yaml` files off disk. It doesn't care whether a human, a
+          cron job, an LLM, or a serverless function wrote them. If you can emit
+          the YAML (or JSON — JSON is valid YAML), finro will render it.
+
+          That makes it trivial to stand up live-ish dashboards pulled from
+          whatever source: GitHub issues, Linear, Google Sheets, an internal
+          metrics endpoint, an RSS feed, or — in this example — the free
+          [Hacker News API](https://github.com/HackerNews/API).
+
+  - type: section
+    eyebrow: Step 1
+    heading: The generator
+    components:
+      - type: markdown
+        body: |
+          Python, stdlib-only. Two halves: a tiny block-style YAML emitter
+          (20 lines, no `pyyaml` dependency), and the actual fetcher that
+          turns each HN story into a `card` component.
+
+          If you'd rather not ship an emitter, drop in `yaml.safe_dump` from
+          PyYAML — or skip YAML entirely and `json.dump` the dict, since
+          finro parses JSON as valid YAML.
+
+      - type: code
+        language: python
+        code: |
+          #!/usr/bin/env python3
+          import json, urllib.request, datetime
+
+          def fetch(url):
+              return json.loads(urllib.request.urlopen(url, timeout=10).read())
+
+          # ── minimal block-YAML emitter ──────────────────────────
+          def yaml_scalar(v):
+              if v is None: return "null"
+              if isinstance(v, bool): return "true" if v else "false"
+              if isinstance(v, (int, float)): return str(v)
+              return json.dumps(v, ensure_ascii=False)  # JSON strings are valid YAML
+
+          def yaml_dump(obj, indent=0):
+              pad, lines = "  " * indent, []
+              if isinstance(obj, dict):
+                  for k, v in obj.items():
+                      if isinstance(v, (dict, list)) and v:
+                          lines.append(f"{pad}{k}:")
+                          lines.extend(yaml_dump(v, indent + 1))
+                      else:
+                          lines.append(f"{pad}{k}: {yaml_scalar(v)}")
+              elif isinstance(obj, list):
+                  for item in obj:
+                      if isinstance(item, dict) and item:
+                          sub = yaml_dump(item, indent + 1)
+                          lines.append(f"{pad}- {sub[0].lstrip()}")
+                          lines.extend(sub[1:])
+                      else:
+                          lines.append(f"{pad}- {yaml_scalar(item)}")
+              return lines
+
+          # ── fetch + shape ───────────────────────────────────────
+          ids = fetch("https://hacker-news.firebaseio.com/v0/topstories.json")[:30]
+          cards = []
+          for id in ids:
+              item = fetch(f"https://hacker-news.firebaseio.com/v0/item/{id}.json")
+              if not item or not item.get("title"):
+                  continue
+              desc = f"{item['by']} · {item.get('score', 0)} points · {item.get('descendants', 0)} comments"
+              links = []
+              if item.get("url"):
+                  links.append({"label": "Read →", "href": item["url"]})
+              links.append({"label": "HN →", "href": f"https://news.ycombinator.com/item?id={id}"})
+              cards.append({"title": item["title"], "description": desc, "links": links})
+
+          page = {
+              "title": "Hacker News — Top 30",
+              "shell": "standard",
+              "eyebrow": "Live",
+              "subtitle": datetime.datetime.now(datetime.UTC).strftime("Pulled %b %d, %Y %H:%M UTC"),
+              "components": [
+                  {"type": "header", "title": "Hacker News Top 30",
+                   "subtitle": f"{len(cards)} stories"},
+                  {"type": "card_grid", "min_width": 280, "cards": cards},
+              ],
+          }
+
+          with open("hackernews-live.yaml", "w") as f:
+              f.write("\n".join(yaml_dump(page)))
+
+  - type: section
+    eyebrow: Step 2
+    heading: Build
+    components:
+      - type: code
+        language: bash
+        code: |
+          python3 generate.py          # writes hackernews-live.yaml
+          finro build . --out _site    # renders it to _site/hackernews-live.html
+
+      - type: markdown
+        body: |
+          That's it. The page exists. No server, no database, no runtime
+          dependencies — just a file finro can render.
+
+  - type: section
+    eyebrow: Step 3
+    heading: Keep it fresh
+    components:
+      - type: markdown
+        body: |
+          Pair the generator with `finro dev` for a live-reloading dashboard.
+          The watcher notices the new YAML, rebuilds, and your browser tab
+          refreshes automatically.
+
+      - type: tabs
+        tabs:
+          - label: Local dev
+            components:
+              - type: code
+                language: bash
+                code: |
+                  # terminal 1 — refresh every 5 minutes
+                  while true; do python3 generate.py; sleep 300; done
+
+                  # terminal 2 — watch, serve, live-reload
+                  finro dev . --port 3000
+
+          - label: Cron / CI
+            components:
+              - type: code
+                language: bash
+                code: |
+                  # crontab: refresh + rebuild + deploy every 10 minutes
+                  */10 * * * * cd /srv/site && python3 generate.py \
+                      && finro build . --out _site --release \
+                      && rsync -a _site/ webhost:/var/www/site/
+
+          - label: GitHub Actions
+            components:
+              - type: code
+                language: yaml
+                code: |
+                  on:
+                    schedule:
+                      - cron: "*/30 * * * *"
+                    workflow_dispatch:
+                  jobs:
+                    refresh:
+                      runs-on: ubuntu-latest
+                      steps:
+                        - uses: actions/checkout@v4
+                        - run: python3 generate.py
+                        - run: curl -L finro.dev/install.sh | sh
+                        - run: finro build . --out _site --release
+                        - uses: actions/upload-pages-artifact@v3
+                          with: { path: _site }
+
+  - type: callout
+    variant: success
+    title: The general pattern
+    body: |
+      `script.py` → `something.yaml` → `finro build`. That's the whole
+      contract. Anything that can emit a JSON object can drive a finro
+      page — RSS feeds, GitHub issues, Linear, Google Sheets, HubSpot,
+      Stripe, your own internal JSON endpoints, or an LLM-written one-off.
+
+  - type: callout
+    variant: info
+    title: Try it yourself
+    body: "The live snapshot on this docs site was generated by the script above — click **[See the live output](hackernews-live.html)** to see the rendered result."

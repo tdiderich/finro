@@ -33,6 +33,35 @@ fn nav_html(config: &SiteConfig, base: &str) -> (String, bool) {
     (out, true)
 }
 
+fn site_bar(page: &Page, config: &SiteConfig, base: &str, right_html: &str) -> String {
+    let home_href = resolve_href("index.html", base);
+    let eyebrow_html = page.eyebrow.as_deref()
+        .filter(|s| !s.is_empty())
+        .map(|e| format!(
+            r#" <span class="site-bar-divider">/</span> <span class="site-bar-eyebrow">{}</span>"#,
+            esc(e)
+        ))
+        .unwrap_or_default();
+    format!(
+        r#"<div class="site-bar">
+  <a class="site-bar-name" href="{home}">{site}</a>{eyebrow}
+  <div class="site-bar-right">{right}</div>
+</div>
+"#,
+        home = esc(&home_href),
+        site = esc(&config.name),
+        eyebrow = eyebrow_html,
+        right = right_html,
+    )
+}
+
+fn subtitle_span(page: &Page) -> String {
+    page.subtitle.as_deref()
+        .filter(|s| !s.is_empty())
+        .map(|s| format!(r#"<span class="site-bar-subtitle">{}</span>"#, esc(s)))
+        .unwrap_or_default()
+}
+
 // ── Standard shell ────────────────────────────────
 
 pub mod standard {
@@ -40,6 +69,10 @@ pub mod standard {
 
     pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered, base: &str, source_href: &str) -> String {
         let (nav, has_nav) = nav_html(config, base);
+        let mut right = subtitle_span(page);
+        right.push_str(&nav);
+        let bar = site_bar(page, config, base, &right);
+
         let mut scripts = body.scripts.clone();
         if has_nav { scripts.push("nav"); }
         scripts.push("reload");
@@ -50,13 +83,7 @@ pub mod standard {
 <html lang="en">
 {head}
 <body class="{cls}">
-<header class="site-header">
-  <div class="container header-inner">
-    <span class="site-name">{site}</span>
-    {nav}
-  </div>
-</header>
-<main class="container main-content">
+{bar}<main class="container main-content">
 {body}
 </main>
 {view_src}
@@ -65,8 +92,7 @@ pub mod standard {
 </html>"#,
             head = head(page, config, base),
             cls = Shell::Standard.class(),
-            site = esc(&config.name),
-            nav = nav,
+            bar = bar,
             body = body.html,
             view_src = view_src,
             scripts = collect_scripts(&scripts),
@@ -80,19 +106,7 @@ pub mod document {
     use super::*;
 
     pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered, base: &str, source_href: &str) -> String {
-        let eyebrow = page.eyebrow.as_deref().unwrap_or("");
-        let subtitle = page.subtitle.as_deref().unwrap_or("");
-
-        let doc_header = if !eyebrow.is_empty() || !subtitle.is_empty() {
-            format!(
-                r#"<header class="doc-header">
-  <span class="doc-eyebrow">{}</span>
-  <span class="doc-subtitle">{}</span>
-</header>
-"#,
-                esc(eyebrow), esc(subtitle)
-            )
-        } else { String::new() };
+        let bar = site_bar(page, config, base, &subtitle_span(page));
 
         let mut scripts = body.scripts.clone();
         scripts.push("reload");
@@ -103,9 +117,9 @@ pub mod document {
 <html lang="en">
 {head}
 <body class="{cls}">
-<div class="doc-root">
+{bar}<div class="doc-root">
 <article class="doc-card">
-{doc_header}<div class="doc-body">
+<div class="doc-body">
 {body}
 </div>
 <footer class="doc-footer"></footer>
@@ -117,7 +131,7 @@ pub mod document {
 </html>"#,
             head = head(page, config, base),
             cls = Shell::Document.class(),
-            doc_header = doc_header,
+            bar = bar,
             body = body.html,
             view_src = view_src,
             scripts = collect_scripts(&scripts),
@@ -147,8 +161,9 @@ pub mod deck {
     }
 
     pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered, base: &str, _source_href: &str) -> String {
-        let eyebrow = page.eyebrow.as_deref().unwrap_or("");
-        let subtitle = page.subtitle.as_deref().unwrap_or("");
+        let mut right = subtitle_span(page);
+        right.push_str(r#"<button class="site-bar-print-btn" onclick="window.print()">Download PDF</button>"#);
+        let bar = site_bar(page, config, base, &right);
 
         let mut scripts = body.scripts.clone();
         scripts.push("reload");
@@ -160,16 +175,7 @@ pub mod deck {
 <body class="{cls}">
 <div class="deck-root">
 
-<div class="deck-bar">
-  <span class="deck-site-name">{site}</span>
-  <span class="deck-bar-divider">/</span>
-  <span class="deck-eyebrow">{eyebrow}</span>
-  <div class="deck-bar-right">
-    <span class="deck-subtitle">{subtitle}</span>
-    <button class="deck-print-btn" onclick="window.print()">Download PDF</button>
-  </div>
-</div>
-
+{bar}
 {body}
 
 <div class="deck-nav">
@@ -184,9 +190,7 @@ pub mod deck {
 </html>"#,
             head = head(page, config, base),
             cls = Shell::Deck.class(),
-            site = esc(&config.name),
-            eyebrow = esc(eyebrow),
-            subtitle = esc(subtitle),
+            bar = bar,
             body = body.html,
             scripts = collect_scripts(&scripts),
         )

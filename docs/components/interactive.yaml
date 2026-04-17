@@ -156,8 +156,9 @@ components:
             components:
               - type: markdown
                 body: |
-                  Not yet — theming lives in `src/theme.rs` as a single CSS
-                  constant. A theme config file is planned.
+                  Yes — pick `dark` or `light` as the base via the `theme:` key
+                  in `finro.yaml`, and override any individual token with a
+                  `colors:` map. See the [Theming section of the guide](../guide.html).
 
           - title: Does it work without a server?
             components:

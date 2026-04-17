@@ -2,7 +2,40 @@ mod components;
 mod scripts;
 mod shells;
 
-use crate::types::{Page, Shell, SiteConfig};
+use crate::types::{Component, Page, Shell, SiteConfig};
+
+pub fn render_source_view(
+    original: &Page,
+    config: &SiteConfig,
+    yaml_content: &str,
+    base: &str,
+    source_filename: &str,
+) -> String {
+    let html_href = source_filename
+        .strip_suffix(".yaml")
+        .map(|s| format!("{}.html", s))
+        .unwrap_or_else(|| source_filename.to_string());
+
+    let synthetic = Page {
+        title: format!("{} — Source", original.title),
+        shell: Shell::Standard,
+        eyebrow: original.eyebrow.clone(),
+        subtitle: Some(source_filename.to_string()),
+        components: Some(vec![
+            Component::Markdown {
+                body: format!("[← Back to rendered page]({})", html_href),
+            },
+            Component::Code {
+                language: Some("yaml".to_string()),
+                code: yaml_content.to_string(),
+            },
+        ]),
+        slides: None,
+        unlisted: true,
+    };
+
+    render_page(&synthetic, config, base, "")
+}
 
 pub fn render_page(page: &Page, config: &SiteConfig, base: &str, source_href: &str) -> String {
     let mut rendered = Rendered::default();

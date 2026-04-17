@@ -1,6 +1,7 @@
 name: finro
 theme: dark
 favicon: assets/favicon.svg
+view_source: true
 nav:
   - label: Home
     href: index.html
@@ -8,3 +9,5 @@ nav:
     href: guide.html
   - label: Components
     href: components/index.html
+  - label: Deploy
+    href: deploy.html

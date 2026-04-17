@@ -9,21 +9,73 @@ components:
 
   - type: section
     eyebrow: Install
-    heading: Build from source
+    heading: Get the binary
     components:
       - type: markdown
         body: |
-          finro is a single Rust binary. Clone the repo and build it.
+          finro is a single self-contained Rust binary. No runtime, no Node,
+          no Python. Pick whichever install method is convenient — all three
+          land the same binary on your `PATH`.
 
+      - type: tabs
+        tabs:
+          - label: cargo install (recommended)
+            components:
+              - type: markdown
+                body: |
+                  Works on any system with a Rust toolchain. Installs straight
+                  from GitHub — no crates.io publish needed.
+              - type: code
+                language: bash
+                code: |
+                  cargo install --git https://github.com/tdiderich/finro
+                  finro --version
+
+          - label: From source
+            components:
+              - type: markdown
+                body: |
+                  For development or if you want to pin to a branch.
+              - type: code
+                language: bash
+                code: |
+                  git clone https://github.com/tdiderich/finro
+                  cd finro
+                  cargo build --release
+                  cp target/release/finro /usr/local/bin/finro
+
+          - label: Prebuilt binary
+            components:
+              - type: callout
+                variant: warn
+                title: Not yet published
+                body: "GitHub Releases + `curl | sh` installer and a Homebrew tap are planned. For now, use `cargo install` above."
+
+  - type: section
+    eyebrow: Start
+    heading: Scaffold a site in 30 seconds
+    components:
       - type: code
         language: bash
         code: |
-          git clone https://github.com/tyler-maze/finro
-          cd finro
-          cargo build --release
+          finro init my-site       # scaffolds finro.yaml + index.yaml + AGENTS.md
+          cd my-site
+          finro dev .              # watch + serve at localhost:3000, live reload
 
-          # Binary is now at target/release/finro
-          cp target/release/finro /usr/local/bin/
+      - type: markdown
+        body: |
+          Edit `index.yaml` — the browser reloads on save. Add new `.yaml`
+          files for new pages. When you're happy, `finro build . --out dist`
+          produces a static HTML bundle you can deploy anywhere.
+
+      - type: callout
+        variant: info
+        title: Ready to ship?
+        body: "Every finro build is just plain HTML/CSS/JS. Check the deploy recipes for a copy-paste setup on Vercel, Netlify, Cloudflare Pages, GitHub Pages, S3 + CloudFront, or Firebase."
+        links:
+          - label: Deploy recipes
+            href: deploy.html
+            variant: primary
 
   - type: section
     eyebrow: File structure
@@ -51,9 +103,10 @@ components:
     components:
       - type: markdown
         body: |
-          Shared across every page in the site. The nav links appear in the header of
-          every `shell: standard` page; their `href` values are rewritten per-page based
-          on directory depth so they work from anywhere in the site.
+          Shared across every page in the site. `name` is the home-link label in the nav
+          bar on every page. `nav` links appear in the bar on `shell: standard` pages; their
+          `href` values are rewritten per-page based on directory depth so they work from
+          anywhere in the site.
 
       - type: code
         language: yaml
@@ -67,6 +120,123 @@ components:
               href: guide.html
             - label: Reference
               href: reference/api.html
+
+  - type: section
+    eyebrow: Theming
+    heading: Colors in one place
+    components:
+      - type: markdown
+        body: |
+          The renderer exposes a small set of **color tokens** (background,
+          surface, text, accent, border, semantic green/yellow/red, etc.).
+          Every component and shell references those tokens via CSS
+          variables — change a token, every page picks it up on the next
+          build. No per-component CSS knobs.
+
+          There are two built-in themes: `dark` (default) and `light`. Pick
+          one as the base via the `theme:` key in `finro.yaml`. If you need
+          to customize, the `colors:` map overrides individual tokens on top
+          of the base.
+
+      - type: code
+        language: yaml
+        code: |
+          # finro.yaml
+          name: My Site
+          theme: dark
+          colors:
+            accent: "#ff9e00"         # brand color (link + highlight + buttons)
+            accent_soft: "rgba(255, 158, 0, 0.08)"
+            header_border: "rgba(255, 158, 0, 0.2)"
+            bg: "#0b0b10"             # page background
+            surface: "rgba(255,255,255,0.04)"
+
+      - type: markdown
+        body: |
+          All available tokens:
+
+      - type: definition_list
+        items:
+          - term: bg
+            definition: Page background.
+          - term: surface
+            definition: Card/panel backgrounds (low-contrast overlay).
+          - term: surface_strong
+            definition: Stronger surface — used for code blocks and kbd pills.
+          - term: border
+            definition: Default border color for cards and dividers.
+          - term: border_strong
+            definition: Active/hover border (cards on hover, focused table).
+          - term: accent
+            definition: The primary brand color. Links, highlights, primary buttons, teal bar on blockquotes and callouts.
+          - term: accent_soft
+            definition: Translucent accent background — used for soft tint fills.
+          - term: text
+            definition: Primary body text.
+          - term: text_muted
+            definition: Secondary text (descriptions, subtitles).
+          - term: text_subtle
+            definition: Tertiary text (labels, captions, placeholder-ish).
+          - term: overlay_hover
+            definition: Subtle hover highlight for nav links and list rows.
+          - term: header_border
+            definition: The teal under-line on the site bar.
+          - term: green
+            definition: Semantic success color (tags, badges, status dots).
+          - term: yellow
+            definition: Semantic warning color.
+          - term: red
+            definition: Semantic danger color.
+
+      - type: callout
+        variant: info
+        title: Picking a strategy
+        body: |
+          Most sites only need to change `accent` and maybe `bg` to feel
+          custom. If you want a bigger departure, override the whole palette
+          — or fork `src/theme.rs` and add a new named theme. The goal is
+          that components stay theme-agnostic either way.
+        links:
+          - label: Theme source
+            href: https://github.com/tdiderich/finro/blob/main/src/theme.rs
+            variant: secondary
+            external: true
+
+  - type: section
+    eyebrow: Navigation
+    heading: The site bar is built in
+    components:
+      - type: markdown
+        body: |
+          Every shell renders the same nav bar at the top of the page — you don't opt in,
+          and there's no per-page wiring. The bar is driven entirely by the site config and
+          three optional page fields, so navigation stays consistent across `standard`,
+          `document`, and `deck` pages.
+
+      - type: definition_list
+        items:
+          - term: site name
+            definition: Always the left-most item. Links back to `index.html`. Sourced from `name` in `finro.yaml`.
+          - term: page.eyebrow
+            definition: Optional context crumb rendered as `/ EYEBROW` after the site name. Use for the parent section, customer, or category.
+          - term: page.subtitle
+            definition: Optional right-side label. Use for dates, versions, or secondary context.
+          - term: config.nav
+            definition: Nav links on the right side of `standard` pages. Suppressed on `document` and `deck` so content pages stay focused.
+          - term: Download PDF
+            definition: Auto-added on `deck` pages. Print-optimized CSS is built in — decks export edge-to-edge, documents export without the bar.
+
+      - type: code
+        language: yaml
+        code: |
+          title: Q3 Business Review
+          shell: deck
+          eyebrow: Acme          # → "finro / ACME" in the bar
+          subtitle: April 2026   # → right-side label
+
+          slides:
+            - label: Outcomes
+              components: [...]
 
   - type: section
     eyebrow: Page structure
@@ -129,4 +299,11 @@ components:
   - type: callout
     variant: info
     title: Next up
-    body: "Read the [components reference](components/index.html) to see every primitive."
+    body: Every page is composed from ~20 typed components — card grids, tables, tabs, callouts, decks. See them all.
+    links:
+      - label: Components reference
+        href: components/index.html
+        variant: primary
+      - label: Examples
+        href: index.html#use-cases
+        variant: secondary

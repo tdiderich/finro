@@ -1,0 +1,90 @@
+title: Observo — Infrastructure clarity, one dashboard
+shell: standard
+eyebrow: Example
+subtitle: Landing page for a fictional product
+
+components:
+  - type: header
+    title: Infrastructure clarity, one dashboard.
+    eyebrow: Observo · not a real product
+    subtitle: Observo watches every service you run and pages exactly one person, exactly once — only when something actually broke.
+
+  - type: button_group
+    buttons:
+      - label: Start free
+        href: "#"
+        variant: primary
+      - label: Book a demo
+        href: "#"
+        variant: secondary
+
+  - type: stat_grid
+    columns: 4
+    stats:
+      - label: Teams using Observo
+        value: "3,200+"
+        color: teal
+      - label: False pages eliminated
+        value: 94%
+        color: green
+      - label: Median MTTR
+        value: 8m
+        color: default
+      - label: Uptime SLA
+        value: 99.99%
+        color: default
+
+  - type: section
+    eyebrow: What's inside
+    heading: Six features you'll actually use
+    components:
+      - type: card_grid
+        min_width: 280
+        cards:
+          - title: Service map
+            description: Auto-discovers your topology from traces. No YAML to write.
+          - title: Smart paging
+            description: Dedup, route, and escalate alerts per team. Silence by symptom, not by noise.
+          - title: Runbooks inline
+            description: Every alert carries the last N dashboards, logs, and related incidents.
+          - title: Cost-aware SLOs
+            description: See the dollar impact of every miss, in real time.
+          - title: Incident review
+            description: One-click postmortems pre-filled from the incident timeline.
+          - title: Bring your own data
+            description: Prometheus, Datadog, OTLP — pipe it all in, query it all here.
+
+  - type: section
+    eyebrow: How it feels
+    heading: From noisy to signal in a weekend
+    components:
+      - type: before_after
+        items:
+          - title: On-call
+            before: Pager fires 40 times a week. Most are duplicates. The on-call stops reading them carefully.
+            after: "**One page per incident**, routed to the owner of the actual failing service, with the three most-likely dashboards attached."
+          - title: Postmortems
+            before: Someone scrolls through Slack at midnight copying screenshots into a doc.
+            after: "**Pre-filled timeline** the moment you close the incident. You edit the narrative, not the facts."
+
+  - type: blockquote
+    body: Observo cut our 2am pages by 80% in the first month. It's the first observability tool the whole team actually likes.
+    attribution: Jordan Park · SRE Lead at Kindling (also fictional)
+
+  - type: callout
+    variant: info
+    title: Free for teams up to 10
+    body: "No credit card. Two-minute install. **[Start free](#)** — or **[book a 20-min demo](#)** if you'd rather see it live."
+
+  - type: divider
+    label: Meta
+
+  - type: markdown
+    body: |
+      This page is ~80 lines of YAML. Every block above is a plain finro
+      component — `header`, `button_group`, `stat_grid`, `card_grid`,
+      `before_after`, `blockquote`, `callout`. No custom CSS, no React, no
+      framework. finro isn't really a landing-page tool, but if you need to
+      ship one alongside your docs, you can.
+
+      Check the [source](landing.source.html) to see the whole thing.

@@ -42,11 +42,23 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
                 .with_context(|| format!("parsing {:?}", path))?;
 
             let base = base_path_for(rel);
-            // source_href is the YAML filename, same-directory relative
-            let source_href = rel.file_name()
+            let source_filename = rel.file_name()
                 .map(|f| f.to_string_lossy().into_owned())
                 .unwrap_or_default();
-            let mut html = render::render_page(&page, &config, &base, &source_href);
+            let source_stem = rel.file_stem()
+                .map(|f| f.to_string_lossy().into_owned())
+                .unwrap_or_default();
+
+            // The "View source" pill + rendered source-view page are opt-in
+            // via `view_source: true` in finro.yaml. Most sites don't need it;
+            // docs/examples sites do.
+            let source_view_href = if config.view_source {
+                format!("{}.source.html", source_stem)
+            } else {
+                String::new()
+            };
+
+            let mut html = render::render_page(&page, &config, &base, &source_view_href);
             if release {
                 html = minify::minify_html(&html);
             }
@@ -55,8 +67,17 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
             if let Some(parent) = out_path.parent() { fs::create_dir_all(parent)?; }
             fs::write(&out_path, html)?;
 
-            // Also copy the source YAML into the output so the "View source"
-            // link (and llms.txt, and anyone curious) can fetch it directly.
+            if config.view_source {
+                let mut source_view = render::render_source_view(&page, &config, &content, &base, &source_filename);
+                if release {
+                    source_view = minify::minify_html(&source_view);
+                }
+                let source_view_path = out_path.with_file_name(format!("{}.source.html", source_stem));
+                fs::write(&source_view_path, source_view)?;
+            }
+
+            // Always copy the raw YAML — llms.txt points at it and it's
+            // useful for `curl` / programmatic access even without view_source.
             let yaml_out = out.join(rel);
             fs::copy(path, &yaml_out)?;
 

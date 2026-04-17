@@ -49,6 +49,26 @@ components:
               - label: See example →
                 href: examples/deck.html
 
+          - title: Dashboards from APIs
+            badge:
+              label: pattern
+              color: teal
+            description: Scripts emit YAML, finro renders. Live data from HN, GitHub, Linear, Sheets, or any JSON endpoint.
+            links:
+              - label: See walkthrough →
+                href: examples/hackernews.html
+              - label: Live HN top 30 →
+                href: examples/hackernews-live.html
+
+          - title: Landing pages
+            badge:
+              label: standard
+              color: default
+            description: Hero, features, stats, testimonial, CTA. Not what finro was built for — but if you need to ship one alongside your docs, it's a few components away.
+            links:
+              - label: See example →
+                href: examples/landing.html
+
   - type: section
     eyebrow: Why
     heading: Markdown isn't enough anymore
@@ -123,7 +143,7 @@ components:
           - - type: callout
               variant: info
               title: Shell
-              body: "**How** the page is chromed. `standard` (site header + nav), `document` (centered card, print-ready), `deck` (full-viewport slides, keyboard-navigated)."
+              body: "**How** the page is chromed. Every shell shares a built-in nav bar (site name, eyebrow crumb, subtitle). `standard` adds nav links and flowing content, `document` adds a centered card optimized for print, `deck` adds full-viewport slides with keyboard nav and PDF export."
           - - type: callout
               variant: info
               title: Page

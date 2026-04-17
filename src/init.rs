@@ -48,6 +48,12 @@ theme: dark
 # directory gets copied into the build output verbatim).
 # favicon: favicon.svg
 
+# Opt-in: render a companion `<page>.source.html` for every page and
+# show a floating "View source" pill that links to it. Handy for docs
+# or demo sites where you want readers to peek at the YAML. Off by
+# default — most sites don't need it.
+# view_source: true
+
 # Nav appears in the sticky header of every `shell: standard` page.
 # Hrefs are auto-resolved per-page based on directory depth, so
 # `index.html` works from any subdirectory.

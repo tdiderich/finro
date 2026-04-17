@@ -16,7 +16,7 @@ pub fn render(c: &Component) -> Rendered {
         Component::Steps { items, numbered } => steps(items, *numbered),
         Component::Markdown { body } => markdown(body),
         Component::Table { columns, rows, filterable } => table(columns, rows, *filterable),
-        Component::Callout { variant, title, body } => callout(*variant, title, body),
+        Component::Callout { variant, title, body, links } => callout(*variant, title, body, links.as_deref()),
         Component::Code { language, code } => code_block(language, code),
         Component::Tabs { tabs } => tabs_component(tabs),
         Component::Section { heading, eyebrow, components } => section(heading, eyebrow, components),
@@ -308,12 +308,19 @@ fn table(columns: &[TableColumn], rows: &[std::collections::HashMap<String, serd
 
 // ── Callout ───────────────────────────────────────
 
-fn callout(variant: CalloutVariant, title: &Option<String>, body: &str) -> Rendered {
+fn callout(variant: CalloutVariant, title: &Option<String>, body: &str, links: Option<&[ButtonConfig]>) -> Rendered {
     let mut h = format!(r#"<div class="c-callout {}">"#, variant.class());
     if let Some(t) = title {
         h.push_str(&format!(r#"<div class="c-callout-title">{}</div>"#, esc(t)));
     }
     h.push_str(&format!(r#"<div class="c-callout-body">{}</div>"#, parse_markdown(body)));
+    if let Some(ls) = links {
+        if !ls.is_empty() {
+            h.push_str(r#"<div class="c-callout-links">"#);
+            h.push_str(&button_group(ls).html);
+            h.push_str("</div>");
+        }
+    }
     h.push_str("</div>");
     Rendered::new(h)
 }

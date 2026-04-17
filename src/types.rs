@@ -97,6 +97,7 @@ pub enum Component {
         variant: CalloutVariant,
         title: Option<String>,
         body: String,
+        links: Option<Vec<ButtonConfig>>,
     },
     Code {
         language: Option<String>,
@@ -490,6 +491,11 @@ pub struct SiteConfig {
     pub colors: std::collections::HashMap<String, String>,
     pub nav: Option<Vec<NavLink>>,
     pub favicon: Option<Favicon>,
+    /// When true, each page gets a companion `*.source.html` rendering of its
+    /// YAML source, and a "View source" pill links to it. Off by default —
+    /// useful for docs/examples sites, noise for most end-user sites.
+    #[serde(default)]
+    pub view_source: bool,
 }
 
 /// Favicon config: either a single path, or a struct with named slots.
@@ -550,6 +556,7 @@ impl Default for SiteConfig {
             colors: std::collections::HashMap::new(),
             nav: None,
             favicon: None,
+            view_source: false,
         }
     }
 }
