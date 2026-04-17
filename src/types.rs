@@ -486,6 +486,50 @@ pub struct SiteConfig {
     #[serde(default)]
     pub colors: std::collections::HashMap<String, String>,
     pub nav: Option<Vec<NavLink>>,
+    pub favicon: Option<Favicon>,
+}
+
+/// Favicon config: either a single path, or a struct with named slots.
+#[derive(Deserialize)]
+#[serde(untagged)]
+pub enum Favicon {
+    Simple(String),
+    Full {
+        svg: Option<String>,
+        png: Option<String>,
+        ico: Option<String>,
+        apple_touch_icon: Option<String>,
+    },
+}
+
+impl Favicon {
+    /// Render <link> tags (already resolved against base path).
+    pub fn render(&self, base: &str) -> String {
+        let resolve = |p: &str| crate::render::resolve_href(p, base);
+        match self {
+            Favicon::Simple(path) => {
+                let mime = mime_for(path);
+                format!(r#"<link rel="icon" type="{}" href="{}">"#, mime, resolve(path))
+            }
+            Favicon::Full { svg, png, ico, apple_touch_icon } => {
+                let mut out = String::new();
+                if let Some(p) = svg { out.push_str(&format!(r#"<link rel="icon" type="image/svg+xml" href="{}">"#, resolve(p))); }
+                if let Some(p) = png { out.push_str(&format!(r#"<link rel="icon" type="image/png" href="{}">"#, resolve(p))); }
+                if let Some(p) = ico { out.push_str(&format!(r#"<link rel="icon" type="image/x-icon" href="{}">"#, resolve(p))); }
+                if let Some(p) = apple_touch_icon { out.push_str(&format!(r#"<link rel="apple-touch-icon" href="{}">"#, resolve(p))); }
+                out
+            }
+        }
+    }
+}
+
+fn mime_for(path: &str) -> &'static str {
+    let lower = path.to_lowercase();
+    if lower.ends_with(".svg") { "image/svg+xml" }
+    else if lower.ends_with(".png") { "image/png" }
+    else if lower.ends_with(".ico") { "image/x-icon" }
+    else if lower.ends_with(".jpg") || lower.ends_with(".jpeg") { "image/jpeg" }
+    else { "image/png" }
 }
 
 impl SiteConfig {
@@ -502,6 +546,7 @@ impl Default for SiteConfig {
             theme: None,
             colors: std::collections::HashMap::new(),
             nav: None,
+            favicon: None,
         }
     }
 }

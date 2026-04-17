@@ -1,5 +1,6 @@
 name: finro
 theme: dark
+favicon: assets/favicon.svg
 nav:
   - label: Home
     href: index.html

@@ -2,16 +2,19 @@ use crate::theme;
 use crate::types::{Page, Shell, SiteConfig, Slide};
 use super::{components, collect_scripts, esc, resolve_href, Rendered};
 
-fn head(page: &Page, config: &SiteConfig) -> String {
+fn head(page: &Page, config: &SiteConfig, base: &str) -> String {
+    let favicon = config.favicon.as_ref().map(|f| f.render(base)).unwrap_or_default();
     format!(
         r#"<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{title} — {site}</title>
+{favicon}
 <style>{css}</style>
 </head>"#,
         title = esc(&page.title),
         site = esc(&config.name),
+        favicon = favicon,
         css = theme::render_css(&config.resolved_theme()),
     )
 }
@@ -58,7 +61,7 @@ pub mod standard {
 {scripts}
 </body>
 </html>"#,
-            head = head(page, config),
+            head = head(page, config, base),
             cls = Shell::Standard.class(),
             site = esc(&config.name),
             nav = nav,
@@ -73,7 +76,7 @@ pub mod standard {
 pub mod document {
     use super::*;
 
-    pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered, _base: &str) -> String {
+    pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered, base: &str) -> String {
         let eyebrow = page.eyebrow.as_deref().unwrap_or("");
         let subtitle = page.subtitle.as_deref().unwrap_or("");
 
@@ -107,7 +110,7 @@ pub mod document {
 {scripts}
 </body>
 </html>"#,
-            head = head(page, config),
+            head = head(page, config, base),
             cls = Shell::Document.class(),
             doc_header = doc_header,
             body = body.html,
@@ -137,7 +140,7 @@ pub mod deck {
         out.scripts.push("deck");
     }
 
-    pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered, _base: &str) -> String {
+    pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered, base: &str) -> String {
         let eyebrow = page.eyebrow.as_deref().unwrap_or("");
         let subtitle = page.subtitle.as_deref().unwrap_or("");
 
@@ -173,7 +176,7 @@ pub mod deck {
 {scripts}
 </body>
 </html>"#,
-            head = head(page, config),
+            head = head(page, config, base),
             cls = Shell::Deck.class(),
             site = esc(&config.name),
             eyebrow = esc(eyebrow),
