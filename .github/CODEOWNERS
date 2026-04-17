@@ -1,0 +1,15 @@
+# Code owners for finro.
+# Every PR requires review from a maintainer listed here before it can merge.
+# CODEOWNERS entries are matched in order; the last matching line wins.
+
+# Default owner for everything in the repo.
+*                                   @tdiderich
+
+# CI and security-sensitive files — same owner, but listed explicitly so a
+# reviewer notices a diff here.
+/.github/                           @tdiderich
+/.github/workflows/                 @tdiderich
+/Cargo.toml                         @tdiderich
+/Cargo.lock                         @tdiderich
+/SECURITY.md                        @tdiderich
+/CODEOWNERS                         @tdiderich

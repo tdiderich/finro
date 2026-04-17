@@ -110,6 +110,14 @@ finro agents
 
 which prints the guide bundled with the installed binary (so it always matches the version in use) with a preamble linking to the hosted component catalog. `finro init` also scaffolds an `AGENTS.md` + `llms.txt` into new sites so agents find them without being told.
 
+## Contributing
+
+PRs welcome — see `CONTRIBUTING.md` for the fork/PR flow, local dev checks, and guidance on agent-assisted contributions.
+
+## Security
+
+Report vulnerabilities privately via the GitHub advisory form — **do not** open a public issue. Scope and supply-chain protections: `SECURITY.md`.
+
 ## License
 
 MIT — see `LICENSE`.
