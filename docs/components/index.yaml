@@ -17,7 +17,7 @@ components:
     cards:
       - title: Content
         badge:
-          label: 8
+          label: "8"
           color: default
         description: "header, meta, markdown, code, image, callout, blockquote, kbd"
         links:
@@ -26,7 +26,7 @@ components:
 
       - title: Grids
         badge:
-          label: 6
+          label: "6"
           color: default
         description: "card_grid, stat_grid, selectable_grid, before_after, avatar_group, definition_list"
         links:
@@ -35,7 +35,7 @@ components:
 
       - title: Interactive
         badge:
-          label: 3
+          label: "3"
           color: default
         description: "table, tabs, accordion"
         links:
@@ -44,7 +44,7 @@ components:
 
       - title: Layout
         badge:
-          label: 6
+          label: "6"
           color: default
         description: "section, columns, divider, timeline, steps, progress_bar, empty_state"
         links:
