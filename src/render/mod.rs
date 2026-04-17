@@ -63,9 +63,12 @@ pub fn render_page(page: &Page, config: &SiteConfig, base: &str, source_href: &s
 }
 
 pub(super) fn resolve_href(href: &str, base: &str) -> String {
-    if href.starts_with("http://") || href.starts_with("https://")
-        || href.starts_with('/') || href.starts_with('#')
-        || href.starts_with("mailto:") || href.starts_with("tel:")
+    if href.starts_with("http://")
+        || href.starts_with("https://")
+        || href.starts_with('/')
+        || href.starts_with('#')
+        || href.starts_with("mailto:")
+        || href.starts_with("tel:")
     {
         return href.to_string();
     }
@@ -81,9 +84,15 @@ pub(super) struct Rendered {
 }
 
 impl Rendered {
-    pub fn new(html: String) -> Self { Self { html, scripts: Vec::new() } }
+    pub fn new(html: String) -> Self {
+        Self {
+            html,
+            scripts: Vec::new(),
+        }
+    }
     pub fn with_script(mut self, name: &'static str) -> Self {
-        self.scripts.push(name); self
+        self.scripts.push(name);
+        self
     }
     pub fn extend(&mut self, other: Rendered) {
         self.html.push_str(&other.html);
@@ -127,15 +136,24 @@ mod tests {
 
     #[test]
     fn resolve_href_passes_through_absolute_urls() {
-        assert_eq!(resolve_href("https://example.com", "../"), "https://example.com");
-        assert_eq!(resolve_href("http://example.com", "../"), "http://example.com");
+        assert_eq!(
+            resolve_href("https://example.com", "../"),
+            "https://example.com"
+        );
+        assert_eq!(
+            resolve_href("http://example.com", "../"),
+            "http://example.com"
+        );
     }
 
     #[test]
     fn resolve_href_passes_through_root_relative_and_fragments() {
         assert_eq!(resolve_href("/foo", "../"), "/foo");
         assert_eq!(resolve_href("#anchor", "../"), "#anchor");
-        assert_eq!(resolve_href("mailto:hi@example.com", "../"), "mailto:hi@example.com");
+        assert_eq!(
+            resolve_href("mailto:hi@example.com", "../"),
+            "mailto:hi@example.com"
+        );
         assert_eq!(resolve_href("tel:+15551234", "../"), "tel:+15551234");
     }
 
@@ -143,6 +161,9 @@ mod tests {
     fn resolve_href_prepends_base_for_relative() {
         assert_eq!(resolve_href("index.html", ""), "index.html");
         assert_eq!(resolve_href("index.html", "../"), "../index.html");
-        assert_eq!(resolve_href("sub/page.html", "../../"), "../../sub/page.html");
+        assert_eq!(
+            resolve_href("sub/page.html", "../../"),
+            "../../sub/page.html"
+        );
     }
 }

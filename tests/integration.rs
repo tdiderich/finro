@@ -1,7 +1,7 @@
 //! Integration tests — invoke the finro binary end-to-end.
 
-use std::process::Command;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 fn bin() -> PathBuf {
     // cargo sets CARGO_BIN_EXE_<name> env var for the test runner
@@ -23,10 +23,7 @@ fn read(p: &Path) -> String {
 }
 
 fn assert_contains(haystack: &str, needle: &str) {
-    assert!(
-        haystack.contains(needle),
-        "expected to find {:?}", needle
-    );
+    assert!(haystack.contains(needle), "expected to find {:?}", needle);
 }
 
 #[test]

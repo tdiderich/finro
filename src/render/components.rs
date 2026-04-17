@@ -1,28 +1,64 @@
 use pulldown_cmark::{html as md_html, Options, Parser as MdParser};
 
+use super::{esc, Rendered};
 use crate::icons;
 use crate::types::*;
-use super::{esc, Rendered};
 
 pub fn render(c: &Component) -> Rendered {
     match c {
-        Component::Header { title, subtitle, eyebrow, align } => header(title, subtitle, eyebrow, *align),
+        Component::Header {
+            title,
+            subtitle,
+            eyebrow,
+            align,
+        } => header(title, subtitle, eyebrow, *align),
         Component::Meta { fields } => meta(fields),
-        Component::CardGrid { cards, min_width, connector } => card_grid(cards, *min_width, *connector),
-        Component::SelectableGrid { cards, interaction, connector } => selectable_grid(cards, *interaction, *connector),
+        Component::CardGrid {
+            cards,
+            min_width,
+            connector,
+        } => card_grid(cards, *min_width, *connector),
+        Component::SelectableGrid {
+            cards,
+            interaction,
+            connector,
+        } => selectable_grid(cards, *interaction, *connector),
         Component::Timeline { items } => timeline(items),
         Component::StatGrid { stats, columns } => stat_grid(stats, *columns),
         Component::BeforeAfter { items } => before_after(items),
         Component::Steps { items, numbered } => steps(items, *numbered),
         Component::Markdown { body } => markdown(body),
-        Component::Table { columns, rows, filterable } => table(columns, rows, *filterable),
-        Component::Callout { variant, title, body, links } => callout(*variant, title, body, links.as_deref()),
+        Component::Table {
+            columns,
+            rows,
+            filterable,
+        } => table(columns, rows, *filterable),
+        Component::Callout {
+            variant,
+            title,
+            body,
+            links,
+        } => callout(*variant, title, body, links.as_deref()),
         Component::Code { language, code } => code_block(language, code),
         Component::Tabs { tabs } => tabs_component(tabs),
-        Component::Section { heading, eyebrow, components, align } => section(heading, eyebrow, components, *align),
-        Component::Columns { columns, equal_heights } => columns_component(columns, *equal_heights),
+        Component::Section {
+            heading,
+            eyebrow,
+            components,
+            align,
+        } => section(heading, eyebrow, components, *align),
+        Component::Columns {
+            columns,
+            equal_heights,
+        } => columns_component(columns, *equal_heights),
         Component::Accordion { items } => accordion(items),
-        Component::Image { src, alt, caption, max_width, align } => image(src, alt, caption, *max_width, *align),
+        Component::Image {
+            src,
+            alt,
+            caption,
+            max_width,
+            align,
+        } => image(src, alt, caption, *max_width, *align),
         // Phase 1 additions
         Component::Badge { label, color } => badge(label, *color),
         Component::Tag { label, color } => tag(label, *color),
@@ -33,10 +69,25 @@ pub fn render(c: &Component) -> Rendered {
         Component::ButtonGroup { buttons } => button_group(buttons),
         Component::DefinitionList { items } => definition_list(items),
         Component::Blockquote { body, attribution } => blockquote(body, attribution),
-        Component::Avatar { name, src, size, subtitle } => avatar(name, src, *size, subtitle),
+        Component::Avatar {
+            name,
+            src,
+            size,
+            subtitle,
+        } => avatar(name, src, *size, subtitle),
         Component::AvatarGroup { avatars, size, max } => avatar_group(avatars, *size, *max),
-        Component::ProgressBar { value, label, color, detail } => progress_bar(*value, label, *color, detail),
-        Component::EmptyState { title, body, action, icon } => empty_state(title, body, action, icon),
+        Component::ProgressBar {
+            value,
+            label,
+            color,
+            detail,
+        } => progress_bar(*value, label, *color, detail),
+        Component::EmptyState {
+            title,
+            body,
+            action,
+            icon,
+        } => empty_state(title, body, action, icon),
         Component::Icon { name, size, color } => icon_component(name, *size, *color),
     }
 }
@@ -47,12 +98,23 @@ fn sem_color_class(c: SemColor) -> &'static str {
 
 // ── Header ────────────────────────────────────────
 
-fn header(title: &str, subtitle: &Option<String>, eyebrow: &Option<String>, align: Align) -> Rendered {
+fn header(
+    title: &str,
+    subtitle: &Option<String>,
+    eyebrow: &Option<String>,
+    align: Align,
+) -> Rendered {
     let mut h = format!(r#"<div class="c-header {}">"#, align.class());
     if let Some(e) = eyebrow {
-        h.push_str(&format!(r#"<div class="c-header-eyebrow">{}</div>"#, esc(e)));
+        h.push_str(&format!(
+            r#"<div class="c-header-eyebrow">{}</div>"#,
+            esc(e)
+        ));
     }
-    h.push_str(&format!(r#"<h1 class="c-header-title">{}</h1>"#, esc(title)));
+    h.push_str(&format!(
+        r#"<h1 class="c-header-title">{}</h1>"#,
+        esc(title)
+    ));
     if let Some(s) = subtitle {
         h.push_str(&format!(r#"<p class="c-header-subtitle">{}</p>"#, esc(s)));
     }
@@ -91,13 +153,20 @@ fn card_grid(cards: &[Card], min_width: Option<u32>, connector: Connector) -> Re
             h.push_str(r#"<div class="c-card-arrow" aria-hidden="true">→</div>"#);
         }
         let tag = if card.href.is_some() { "a" } else { "div" };
-        let href_attr = card.href.as_ref().map(|h| format!(r#" href="{}""#, esc(h))).unwrap_or_default();
+        let href_attr = card
+            .href
+            .as_ref()
+            .map(|h| format!(r#" href="{}""#, esc(h)))
+            .unwrap_or_default();
         h.push_str(&format!(
             r#"<{tag} class="c-card c-card-{color}"{href_attr}>"#,
             color = sem_color_class(card.color),
         ));
         h.push_str(r#"<div class="c-card-top">"#);
-        h.push_str(&format!(r#"<h2 class="c-card-title">{}</h2>"#, esc(&card.title)));
+        h.push_str(&format!(
+            r#"<h2 class="c-card-title">{}</h2>"#,
+            esc(&card.title)
+        ));
         if let Some(b) = &card.badge {
             h.push_str(&format!(
                 r#"<span class="c-badge c-badge-{color}">{label}</span>"#,
@@ -114,7 +183,8 @@ fn card_grid(cards: &[Card], min_width: Option<u32>, connector: Connector) -> Re
             for l in links {
                 h.push_str(&format!(
                     r#"<a href="{}" class="c-card-link">{}</a>"#,
-                    esc(&l.href), esc(&l.label)
+                    esc(&l.href),
+                    esc(&l.label)
                 ));
             }
             h.push_str("</div>");
@@ -125,10 +195,13 @@ fn card_grid(cards: &[Card], min_width: Option<u32>, connector: Connector) -> Re
     Rendered::new(h)
 }
 
-
 // ── Selectable Grid ───────────────────────────────
 
-fn selectable_grid(cards: &[SelectableCard], interaction: Interaction, connector: Connector) -> Rendered {
+fn selectable_grid(
+    cards: &[SelectableCard],
+    interaction: Interaction,
+    connector: Connector,
+) -> Rendered {
     let interaction_attr = match interaction {
         Interaction::SingleSelect => "single_select",
         Interaction::MultiSelect => "multi_select",
@@ -168,11 +241,19 @@ fn selectable_grid(cards: &[SelectableCard], interaction: Interaction, connector
             r#"<button class="sel-card sel-card-{color}" data-n="{n}">"#,
             color = sem_color_class(card.color),
         ));
-        let eyebrow = card.eyebrow.as_deref()
+        let eyebrow = card
+            .eyebrow
+            .as_deref()
             .map(|s| s.to_string())
             .unwrap_or_else(|| format!("Item {n}"));
-        h.push_str(&format!(r#"<div class="c-sel-eyebrow">{}</div>"#, esc(&eyebrow)));
-        h.push_str(&format!(r#"<div class="c-sel-title">{}</div>"#, esc(&card.title)));
+        h.push_str(&format!(
+            r#"<div class="c-sel-eyebrow">{}</div>"#,
+            esc(&eyebrow)
+        ));
+        h.push_str(&format!(
+            r#"<div class="c-sel-title">{}</div>"#,
+            esc(&card.title)
+        ));
         if let Some(bullets) = &card.bullets {
             h.push_str(r#"<ul class="c-sel-bullets">"#);
             for b in bullets {
@@ -184,7 +265,10 @@ fn selectable_grid(cards: &[SelectableCard], interaction: Interaction, connector
             h.push_str("</ul>");
         }
         if let Some(body) = &card.body {
-            h.push_str(&format!(r#"<div class="c-sel-body">{}</div>"#, parse_markdown(body)));
+            h.push_str(&format!(
+                r#"<div class="c-sel-body">{}</div>"#,
+                parse_markdown(body)
+            ));
         }
         h.push_str("</button>");
     }
@@ -239,7 +323,11 @@ fn before_after(items: &[BeforeAfterItem]) -> Rendered {
     let mut h = String::from(r#"<div class="c-before-after">"#);
     for item in items {
         let ctx = item.after_context.as_deref().unwrap_or("");
-        let ctx_span = if ctx.is_empty() { String::new() } else { format!(" {}", esc(ctx)) };
+        let ctx_span = if ctx.is_empty() {
+            String::new()
+        } else {
+            format!(" {}", esc(ctx))
+        };
         h.push_str(&format!(
             r#"<div class="c-ba-card">
   <div class="c-ba-title">{title}</div>
@@ -268,7 +356,10 @@ fn steps(items: &[Step], numbered: bool) -> Rendered {
         } else {
             h.push_str(r#"<div class="c-step-bullet"></div>"#);
         }
-        h.push_str(&format!(r#"<div><div class="c-step-title">{}</div>"#, esc(&s.title)));
+        h.push_str(&format!(
+            r#"<div><div class="c-step-title">{}</div>"#,
+            esc(&s.title)
+        ));
         if let Some(d) = &s.detail {
             h.push_str(&format!(r#"<div class="c-step-detail">{}</div>"#, esc(d)));
         }
@@ -281,7 +372,10 @@ fn steps(items: &[Step], numbered: bool) -> Rendered {
 // ── Markdown ──────────────────────────────────────
 
 fn markdown(body: &str) -> Rendered {
-    Rendered::new(format!(r#"<div class="c-markdown">{}</div>"#, parse_markdown(body)))
+    Rendered::new(format!(
+        r#"<div class="c-markdown">{}</div>"#,
+        parse_markdown(body)
+    ))
 }
 
 pub(super) fn parse_markdown(md: &str) -> String {
@@ -296,10 +390,16 @@ pub(super) fn parse_markdown(md: &str) -> String {
 
 // ── Table ─────────────────────────────────────────
 
-fn table(columns: &[TableColumn], rows: &[std::collections::HashMap<String, serde_yaml::Value>], filterable: bool) -> Rendered {
+fn table(
+    columns: &[TableColumn],
+    rows: &[std::collections::HashMap<String, serde_yaml::Value>],
+    filterable: bool,
+) -> Rendered {
     let mut h = String::from(r#"<div class="c-table-wrap">"#);
     if filterable {
-        h.push_str(r#"<input type="text" class="c-table-filter" data-table-filter placeholder="Filter…">"#);
+        h.push_str(
+            r#"<input type="text" class="c-table-filter" data-table-filter placeholder="Filter…">"#,
+        );
     }
     h.push_str(r#"<table class="c-table" data-finro-table><thead><tr>"#);
     for col in columns {
@@ -330,12 +430,20 @@ fn table(columns: &[TableColumn], rows: &[std::collections::HashMap<String, serd
 
 // ── Callout ───────────────────────────────────────
 
-fn callout(variant: CalloutVariant, title: &Option<String>, body: &str, links: Option<&[ButtonConfig]>) -> Rendered {
+fn callout(
+    variant: CalloutVariant,
+    title: &Option<String>,
+    body: &str,
+    links: Option<&[ButtonConfig]>,
+) -> Rendered {
     let mut h = format!(r#"<div class="c-callout {}">"#, variant.class());
     if let Some(t) = title {
         h.push_str(&format!(r#"<div class="c-callout-title">{}</div>"#, esc(t)));
     }
-    h.push_str(&format!(r#"<div class="c-callout-body">{}</div>"#, parse_markdown(body)));
+    h.push_str(&format!(
+        r#"<div class="c-callout-body">{}</div>"#,
+        parse_markdown(body)
+    ));
     if let Some(ls) = links {
         if !ls.is_empty() {
             h.push_str(r#"<div class="c-callout-links">"#);
@@ -351,7 +459,11 @@ fn callout(variant: CalloutVariant, title: &Option<String>, body: &str, links: O
 
 fn code_block(language: &Option<String>, code: &str) -> Rendered {
     let lang = language.as_deref().unwrap_or("");
-    let lang_attr = if lang.is_empty() { String::new() } else { format!(r#" data-lang="{}""#, esc(lang)) };
+    let lang_attr = if lang.is_empty() {
+        String::new()
+    } else {
+        format!(r#" data-lang="{}""#, esc(lang))
+    };
     Rendered::new(format!(
         r#"<pre class="c-code"{lang_attr}><code>{}</code></pre>"#,
         esc(code)
@@ -389,16 +501,26 @@ fn tabs_component(tabs: &[Tab]) -> Rendered {
 
 // ── Section ───────────────────────────────────────
 
-fn section(heading: &Option<String>, eyebrow: &Option<String>, comps: &[Component], align: Align) -> Rendered {
+fn section(
+    heading: &Option<String>,
+    eyebrow: &Option<String>,
+    comps: &[Component],
+    align: Align,
+) -> Rendered {
     let mut r = Rendered::default();
-    r.html.push_str(&format!(r#"<section class="c-section {}">"#, align.class()));
+    r.html
+        .push_str(&format!(r#"<section class="c-section {}">"#, align.class()));
     if eyebrow.is_some() || heading.is_some() {
         r.html.push_str(r#"<div class="c-section-header">"#);
         if let Some(e) = eyebrow {
-            r.html.push_str(&format!(r#"<div class="c-section-eyebrow">{}</div>"#, esc(e)));
+            r.html.push_str(&format!(
+                r#"<div class="c-section-eyebrow">{}</div>"#,
+                esc(e)
+            ));
         }
         if let Some(h) = heading {
-            r.html.push_str(&format!(r#"<h2 class="c-section-heading">{}</h2>"#, esc(h)));
+            r.html
+                .push_str(&format!(r#"<h2 class="c-section-heading">{}</h2>"#, esc(h)));
         }
         r.html.push_str("</div>");
     }
@@ -413,7 +535,11 @@ fn section(heading: &Option<String>, eyebrow: &Option<String>, comps: &[Componen
 
 fn columns_component(cols: &[Vec<Component>], equal_heights: bool) -> Rendered {
     let mut r = Rendered::default();
-    let class = if equal_heights { "c-columns c-columns-stretch" } else { "c-columns" };
+    let class = if equal_heights {
+        "c-columns c-columns-stretch"
+    } else {
+        "c-columns"
+    };
     r.html.push_str(&format!(
         r#"<div class="{class}" style="grid-template-columns: repeat({}, 1fr)">"#,
         cols.len().max(1)
@@ -435,7 +561,8 @@ fn accordion(items: &[AccordionItem]) -> Rendered {
     let mut r = Rendered::default();
     r.html.push_str(r#"<div class="c-accordion">"#);
     for item in items {
-        r.html.push_str(r#"<div class="c-accordion-item" data-accordion-item>"#);
+        r.html
+            .push_str(r#"<div class="c-accordion-item" data-accordion-item>"#);
         r.html.push_str(&format!(
             r#"<button class="accordion-head">{}<span class="accordion-chevron">›</span></button>"#,
             esc(&item.title)
@@ -453,9 +580,17 @@ fn accordion(items: &[AccordionItem]) -> Rendered {
 
 // ── Image ─────────────────────────────────────────
 
-fn image(src: &str, alt: &Option<String>, caption: &Option<String>, max_width: Option<u32>, align: Align) -> Rendered {
+fn image(
+    src: &str,
+    alt: &Option<String>,
+    caption: &Option<String>,
+    max_width: Option<u32>,
+    align: Align,
+) -> Rendered {
     let alt_txt = alt.as_deref().unwrap_or("");
-    let style = max_width.map(|w| format!(r#" style="max-width: {w}px""#)).unwrap_or_default();
+    let style = max_width
+        .map(|w| format!(r#" style="max-width: {w}px""#))
+        .unwrap_or_default();
     let mut h = format!(
         r#"<figure class="c-image {align}"{style}><img src="{src}" alt="{alt}">"#,
         align = align.class(),
@@ -543,7 +678,8 @@ fn breadcrumb(items: &[BreadcrumbItem]) -> Rendered {
             Some(href) => {
                 h.push_str(&format!(
                     r#"<a href="{}">{}</a>"#,
-                    esc(href), esc(&item.label)
+                    esc(href),
+                    esc(&item.label)
                 ));
             }
             None => {
@@ -569,7 +705,11 @@ fn button_group(buttons: &[ButtonConfig]) -> Rendered {
             ButtonVariant::Secondary => "c-button-secondary",
             ButtonVariant::Ghost => "c-button-ghost",
         };
-        let target = if b.external { r#" target="_blank" rel="noopener""# } else { "" };
+        let target = if b.external {
+            r#" target="_blank" rel="noopener""#
+        } else {
+            ""
+        };
         h.push_str(&format!(
             r#"<a href="{href}" class="c-button {variant}"{target}>"#,
             href = esc(&b.href),
@@ -637,7 +777,12 @@ fn initials(name: &str) -> String {
         .collect()
 }
 
-fn avatar(name: &str, src: &Option<String>, size: AvatarSize, subtitle: &Option<String>) -> Rendered {
+fn avatar(
+    name: &str,
+    src: &Option<String>,
+    size: AvatarSize,
+    subtitle: &Option<String>,
+) -> Rendered {
     let size_class = size.class_suffix();
     let wrapper_open = if subtitle.is_some() {
         format!(r#"<div class="c-avatar-row"><div class="c-avatar c-avatar-{size_class}">"#)
@@ -647,10 +792,7 @@ fn avatar(name: &str, src: &Option<String>, size: AvatarSize, subtitle: &Option<
     let mut h = wrapper_open;
     match src {
         Some(s) => {
-            h.push_str(&format!(
-                r#"<img src="{}" alt="{}">"#,
-                esc(s), esc(name)
-            ));
+            h.push_str(&format!(r#"<img src="{}" alt="{}">"#, esc(s), esc(name)));
         }
         None => {
             h.push_str(&format!(
@@ -676,7 +818,10 @@ fn avatar_group(avatars: &[AvatarConfig], size: AvatarSize, max: usize) -> Rende
     let mut h = format!(r#"<div class="c-avatar-group c-avatar-group-{size_class}">"#);
     let visible = avatars.len().min(max);
     for a in avatars.iter().take(visible) {
-        h.push_str(&format!(r#"<div class="c-avatar c-avatar-{size_class}" title="{}">"#, esc(&a.name)));
+        h.push_str(&format!(
+            r#"<div class="c-avatar c-avatar-{size_class}" title="{}">"#,
+            esc(&a.name)
+        ));
         match &a.src {
             Some(s) => h.push_str(&format!(r#"<img src="{}" alt="{}">"#, esc(s), esc(&a.name))),
             None => h.push_str(&format!(
@@ -699,7 +844,12 @@ fn avatar_group(avatars: &[AvatarConfig], size: AvatarSize, max: usize) -> Rende
 
 // ── Progress Bar ─────────────────────────────────
 
-fn progress_bar(value: u8, label: &Option<String>, color: SemColor, detail: &Option<String>) -> Rendered {
+fn progress_bar(
+    value: u8,
+    label: &Option<String>,
+    color: SemColor,
+    detail: &Option<String>,
+) -> Rendered {
     let clamped = value.min(100);
     let color_class = sem_color_class(color);
 
@@ -707,11 +857,17 @@ fn progress_bar(value: u8, label: &Option<String>, color: SemColor, detail: &Opt
     if label.is_some() || detail.is_some() {
         h.push_str(r#"<div class="c-progress-labels">"#);
         if let Some(l) = label {
-            h.push_str(&format!(r#"<span class="c-progress-label">{}</span>"#, esc(l)));
+            h.push_str(&format!(
+                r#"<span class="c-progress-label">{}</span>"#,
+                esc(l)
+            ));
         } else {
             h.push_str(r#"<span></span>"#);
         }
-        h.push_str(&format!(r#"<span class="c-progress-value">{}%</span>"#, clamped));
+        h.push_str(&format!(
+            r#"<span class="c-progress-value">{}%</span>"#,
+            clamped
+        ));
         h.push_str("</div>");
     }
     h.push_str(&format!(
@@ -719,7 +875,10 @@ fn progress_bar(value: u8, label: &Option<String>, color: SemColor, detail: &Opt
         v = clamped, color = color_class
     ));
     if let Some(d) = detail {
-        h.push_str(&format!(r#"<div class="c-progress-detail">{}</div>"#, esc(d)));
+        h.push_str(&format!(
+            r#"<div class="c-progress-detail">{}</div>"#,
+            esc(d)
+        ));
     }
     h.push_str("</div>");
     Rendered::new(h)
@@ -727,7 +886,12 @@ fn progress_bar(value: u8, label: &Option<String>, color: SemColor, detail: &Opt
 
 // ── Empty State ──────────────────────────────────
 
-fn empty_state(title: &str, body: &Option<String>, action: &Option<EmptyStateAction>, icon: &Option<String>) -> Rendered {
+fn empty_state(
+    title: &str,
+    body: &Option<String>,
+    action: &Option<EmptyStateAction>,
+    icon: &Option<String>,
+) -> Rendered {
     let mut h = String::from(r#"<div class="c-empty-state">"#);
     let icon_name = icon.as_deref().unwrap_or("inbox");
     h.push_str(&format!(
@@ -739,10 +903,7 @@ fn empty_state(title: &str, body: &Option<String>, action: &Option<EmptyStateAct
         esc(title)
     ));
     if let Some(b) = body {
-        h.push_str(&format!(
-            r#"<p class="c-empty-state-body">{}</p>"#,
-            esc(b)
-        ));
+        h.push_str(&format!(r#"<p class="c-empty-state-body">{}</p>"#, esc(b)));
     }
     if let Some(a) = action {
         h.push_str(&format!(
@@ -765,4 +926,3 @@ fn icon_component(name: &str, size: IconSize, color: SemColor) -> Rendered {
     };
     Rendered::new(icons::render(name, px, &color_value))
 }
-

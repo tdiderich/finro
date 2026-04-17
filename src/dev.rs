@@ -23,8 +23,7 @@ pub fn run(dir: &Path, out: &Path, port: u16) -> Result<()> {
 
     // ── HTTP server ───────────────────────────────
     let addr = format!("0.0.0.0:{port}");
-    let server = Server::http(&addr)
-        .map_err(|e| anyhow::anyhow!("failed to bind {addr}: {e}"))?;
+    let server = Server::http(&addr).map_err(|e| anyhow::anyhow!("failed to bind {addr}: {e}"))?;
 
     println!("\n  ➜ http://localhost:{port}");
     println!("  watching {}\n", dir.display());
@@ -47,7 +46,10 @@ fn watch_loop(dir: PathBuf, out: PathBuf, version: Arc<AtomicU64>) {
     let (tx, rx) = std::sync::mpsc::channel::<notify::Result<Event>>();
     let mut watcher = match notify::recommended_watcher(tx) {
         Ok(w) => w,
-        Err(e) => { eprintln!("watcher init failed: {e}"); return; }
+        Err(e) => {
+            eprintln!("watcher init failed: {e}");
+            return;
+        }
     };
     if let Err(e) = watcher.watch(&dir, RecursiveMode::Recursive) {
         eprintln!("watch failed: {e}");
@@ -60,12 +62,18 @@ fn watch_loop(dir: PathBuf, out: PathBuf, version: Arc<AtomicU64>) {
         let Ok(event) = event else { continue };
         let relevant = event.paths.iter().any(|p| {
             // Ignore output dir and its contents
-            if p.starts_with(&out) { return false }
+            if p.starts_with(&out) {
+                return false;
+            }
             p.extension().map(|e| e == "yaml").unwrap_or(false)
                 || p.file_name().map(|n| n == "finro.yaml").unwrap_or(false)
         });
-        if !relevant { continue }
-        if last_build.elapsed() < Duration::from_millis(150) { continue }
+        if !relevant {
+            continue;
+        }
+        if last_build.elapsed() < Duration::from_millis(150) {
+            continue;
+        }
         last_build = Instant::now();
 
         print!("  rebuild…");
@@ -85,7 +93,8 @@ fn watch_loop(dir: PathBuf, out: PathBuf, version: Arc<AtomicU64>) {
 
 fn handle(req: tiny_http::Request, root: &Path, version: &AtomicU64) -> Result<()> {
     if req.method() != &Method::Get {
-        return req.respond(Response::from_string("method not allowed").with_status_code(405))
+        return req
+            .respond(Response::from_string("method not allowed").with_status_code(405))
             .context("respond");
     }
 
@@ -105,7 +114,8 @@ fn handle(req: tiny_http::Request, root: &Path, version: &AtomicU64) -> Result<(
 
     // Prevent escape
     if rel.contains("..") {
-        return req.respond(Response::from_string("bad path").with_status_code(400))
+        return req
+            .respond(Response::from_string("bad path").with_status_code(400))
             .context("respond");
     }
 

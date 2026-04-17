@@ -27,14 +27,20 @@ pub fn write(out: &Path, config: &SiteConfig, pages: &[PageEntry]) -> std::io::R
 
     // "Root" group first (alphabetically "" comes first anyway with BTreeMap)
     for (group, entries) in &groups {
-        let heading = if group.is_empty() { "Pages".to_string() } else { title_case(group) };
+        let heading = if group.is_empty() {
+            "Pages".to_string()
+        } else {
+            title_case(group)
+        };
         body.push_str(&format!("## {}\n\n", heading));
         let mut sorted = entries.clone();
         sorted.sort_by(|a, b| a.html_path.cmp(&b.html_path));
         for e in sorted {
             body.push_str(&format!(
                 "- [{title}](./{html}) ([source](./{yaml}))",
-                title = e.title, html = e.html_path, yaml = e.yaml_path
+                title = e.title,
+                html = e.html_path,
+                yaml = e.yaml_path
             ));
             if let Some(sub) = &e.subtitle {
                 body.push_str(&format!(": {}", sub));

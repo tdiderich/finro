@@ -6,16 +6,16 @@ use std::collections::HashMap;
 #[derive(Clone)]
 pub struct Theme {
     pub bg: String,
-    pub surface: String,          // card backgrounds (low-contrast overlay)
-    pub surface_strong: String,   // stronger surface (code, kbd)
-    pub border: String,           // default border color
-    pub border_strong: String,    // stronger/active border
-    pub accent: String,           // primary brand color (teal by default)
-    pub accent_soft: String,      // accent on a translucent background
-    pub text: String,             // primary text
-    pub text_muted: String,       // secondary text
-    pub text_subtle: String,      // tertiary (labels, captions)
-    pub overlay_hover: String,    // hover/active surface overlay
+    pub surface: String,        // card backgrounds (low-contrast overlay)
+    pub surface_strong: String, // stronger surface (code, kbd)
+    pub border: String,         // default border color
+    pub border_strong: String,  // stronger/active border
+    pub accent: String,         // primary brand color (teal by default)
+    pub accent_soft: String,    // accent on a translucent background
+    pub text: String,           // primary text
+    pub text_muted: String,     // secondary text
+    pub text_subtle: String,    // tertiary (labels, captions)
+    pub overlay_hover: String,  // hover/active surface overlay
     pub green: String,
     pub yellow: String,
     pub red: String,
@@ -35,7 +35,9 @@ impl Theme {
     pub fn with_overrides(mut self, colors: &HashMap<String, String>) -> Theme {
         macro_rules! apply {
             ($key:literal, $field:ident) => {
-                if let Some(v) = colors.get($key) { self.$field = v.clone(); }
+                if let Some(v) = colors.get($key) {
+                    self.$field = v.clone();
+                }
             };
         }
         apply!("bg", bg);
@@ -105,7 +107,9 @@ impl Theme {
 
 fn hex_to_rgb_triple(hex: &str) -> Option<String> {
     let h = hex.trim().trim_start_matches('#');
-    if h.len() != 6 { return None; }
+    if h.len() != 6 {
+        return None;
+    }
     let r = u8::from_str_radix(&h[0..2], 16).ok()?;
     let g = u8::from_str_radix(&h[2..4], 16).ok()?;
     let b = u8::from_str_radix(&h[4..6], 16).ok()?;

@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use serde::Deserialize;
+use std::collections::HashMap;
 
 // ── Shell ────────────────────────────────────────────
 
@@ -535,14 +535,43 @@ impl Favicon {
         match self {
             Favicon::Simple(path) => {
                 let mime = mime_for(path);
-                format!(r#"<link rel="icon" type="{}" href="{}">"#, mime, resolve(path))
+                format!(
+                    r#"<link rel="icon" type="{}" href="{}">"#,
+                    mime,
+                    resolve(path)
+                )
             }
-            Favicon::Full { svg, png, ico, apple_touch_icon } => {
+            Favicon::Full {
+                svg,
+                png,
+                ico,
+                apple_touch_icon,
+            } => {
                 let mut out = String::new();
-                if let Some(p) = svg { out.push_str(&format!(r#"<link rel="icon" type="image/svg+xml" href="{}">"#, resolve(p))); }
-                if let Some(p) = png { out.push_str(&format!(r#"<link rel="icon" type="image/png" href="{}">"#, resolve(p))); }
-                if let Some(p) = ico { out.push_str(&format!(r#"<link rel="icon" type="image/x-icon" href="{}">"#, resolve(p))); }
-                if let Some(p) = apple_touch_icon { out.push_str(&format!(r#"<link rel="apple-touch-icon" href="{}">"#, resolve(p))); }
+                if let Some(p) = svg {
+                    out.push_str(&format!(
+                        r#"<link rel="icon" type="image/svg+xml" href="{}">"#,
+                        resolve(p)
+                    ));
+                }
+                if let Some(p) = png {
+                    out.push_str(&format!(
+                        r#"<link rel="icon" type="image/png" href="{}">"#,
+                        resolve(p)
+                    ));
+                }
+                if let Some(p) = ico {
+                    out.push_str(&format!(
+                        r#"<link rel="icon" type="image/x-icon" href="{}">"#,
+                        resolve(p)
+                    ));
+                }
+                if let Some(p) = apple_touch_icon {
+                    out.push_str(&format!(
+                        r#"<link rel="apple-touch-icon" href="{}">"#,
+                        resolve(p)
+                    ));
+                }
                 out
             }
         }
@@ -551,11 +580,17 @@ impl Favicon {
 
 fn mime_for(path: &str) -> &'static str {
     let lower = path.to_lowercase();
-    if lower.ends_with(".svg") { "image/svg+xml" }
-    else if lower.ends_with(".png") { "image/png" }
-    else if lower.ends_with(".ico") { "image/x-icon" }
-    else if lower.ends_with(".jpg") || lower.ends_with(".jpeg") { "image/jpeg" }
-    else { "image/png" }
+    if lower.ends_with(".svg") {
+        "image/svg+xml"
+    } else if lower.ends_with(".png") {
+        "image/png"
+    } else if lower.ends_with(".ico") {
+        "image/x-icon"
+    } else if lower.ends_with(".jpg") || lower.ends_with(".jpeg") {
+        "image/jpeg"
+    } else {
+        "image/png"
+    }
 }
 
 impl SiteConfig {
@@ -580,9 +615,15 @@ impl Default for SiteConfig {
 
 // ── Defaults ─────────────────────────────────────────
 
-fn default_stat_columns() -> u32 { 3 }
-fn default_true() -> bool { true }
-fn default_avatar_max() -> usize { 5 }
+fn default_stat_columns() -> u32 {
+    3
+}
+fn default_true() -> bool {
+    true
+}
+fn default_avatar_max() -> usize {
+    5
+}
 
 pub fn value_to_string(v: &serde_yaml::Value) -> String {
     match v {

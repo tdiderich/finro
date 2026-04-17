@@ -48,9 +48,11 @@ pub fn minify_html(input: &str) -> String {
         // Whitespace collapse
         let first = rest.chars().next().unwrap();
         if first.is_ascii_whitespace() {
-            let ws_len: usize = rest.chars()
+            let ws_len: usize = rest
+                .chars()
                 .take_while(|c| c.is_ascii_whitespace())
-                .map(char::len_utf8).sum();
+                .map(char::len_utf8)
+                .sum();
             let after_ws = &rest[ws_len..];
             let prev_is_tag_close = out.ends_with('>');
             let next_is_tag_open = after_ws.starts_with('<');
@@ -75,7 +77,9 @@ pub fn minify_html(input: &str) -> String {
 /// number of bytes to copy verbatim (including both tags). Returns None if this
 /// isn't actually the start of that tag.
 fn consume_preserved(rest: &str, tag: &str) -> Option<usize> {
-    if !starts_tag_ci(rest, tag) { return None; }
+    if !starts_tag_ci(rest, tag) {
+        return None;
+    }
     // finro emits lowercase tags, so search for the literal lowercase close.
     // Using rest.find() directly avoids to_lowercase() which can change byte
     // offsets for multi-byte characters and invalidate the returned position.
@@ -91,7 +95,9 @@ fn minify_tag_inner(
     tag: &str,
     minifier: fn(&str) -> String,
 ) -> Option<(usize, String)> {
-    if !starts_tag_ci(rest, tag) { return None; }
+    if !starts_tag_ci(rest, tag) {
+        return None;
+    }
     let open_end = rest.find('>')?;
     let close = format!("</{}>", tag);
     let inner = &rest[open_end + 1..];
@@ -112,13 +118,16 @@ fn starts_tag_ci(rest: &str, tag: &str) -> bool {
     let open = format!("<{}", tag);
     let open_bytes = open.as_bytes();
     let rest_bytes = rest.as_bytes();
-    if rest_bytes.len() < open_bytes.len() { return false; }
+    if rest_bytes.len() < open_bytes.len() {
+        return false;
+    }
     for i in 0..open_bytes.len() {
-        if rest_bytes[i].to_ascii_lowercase() != open_bytes[i].to_ascii_lowercase() {
+        if !rest_bytes[i].eq_ignore_ascii_case(&open_bytes[i]) {
             return false;
         }
     }
-    rest_bytes.get(open_bytes.len())
+    rest_bytes
+        .get(open_bytes.len())
         .map(|c| matches!(*c, b' ' | b'\t' | b'\n' | b'\r' | b'>' | b'/'))
         .unwrap_or(false)
 }
@@ -133,15 +142,20 @@ pub fn minify_css(input: &str) -> String {
         // /* comment */
         if rest.starts_with("/*") {
             match rest[2..].find("*/") {
-                Some(pos) => { rest = &rest[2 + pos + 2..]; continue; }
+                Some(pos) => {
+                    rest = &rest[2 + pos + 2..];
+                    continue;
+                }
                 None => break,
             }
         }
         let first = rest.chars().next().unwrap();
         if first.is_ascii_whitespace() {
-            let ws_len: usize = rest.chars()
+            let ws_len: usize = rest
+                .chars()
                 .take_while(|c| c.is_ascii_whitespace())
-                .map(char::len_utf8).sum();
+                .map(char::len_utf8)
+                .sum();
             let after_ws = &rest[ws_len..];
             let prev = out.chars().last().unwrap_or(' ');
             let next = after_ws.chars().next().unwrap_or(' ');
@@ -152,7 +166,9 @@ pub fn minify_css(input: &str) -> String {
             continue;
         }
         if is_css_delim(first) {
-            while out.ends_with(' ') { out.pop(); }
+            while out.ends_with(' ') {
+                out.pop();
+            }
             out.push(first);
             rest = &rest[first.len_utf8()..];
             continue;
@@ -178,14 +194,20 @@ pub fn minify_js(input: &str) -> String {
         // /* ... */
         if rest.starts_with("/*") {
             match rest[2..].find("*/") {
-                Some(pos) => { rest = &rest[2 + pos + 2..]; continue; }
+                Some(pos) => {
+                    rest = &rest[2 + pos + 2..];
+                    continue;
+                }
                 None => break,
             }
         }
         // // ...
         if rest.starts_with("//") {
             match rest.find('\n') {
-                Some(pos) => { rest = &rest[pos..]; continue; }
+                Some(pos) => {
+                    rest = &rest[pos..];
+                    continue;
+                }
                 None => break,
             }
         }
@@ -198,18 +220,28 @@ pub fn minify_js(input: &str) -> String {
             let mut escaped = false;
             for (off, c) in iter.by_ref() {
                 len = first.len_utf8() + off + c.len_utf8();
-                if escaped { escaped = false; continue; }
-                if c == '\\' { escaped = true; continue; }
-                if c == quote { break; }
+                if escaped {
+                    escaped = false;
+                    continue;
+                }
+                if c == '\\' {
+                    escaped = true;
+                    continue;
+                }
+                if c == quote {
+                    break;
+                }
             }
             out.push_str(&rest[..len]);
             rest = &rest[len..];
             continue;
         }
         if first.is_ascii_whitespace() {
-            let ws_len: usize = rest.chars()
+            let ws_len: usize = rest
+                .chars()
                 .take_while(|c| c.is_ascii_whitespace())
-                .map(char::len_utf8).sum();
+                .map(char::len_utf8)
+                .sum();
             let after_ws = &rest[ws_len..];
             let prev = out.chars().last().unwrap_or(' ');
             let next = after_ws.chars().next().unwrap_or(' ');

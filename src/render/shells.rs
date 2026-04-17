@@ -1,6 +1,6 @@
+use super::{collect_scripts, components, esc, resolve_href, Rendered};
 use crate::theme;
 use crate::types::{Page, Shell, SiteConfig, Slide};
-use super::{components, collect_scripts, esc, resolve_href, Rendered};
 
 fn head(page: &Page, config: &SiteConfig, base: &str) -> String {
     let theme = config.resolved_theme();
@@ -28,20 +28,30 @@ fn head(page: &Page, config: &SiteConfig, base: &str) -> String {
 fn default_favicon(theme: &theme::Theme) -> String {
     let svg = format!(
         r##"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='{bg}'/><path d='M 10 9 L 22 9 L 22 12 L 13 12 L 13 15 L 20 15 L 20 18 L 13 18 L 13 23 L 10 23 Z' fill='{accent}'/></svg>"##,
-        bg = theme.bg, accent = theme.accent
+        bg = theme.bg,
+        accent = theme.accent
     );
-    let encoded = svg.replace('#', "%23").replace('<', "%3C").replace('>', "%3E").replace(' ', "%20");
+    let encoded = svg
+        .replace('#', "%23")
+        .replace('<', "%3C")
+        .replace('>', "%3E")
+        .replace(' ', "%20");
     format!(r#"<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,{encoded}">"#)
 }
 
 fn nav_html(config: &SiteConfig, base: &str) -> (String, bool) {
-    let Some(links) = &config.nav else { return (String::new(), false) };
-    if links.is_empty() { return (String::new(), false) }
+    let Some(links) = &config.nav else {
+        return (String::new(), false);
+    };
+    if links.is_empty() {
+        return (String::new(), false);
+    }
     let mut out = String::from("<nav>");
     for link in links {
         out.push_str(&format!(
             r#"<a href="{}" class="nav-link">{}</a>"#,
-            esc(&resolve_href(&link.href, base)), esc(&link.label)
+            esc(&resolve_href(&link.href, base)),
+            esc(&link.label)
         ));
     }
     out.push_str("</nav>");
@@ -71,7 +81,8 @@ fn site_bar(page: &Page, config: &SiteConfig, base: &str, right_html: &str) -> S
 }
 
 fn subtitle_span(page: &Page) -> String {
-    page.subtitle.as_deref()
+    page.subtitle
+        .as_deref()
         .filter(|s| !s.is_empty())
         .map(|s| format!(r#"<span class="site-bar-subtitle">{}</span>"#, esc(s)))
         .unwrap_or_default()
@@ -82,14 +93,22 @@ fn subtitle_span(page: &Page) -> String {
 pub mod standard {
     use super::*;
 
-    pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered, base: &str, source_href: &str) -> String {
+    pub fn wrap(
+        page: &Page,
+        config: &SiteConfig,
+        body: Rendered,
+        base: &str,
+        source_href: &str,
+    ) -> String {
         let (nav, has_nav) = nav_html(config, base);
         let mut right = subtitle_span(page);
         right.push_str(&nav);
         let bar = site_bar(page, config, base, &right);
 
         let mut scripts = body.scripts.clone();
-        if has_nav { scripts.push("nav"); }
+        if has_nav {
+            scripts.push("nav");
+        }
         scripts.push("reload");
         let view_src = view_source_html(source_href);
 
@@ -120,7 +139,13 @@ pub mod standard {
 pub mod document {
     use super::*;
 
-    pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered, base: &str, source_href: &str) -> String {
+    pub fn wrap(
+        page: &Page,
+        config: &SiteConfig,
+        body: Rendered,
+        base: &str,
+        source_href: &str,
+    ) -> String {
         let bar = site_bar(page, config, base, &subtitle_span(page));
 
         let mut scripts = body.scripts.clone();
@@ -160,12 +185,16 @@ pub mod deck {
     use super::*;
 
     pub fn render(_page: &Page, _config: &SiteConfig, slides: &[Slide], out: &mut Rendered) {
-        out.html.push_str(r#"<div class="deck-viewport"><div class="deck-track">"#);
+        out.html
+            .push_str(r#"<div class="deck-viewport"><div class="deck-track">"#);
         for slide in slides {
             let (label_html, slide_cls) = if slide.hide_label {
                 (String::new(), " deck-slide-cover")
             } else {
-                (format!(r#"<div class="deck-label">{}</div>"#, esc(&slide.label)), "")
+                (
+                    format!(r#"<div class="deck-label">{}</div>"#, esc(&slide.label)),
+                    "",
+                )
             };
             out.html.push_str(&format!(
                 r#"<div class="deck-slide{cls}" data-label="{label}"><div class="deck-inner">{label_html}"#,
@@ -182,9 +211,17 @@ pub mod deck {
         out.scripts.push("deck");
     }
 
-    pub fn wrap(page: &Page, config: &SiteConfig, body: Rendered, base: &str, _source_href: &str) -> String {
+    pub fn wrap(
+        page: &Page,
+        config: &SiteConfig,
+        body: Rendered,
+        base: &str,
+        _source_href: &str,
+    ) -> String {
         let mut right = subtitle_span(page);
-        right.push_str(r#"<button class="site-bar-print-btn" onclick="window.print()">Download PDF</button>"#);
+        right.push_str(
+            r#"<button class="site-bar-print-btn" onclick="window.print()">Download PDF</button>"#,
+        );
         let bar = site_bar(page, config, base, &right);
 
         let mut scripts = body.scripts.clone();
@@ -219,9 +256,10 @@ pub mod deck {
     }
 }
 
-
 fn view_source_html(source_href: &str) -> String {
-    if source_href.is_empty() { return String::new(); }
+    if source_href.is_empty() {
+        return String::new();
+    }
     format!(
         r##"<a class="view-source" href="{src}" title="View raw YAML source">
   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>

@@ -8,18 +8,28 @@ use std::path::Path;
 pub fn run(path: &str) -> Result<()> {
     let dir = Path::new(path);
     if dir.exists() {
-        bail!("'{}' already exists — choose another name or remove it first", path);
+        bail!(
+            "'{}' already exists — choose another name or remove it first",
+            path
+        );
     }
 
-    let site_name = dir.file_name()
+    let site_name = dir
+        .file_name()
         .and_then(|f| f.to_str())
         .unwrap_or("my-site")
         .to_string();
 
     fs::create_dir_all(dir).with_context(|| format!("creating {:?}", dir))?;
 
-    fs::write(dir.join("finro.yaml"), FINRO_YAML.replace("{{SITE_NAME}}", &site_name))?;
-    fs::write(dir.join("index.yaml"), INDEX_YAML.replace("{{SITE_NAME}}", &site_name))?;
+    fs::write(
+        dir.join("finro.yaml"),
+        FINRO_YAML.replace("{{SITE_NAME}}", &site_name),
+    )?;
+    fs::write(
+        dir.join("index.yaml"),
+        INDEX_YAML.replace("{{SITE_NAME}}", &site_name),
+    )?;
     fs::write(dir.join("AGENTS.md"), AGENTS_MD)?;
     fs::write(dir.join(".gitignore"), GITIGNORE)?;
 

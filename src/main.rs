@@ -42,9 +42,7 @@ enum Command {
         port: u16,
     },
     /// Scaffold a new finro site in <NAME>/
-    Init {
-        name: String,
-    },
+    Init { name: String },
     /// Print the LLM authoring guide (full AGENTS.md to stdout)
     Agents,
 }

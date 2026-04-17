@@ -20,32 +20,43 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
     let mut assets = 0;
     let mut entries: Vec<PageEntry> = Vec::new();
 
-    for entry in WalkDir::new(dir).follow_links(true).into_iter().filter_entry(|e| {
-        !e.path().canonicalize()
-            .map(|p| p.starts_with(&out_canonical))
-            .unwrap_or(false)
-    }) {
+    for entry in WalkDir::new(dir)
+        .follow_links(true)
+        .into_iter()
+        .filter_entry(|e| {
+            !e.path()
+                .canonicalize()
+                .map(|p| p.starts_with(&out_canonical))
+                .unwrap_or(false)
+        })
+    {
         let entry = entry?;
         let path = entry.path();
-        if !entry.file_type().is_file() { continue; }
+        if !entry.file_type().is_file() {
+            continue;
+        }
 
         let fname = path.file_name().unwrap_or_default();
-        if fname == "finro.yaml" { continue; }
+        if fname == "finro.yaml" {
+            continue;
+        }
 
         let rel = path.strip_prefix(dir)?;
         let is_yaml = path.extension().map(|e| e == "yaml").unwrap_or(false);
 
         if is_yaml {
-            let content = fs::read_to_string(path)
-                .with_context(|| format!("reading {:?}", path))?;
-            let page: Page = serde_yaml::from_str(&content)
-                .with_context(|| format!("parsing {:?}", path))?;
+            let content =
+                fs::read_to_string(path).with_context(|| format!("reading {:?}", path))?;
+            let page: Page =
+                serde_yaml::from_str(&content).with_context(|| format!("parsing {:?}", path))?;
 
             let base = base_path_for(rel);
-            let source_filename = rel.file_name()
+            let source_filename = rel
+                .file_name()
                 .map(|f| f.to_string_lossy().into_owned())
                 .unwrap_or_default();
-            let source_stem = rel.file_stem()
+            let source_stem = rel
+                .file_stem()
                 .map(|f| f.to_string_lossy().into_owned())
                 .unwrap_or_default();
 
@@ -64,15 +75,19 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
             }
 
             let out_path = out.join(rel).with_extension("html");
-            if let Some(parent) = out_path.parent() { fs::create_dir_all(parent)?; }
+            if let Some(parent) = out_path.parent() {
+                fs::create_dir_all(parent)?;
+            }
             fs::write(&out_path, html)?;
 
             if config.view_source {
-                let mut source_view = render::render_source_view(&page, &config, &content, &base, &source_filename);
+                let mut source_view =
+                    render::render_source_view(&page, &config, &content, &base, &source_filename);
                 if release {
                     source_view = minify::minify_html(&source_view);
                 }
-                let source_view_path = out_path.with_file_name(format!("{}.source.html", source_stem));
+                let source_view_path =
+                    out_path.with_file_name(format!("{}.source.html", source_stem));
                 fs::write(&source_view_path, source_view)?;
             }
 
@@ -98,7 +113,9 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
         } else {
             // Static asset — copy verbatim
             let out_path = out.join(rel);
-            if let Some(parent) = out_path.parent() { fs::create_dir_all(parent)?; }
+            if let Some(parent) = out_path.parent() {
+                fs::create_dir_all(parent)?;
+            }
             fs::copy(path, &out_path)?;
             assets += 1;
         }
@@ -110,19 +127,26 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
     }
 
     if assets > 0 {
-        println!("\n✓ {} page(s), {} asset(s) → {}{}", pages, assets, out.display(),
-            if release { " (minified)" } else { "" });
+        println!(
+            "\n✓ {} page(s), {} asset(s) → {}{}",
+            pages,
+            assets,
+            out.display(),
+            if release { " (minified)" } else { "" }
+        );
     } else {
-        println!("\n✓ {} page(s) → {}{}", pages, out.display(),
-            if release { " (minified)" } else { "" });
+        println!(
+            "\n✓ {} page(s) → {}{}",
+            pages,
+            out.display(),
+            if release { " (minified)" } else { "" }
+        );
     }
     Ok(())
 }
 
 fn base_path_for(rel: &Path) -> String {
-    let depth = rel.parent()
-        .map(|p| p.components().count())
-        .unwrap_or(0);
+    let depth = rel.parent().map(|p| p.components().count()).unwrap_or(0);
     "../".repeat(depth)
 }
 
