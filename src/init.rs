@@ -37,21 +37,42 @@ pub fn run(path: &str) -> Result<()> {
     Ok(())
 }
 
-const FINRO_YAML: &str = r#"# Site configuration. Shared across every page.
+const FINRO_YAML: &str = r##"# Site configuration. Shared across every page.
+# Every available field is listed below — uncomment the ones you want.
+
 name: {{SITE_NAME}}
 
-# Theme: "dark" (default) or "light". Or add a `colors:` map below to
-# override individual tokens of the chosen base theme.
+# Theme: "dark" (default) or "light".
 theme: dark
 
-# Uncomment and point to a favicon file (any non-.yaml file in this
-# directory gets copied into the build output verbatim).
-# favicon: favicon.svg
+# Override individual theme tokens. Keys not listed here fall back to the
+# base theme's default. Full list of tokens: bg, surface, surface_strong,
+# border, border_strong, accent, accent_soft, text, text_muted, text_subtle,
+# overlay_hover, green, yellow, red, header_border.
+# colors:
+#   accent: "#3CCECE"          # primary brand color (links, eyebrows, borders)
+#   bg: "#090D18"              # page background
+#   text: "#F0F0F7"             # primary text
+#   text_muted: "#ABABC1"       # secondary text
+#   text_subtle: "#4C556A"      # labels, captions
+#   green: "#34D399"
+#   yellow: "#FBBF24"
+#   red: "#F87171"
 
-# Opt-in: render a companion `<page>.source.html` for every page and
-# show a floating "View source" pill that links to it. Handy for docs
-# or demo sites where you want readers to peek at the YAML. Off by
-# default — most sites don't need it.
+# Point to a favicon. Any non-.yaml file in this directory is copied
+# verbatim into the build output, so a relative path just works.
+# Simple form: one file for every slot.
+# favicon: favicon.svg
+# Full form: named slots for each icon variant.
+# favicon:
+#   svg: favicon.svg
+#   png: favicon.png
+#   ico: favicon.ico
+#   apple_touch_icon: apple-touch-icon.png
+
+# Opt-in: render a companion `<page>.source.html` for every page and show
+# a floating "View source" pill that links to it. Handy for docs/demo
+# sites. Off by default — most sites don't need it.
 # view_source: true
 
 # Nav appears in the sticky header of every `shell: standard` page.
@@ -60,7 +81,11 @@ theme: dark
 nav:
   - label: Home
     href: index.html
-"#;
+  # - label: Docs
+  #   href: docs.html
+  # - label: GitHub
+  #   href: https://github.com/your-org/your-repo
+"##;
 
 const INDEX_YAML: &str = r#"# The home page. See AGENTS.md for the full component catalog.
 title: {{SITE_NAME}}
