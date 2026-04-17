@@ -64,7 +64,7 @@ fn build_docs_site() {
     let llms = read(&out.join("llms.txt"));
     assert_contains(&llms, "# finro");
     assert_contains(&llms, "Content components");
-    assert_contains(&llms, "Q1 Product Strategy Review");
+    assert_contains(&llms, "Why finro");
 
     // Each page has a View source link
     let index = read(&out.join("index.html"));
