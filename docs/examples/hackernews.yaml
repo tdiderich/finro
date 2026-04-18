@@ -7,7 +7,7 @@ components:
   - type: header
     title: Generating pages from an API
     eyebrow: Pattern
-    subtitle: Any script that writes a string can drive finro. Here's a 20-line one that pulls the Hacker News top 30.
+    subtitle: Any script that writes a string can drive kazam. Here's a 20-line one that pulls the Hacker News top 30.
 
   - type: button_group
     buttons:
@@ -24,9 +24,9 @@ components:
     components:
       - type: markdown
         body: |
-          finro reads `.yaml` files off disk. It doesn't care whether a human, a
+          kazam reads `.yaml` files off disk. It doesn't care whether a human, a
           cron job, an LLM, or a serverless function wrote them. If you can emit
-          the YAML (or JSON — JSON is valid YAML), finro will render it.
+          the YAML (or JSON — JSON is valid YAML), kazam will render it.
 
           That makes it trivial to stand up live-ish dashboards pulled from
           whatever source: GitHub issues, Linear, Google Sheets, an internal
@@ -45,7 +45,7 @@ components:
 
           If you'd rather not ship an emitter, drop in `yaml.safe_dump` from
           PyYAML — or skip YAML entirely and `json.dump` the dict, since
-          finro parses JSON as valid YAML.
+          kazam parses JSON as valid YAML.
 
       - type: code
         language: python
@@ -119,12 +119,12 @@ components:
         language: bash
         code: |
           python3 generate.py          # writes hackernews-live.yaml
-          finro build . --out _site    # renders it to _site/hackernews-live.html
+          kazam build . --out _site    # renders it to _site/hackernews-live.html
 
       - type: markdown
         body: |
           That's it. The page exists. No server, no database, no runtime
-          dependencies — just a file finro can render.
+          dependencies — just a file kazam can render.
 
   - type: section
     eyebrow: Step 3
@@ -132,7 +132,7 @@ components:
     components:
       - type: markdown
         body: |
-          Pair the generator with `finro dev` for a live-reloading dashboard.
+          Pair the generator with `kazam dev` for a live-reloading dashboard.
           The watcher notices the new YAML, rebuilds, and your browser tab
           refreshes automatically.
 
@@ -147,7 +147,7 @@ components:
                   while true; do python3 generate.py; sleep 300; done
 
                   # terminal 2 — watch, serve, live-reload
-                  finro dev . --port 3000
+                  kazam dev . --port 3000
 
           - label: Cron / CI
             components:
@@ -156,7 +156,7 @@ components:
                 code: |
                   # crontab: refresh + rebuild + deploy every 10 minutes
                   */10 * * * * cd /srv/site && python3 generate.py \
-                      && finro build . --out _site --release \
+                      && kazam build . --out _site --release \
                       && rsync -a _site/ webhost:/var/www/site/
 
           - label: GitHub Actions
@@ -174,8 +174,8 @@ components:
                       steps:
                         - uses: actions/checkout@v4
                         - run: python3 generate.py
-                        - run: curl -L finro.dev/install.sh | sh
-                        - run: finro build . --out _site --release
+                        - run: curl -L kazam.dev/install.sh | sh
+                        - run: kazam build . --out _site --release
                         - uses: actions/upload-pages-artifact@v3
                           with: { path: _site }
 
@@ -183,8 +183,8 @@ components:
     variant: success
     title: The general pattern
     body: |
-      `script.py` → `something.yaml` → `finro build`. That's the whole
-      contract. Anything that can emit a JSON object can drive a finro
+      `script.py` → `something.yaml` → `kazam build`. That's the whole
+      contract. Anything that can emit a JSON object can drive a kazam
       page — RSS feeds, GitHub issues, Linear, Google Sheets, HubSpot,
       Stripe, your own internal JSON endpoints, or an LLM-written one-off.
 

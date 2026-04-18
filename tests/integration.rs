@@ -1,11 +1,11 @@
-//! Integration tests — invoke the finro binary end-to-end.
+//! Integration tests — invoke the kazam binary end-to-end.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn bin() -> PathBuf {
     // cargo sets CARGO_BIN_EXE_<name> env var for the test runner
-    PathBuf::from(env!("CARGO_BIN_EXE_finro"))
+    PathBuf::from(env!("CARGO_BIN_EXE_kazam"))
 }
 
 fn repo_root() -> PathBuf {
@@ -13,7 +13,7 @@ fn repo_root() -> PathBuf {
 }
 
 fn tmp_dir(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("finro-test-{}", name));
+    let dir = std::env::temp_dir().join(format!("kazam-test-{}", name));
     let _ = std::fs::remove_dir_all(&dir);
     dir
 }
@@ -36,8 +36,8 @@ fn build_kb_example() {
         .arg("--out")
         .arg(&out)
         .status()
-        .expect("run finro build");
-    assert!(status.success(), "finro build failed");
+        .expect("run kazam build");
+    assert!(status.success(), "kazam build failed");
 
     let index = read(&out.join("index.html"));
     assert_contains(&index, "Customer Portfolio");
@@ -57,14 +57,14 @@ fn build_docs_site() {
         .arg("--out")
         .arg(&out)
         .status()
-        .expect("run finro build");
+        .expect("run kazam build");
     assert!(status.success());
 
     // llms.txt should exist and list known pages
     let llms = read(&out.join("llms.txt"));
-    assert_contains(&llms, "# finro");
+    assert_contains(&llms, "# kazam");
     assert_contains(&llms, "Content components");
-    assert_contains(&llms, "Why finro");
+    assert_contains(&llms, "Why kazam");
 
     // Each page has a View source link
     let index = read(&out.join("index.html"));
@@ -89,7 +89,7 @@ fn build_release_minifies() {
         .arg(&out)
         .arg("--release")
         .status()
-        .expect("run finro build --release");
+        .expect("run kazam build --release");
     assert!(status.success());
 
     let html = read(&out.join("index.html"));
@@ -106,11 +106,11 @@ fn init_creates_minimal_site_that_builds() {
         .args(["init"])
         .arg(&dir)
         .status()
-        .expect("run finro init");
+        .expect("run kazam init");
     assert!(status.success());
 
     // Scaffold has expected files
-    assert!(dir.join("finro.yaml").exists());
+    assert!(dir.join("kazam.yaml").exists());
     assert!(dir.join("index.yaml").exists());
     assert!(dir.join("AGENTS.md").exists());
     assert!(dir.join(".gitignore").exists());
@@ -139,6 +139,6 @@ fn init_refuses_existing_dir() {
         .args(["init"])
         .arg(&dir)
         .status()
-        .expect("run finro init");
+        .expect("run kazam init");
     assert!(!status.success(), "init should fail on existing dir");
 }

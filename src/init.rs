@@ -1,5 +1,5 @@
-//! `finro init <name>` scaffolds a new site directory with a minimal,
-//! well-commented starter — finro.yaml, index.yaml, AGENTS.md, .gitignore.
+//! `kazam init <name>` scaffolds a new site directory with a minimal,
+//! well-commented starter — kazam.yaml, index.yaml, AGENTS.md, .gitignore.
 
 use anyhow::{bail, Context, Result};
 use std::fs;
@@ -23,8 +23,8 @@ pub fn run(path: &str) -> Result<()> {
     fs::create_dir_all(dir).with_context(|| format!("creating {:?}", dir))?;
 
     fs::write(
-        dir.join("finro.yaml"),
-        FINRO_YAML.replace("{{SITE_NAME}}", &site_name),
+        dir.join("kazam.yaml"),
+        KAZAM_YAML.replace("{{SITE_NAME}}", &site_name),
     )?;
     fs::write(
         dir.join("index.yaml"),
@@ -34,20 +34,20 @@ pub fn run(path: &str) -> Result<()> {
     fs::write(dir.join(".gitignore"), GITIGNORE)?;
 
     println!("\n  ✓ Created {} with:", path);
-    println!("    finro.yaml       site config (name, theme, nav)");
+    println!("    kazam.yaml       site config (name, theme, nav)");
     println!("    index.yaml       home page");
     println!("    AGENTS.md        LLM authoring guide");
     println!("    .gitignore");
     println!();
     println!("  Next:");
     println!("    cd {}", path);
-    println!("    finro dev .          # watch + serve at localhost:3000");
+    println!("    kazam dev .          # watch + serve at localhost:3000");
     println!();
 
     Ok(())
 }
 
-const FINRO_YAML: &str = r##"# Site configuration. Shared across every page.
+const KAZAM_YAML: &str = r##"# Site configuration. Shared across every page.
 # Every available field is listed below — uncomment the ones you want.
 
 name: {{SITE_NAME}}
@@ -114,7 +114,7 @@ components:
   - type: header
     title: {{SITE_NAME}}
     eyebrow: Welcome
-    subtitle: A starter site scaffolded by `finro init`.
+    subtitle: A starter site scaffolded by `kazam init`.
 
   - type: section
     eyebrow: Next steps
@@ -131,8 +131,8 @@ components:
           - label: Read AGENTS.md
             href: AGENTS.md
             variant: primary
-          - label: finro source
-            href: https://github.com/tdiderich/finro
+          - label: kazam source
+            href: https://github.com/tdiderich/kazam
             variant: secondary
             external: true
 
@@ -159,7 +159,7 @@ components:
       - type: callout
         variant: info
         title: Tip
-        body: "Run `finro dev .` to watch your files and live-reload the browser on every save."
+        body: "Run `kazam dev .` to watch your files and live-reload the browser on every save."
 "#;
 
 const GITIGNORE: &str = r#"/_site

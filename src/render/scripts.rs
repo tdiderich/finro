@@ -16,7 +16,7 @@ const RELOAD: &str = r#"
   if (!/^https?:$/.test(location.protocol)) return;
   var last = null;
   function poll() {
-    fetch('/__finro_version__', { cache: 'no-store' })
+    fetch('/__kazam_version__', { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.text() : null; })
       .then(function (v) {
         if (v === null) return;
@@ -73,7 +73,7 @@ document.querySelectorAll('[data-selectable-grid]').forEach(function (grid) {
 "#;
 
 const TABLE: &str = r#"
-document.querySelectorAll('[data-finro-table]').forEach(function (table) {
+document.querySelectorAll('[data-kazam-table]').forEach(function (table) {
   var tbody = table.tBodies[0];
   var sortState = { col: null, dir: 1 };
   function parse(v) {

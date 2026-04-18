@@ -401,7 +401,7 @@ fn table(
             r#"<input type="text" class="c-table-filter" data-table-filter placeholder="Filter…">"#,
         );
     }
-    h.push_str(r#"<table class="c-table" data-finro-table><thead><tr>"#);
+    h.push_str(r#"<table class="c-table" data-kazam-table><thead><tr>"#);
     for col in columns {
         let sortable_attr = if col.sortable { " data-sortable" } else { "" };
         h.push_str(&format!(

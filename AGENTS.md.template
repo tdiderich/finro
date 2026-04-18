@@ -1,11 +1,11 @@
-# AGENTS.md — finro authoring guide for LLMs
+# AGENTS.md — kazam authoring guide for LLMs
 
-This file tells LLMs (Claude, GPT, etc.) how to author pages in a finro site.
+This file tells LLMs (Claude, GPT, etc.) how to author pages in a kazam site.
 Read this before generating or editing any `.yaml` file.
 
-## What finro is
+## What kazam is
 
-finro is a Rust CLI that turns YAML files into themed static HTML. Every `.yaml`
+kazam is a Rust CLI that turns YAML files into themed static HTML. Every `.yaml`
 file in the source directory becomes one page of output. The format is designed
 for you — the machine — to generate easily: consistent `type:` tags, no nested
 conditionals, no templating logic.
@@ -14,7 +14,7 @@ conditionals, no templating logic.
 
 ```
 my-site/
-  finro.yaml         # site-wide config (name, theme, nav, favicon)
+  kazam.yaml         # site-wide config (name, theme, nav, favicon)
   index.yaml         # → _site/index.html
   guide.yaml         # → _site/guide.html
   reference/
@@ -23,7 +23,7 @@ my-site/
 
 Any non-`.yaml` file (images, SVGs, fonts) is copied verbatim into the output.
 
-## finro.yaml — site config
+## kazam.yaml — site config
 
 ```yaml
 name: Site Name
@@ -398,7 +398,7 @@ Every colored component accepts the same 5-value palette:
 ## Running
 
 ```bash
-finro dev .              # watch + serve at localhost:3000 (live reload)
-finro build .            # one-shot build to _site/
-finro build . --release  # minified production build
+kazam dev .              # watch + serve at localhost:3000 (live reload)
+kazam build .            # one-shot build to _site/
+kazam build . --release  # minified production build
 ```

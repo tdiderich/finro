@@ -167,20 +167,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "finro"
-version = "0.3.0"
-dependencies = [
- "anyhow",
- "clap",
- "notify",
- "pulldown-cmark",
- "serde",
- "serde_yaml",
- "tiny_http",
- "walkdir",
-]
-
-[[package]]
 name = "fsevent-sys"
 version = "4.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -257,6 +243,20 @@ name = "itoa"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
+
+[[package]]
+name = "kazam"
+version = "0.3.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "notify",
+ "pulldown-cmark",
+ "serde",
+ "serde_yaml",
+ "tiny_http",
+ "walkdir",
+]
 
 [[package]]
 name = "kqueue"

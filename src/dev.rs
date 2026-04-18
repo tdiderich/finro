@@ -66,7 +66,7 @@ fn watch_loop(dir: PathBuf, out: PathBuf, version: Arc<AtomicU64>) {
                 return false;
             }
             p.extension().map(|e| e == "yaml").unwrap_or(false)
-                || p.file_name().map(|n| n == "finro.yaml").unwrap_or(false)
+                || p.file_name().map(|n| n == "kazam.yaml").unwrap_or(false)
         });
         if !relevant {
             continue;
@@ -101,7 +101,7 @@ fn handle(req: tiny_http::Request, root: &Path, version: &AtomicU64) -> Result<(
     let url = req.url().split('?').next().unwrap_or("/");
 
     // Live-reload version endpoint
-    if url == "/__finro_version__" {
+    if url == "/__kazam_version__" {
         let v = version.load(Ordering::SeqCst).to_string();
         let resp = Response::from_string(v)
             .with_header(hdr("Content-Type", "text/plain"))

@@ -5,12 +5,12 @@ components:
   - type: header
     title: Deploy
     eyebrow: Any static host works
-    subtitle: A finro build is just HTML, CSS, JS, and copied assets. Anything that serves files on the internet can host it.
+    subtitle: A kazam build is just HTML, CSS, JS, and copied assets. Anything that serves files on the internet can host it.
 
   - type: callout
     variant: info
     title: One build, many hosts
-    body: "Run `finro build . --out dist --release` once. The `dist/` directory is your whole site — self-contained, no server runtime. Everything below is just how to upload that directory somewhere with a URL."
+    body: "Run `kazam build . --out dist --release` once. The `dist/` directory is your whole site — self-contained, no server runtime. Everything below is just how to upload that directory somewhere with a URL."
 
   - type: section
     eyebrow: Recipes
@@ -27,7 +27,7 @@ components:
               - type: code
                 language: bash
                 code: |
-                  finro build . --out dist --release
+                  kazam build . --out dist --release
 
                   # One-time:
                   npm i -g vercel
@@ -44,7 +44,7 @@ components:
                 language: json
                 code: |
                   {
-                    "buildCommand": "cargo install --git https://github.com/tdiderich/finro && finro build . --out dist --release",
+                    "buildCommand": "cargo install --git https://github.com/tdiderich/kazam && kazam build . --out dist --release",
                     "outputDirectory": "dist",
                     "framework": null
                   }
@@ -58,7 +58,7 @@ components:
               - type: code
                 language: bash
                 code: |
-                  finro build . --out dist --release
+                  kazam build . --out dist --release
 
                   # One-time:
                   npm i -g netlify-cli
@@ -75,7 +75,7 @@ components:
                 language: toml
                 code: |
                   [build]
-                    command = "cargo install --git https://github.com/tdiderich/finro && finro build . --out dist --release"
+                    command = "cargo install --git https://github.com/tdiderich/kazam && kazam build . --out dist --release"
                     publish = "dist"
 
           - label: Cloudflare Pages
@@ -87,7 +87,7 @@ components:
               - type: code
                 language: bash
                 code: |
-                  finro build . --out dist --release
+                  kazam build . --out dist --release
 
                   # One-time:
                   npm i -g wrangler
@@ -99,7 +99,7 @@ components:
               - type: markdown
                 body: |
                   For Git-driven builds in the Cloudflare dashboard, set:
-                  **Build command**: `cargo install --git https://github.com/tdiderich/finro && finro build . --out dist --release` ·
+                  **Build command**: `cargo install --git https://github.com/tdiderich/kazam && kazam build . --out dist --release` ·
                   **Output directory**: `dist`
 
           - label: GitHub Pages
@@ -125,8 +125,8 @@ components:
                       steps:
                         - uses: actions/checkout@v4
                         - uses: dtolnay/rust-toolchain@stable
-                        - run: cargo install --git https://github.com/tdiderich/finro
-                        - run: finro build . --out dist --release
+                        - run: cargo install --git https://github.com/tdiderich/kazam
+                        - run: kazam build . --out dist --release
                         - uses: actions/upload-pages-artifact@v3
                           with: { path: dist }
                     deploy:
@@ -151,7 +151,7 @@ components:
                 language: bash
                 code: |
                   # One-time setup (replace names):
-                  BUCKET=my-finro-site
+                  BUCKET=my-kazam-site
                   REGION=us-east-1
 
                   aws s3api create-bucket --bucket $BUCKET --region $REGION
@@ -164,7 +164,7 @@ components:
                 language: bash
                 code: |
                   # Every deploy:
-                  finro build . --out dist --release
+                  kazam build . --out dist --release
                   aws s3 sync dist/ s3://$BUCKET --delete \
                       --cache-control "public, max-age=300"
 
@@ -175,7 +175,7 @@ components:
               - type: callout
                 variant: info
                 title: Tip
-                body: "Serve `*.html` with a short max-age (300s) and hash-named assets with a long one — but finro doesn't hash asset filenames, so keep everything short-lived or add a cache-busting query string to `src=` paths in YAML."
+                body: "Serve `*.html` with a short max-age (300s) and hash-named assets with a long one — but kazam doesn't hash asset filenames, so keep everything short-lived or add a cache-busting query string to `src=` paths in YAML."
 
           - label: Firebase Hosting
             components:
@@ -191,7 +191,7 @@ components:
                 language: bash
                 code: |
                   # Every deploy:
-                  finro build . --out dist --release
+                  kazam build . --out dist --release
                   firebase deploy --only hosting
 
               - type: markdown
@@ -218,7 +218,7 @@ components:
               - type: code
                 language: bash
                 code: |
-                  finro build . --out dist --release
+                  kazam build . --out dist --release
                   rsync -a --delete dist/ user@host:/var/www/my-site/
                   ssh user@host "sudo nginx -s reload"
 
@@ -232,7 +232,7 @@ components:
                     root /var/www/my-site;
                     index index.html;
 
-                    # finro emits plain .html files — this lets /guide
+                    # kazam emits plain .html files — this lets /guide
                     # resolve to /guide.html automatically
                     location / {
                       try_files $uri $uri.html $uri/ =404;
@@ -247,7 +247,7 @@ components:
         min_width: 280
         cards:
           - title: Relative asset paths
-            description: "finro rewrites nav hrefs per-page based on directory depth, so `index.html` works from any subfolder. Avoid hand-written absolute URLs like `/foo` unless you know the deploy path will match."
+            description: "kazam rewrites nav hrefs per-page based on directory depth, so `index.html` works from any subfolder. Avoid hand-written absolute URLs like `/foo` unless you know the deploy path will match."
           - title: Trailing slashes
             description: "Some hosts serve `/guide/` but not `/guide.html` (or vice versa) by default. Test after deploy, or add a rewrite rule if links break."
           - title: Cache headers
@@ -258,4 +258,4 @@ components:
   - type: callout
     variant: success
     title: Nothing fancy required
-    body: "If your host can serve a folder of static files, it can serve a finro build. If it can't, it's probably not worth the headache — pick one of the recipes above."
+    body: "If your host can serve a folder of static files, it can serve a kazam build. If it can't, it's probably not worth the headache — pick one of the recipes above."

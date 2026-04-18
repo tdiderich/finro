@@ -80,7 +80,7 @@ fn consume_preserved(rest: &str, tag: &str) -> Option<usize> {
     if !starts_tag_ci(rest, tag) {
         return None;
     }
-    // finro emits lowercase tags, so search for the literal lowercase close.
+    // kazam emits lowercase tags, so search for the literal lowercase close.
     // Using rest.find() directly avoids to_lowercase() which can change byte
     // offsets for multi-byte characters and invalidate the returned position.
     let close = format!("</{}>", tag);

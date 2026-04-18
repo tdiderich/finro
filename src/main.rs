@@ -14,7 +14,7 @@ mod theme;
 mod types;
 
 #[derive(Parser)]
-#[command(name = "finro", about = "Beautiful sites from simple YAML", version)]
+#[command(name = "kazam", about = "Beautiful sites from simple YAML", version)]
 struct Cli {
     #[command(subcommand)]
     command: Command,
@@ -41,7 +41,7 @@ enum Command {
         #[arg(short, long, default_value_t = 3000)]
         port: u16,
     },
-    /// Scaffold a new finro site in <NAME>/
+    /// Scaffold a new kazam site in <NAME>/
     Init { name: String },
     /// Print the LLM authoring guide (full AGENTS.md to stdout)
     Agents,

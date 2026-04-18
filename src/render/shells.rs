@@ -24,10 +24,11 @@ fn head(page: &Page, config: &SiteConfig, base: &str) -> String {
 }
 
 /// When a site doesn't declare a `favicon:`, synthesize one from theme colors.
-/// Produces the finro "F" mark as an inline data-URI SVG — accent on bg.
+/// Produces the kazam genie-bottle mark as an inline data-URI SVG — accent on
+/// bg. Stopper + narrow neck + bulbous body, sized for 32px and 16px alike.
 fn default_favicon(theme: &theme::Theme) -> String {
     let svg = format!(
-        r##"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='{bg}'/><path d='M 10 9 L 22 9 L 22 12 L 13 12 L 13 15 L 20 15 L 20 18 L 13 18 L 13 23 L 10 23 Z' fill='{accent}'/></svg>"##,
+        r##"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='{bg}'/><rect x='13' y='5' width='6' height='3' rx='1' fill='{accent}'/><path d='M 14 8 L 18 8 L 18 12 Q 23 13 23 19 Q 23 27 16 27 Q 9 27 9 19 Q 9 13 14 12 Z' fill='{accent}'/></svg>"##,
         bg = theme.bg,
         accent = theme.accent
     );

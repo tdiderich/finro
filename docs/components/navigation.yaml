@@ -68,7 +68,7 @@ components:
             href: "#"
             variant: secondary
           - label: View on GitHub
-            href: https://github.com/tdiderich/finro
+            href: https://github.com/tdiderich/kazam
             variant: secondary
             external: true
             icon: github

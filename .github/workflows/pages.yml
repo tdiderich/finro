@@ -30,11 +30,11 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - name: Build finro
+      - name: Build kazam
         run: cargo build --release
 
       - name: Build docs site
-        run: ./target/release/finro build docs --out dist --release
+        run: ./target/release/kazam build docs --out dist --release
 
       - uses: actions/configure-pages@v5
 
