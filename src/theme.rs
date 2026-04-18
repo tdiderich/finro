@@ -515,13 +515,18 @@ body.shell-standard .site-bar, body.shell-document .site-bar {
 .site-bar nav .nav-chevron { font-size: 9px; opacity: 0.6; margin-top: 1px; }
 .site-bar nav .nav-dropdown {
   position: absolute;
-  top: calc(100% + 6px);
+  /* Touch the bottom of the button — no hover gap between trigger and
+     panel, otherwise the pointer leaves the :hover region while moving
+     toward the menu and the dropdown snaps shut. */
+  top: 100%;
   right: 0;
   min-width: 180px;
   background: var(--bg);
   border: 1px solid var(--card-border);
   border-radius: 10px;
-  padding: 4px;
+  /* The 6px top padding gives visual breathing room without a dead hover
+     zone — the whole panel edge-to-edge is still a hover target. */
+  padding: 6px 4px 4px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.25);
   opacity: 0;
   pointer-events: none;
@@ -529,6 +534,16 @@ body.shell-standard .site-bar, body.shell-document .site-bar {
   transition: opacity 0.15s, transform 0.15s;
   z-index: 100;
   display: flex; flex-direction: column; gap: 2px;
+}
+/* Safety bridge: a transparent strip above the dropdown that keeps the
+   cursor inside the parent's :hover region while traversing. */
+.site-bar nav .nav-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 0;
+  right: 0;
+  height: 8px;
 }
 .site-bar nav .nav-link-group:hover .nav-dropdown,
 .site-bar nav .nav-link-group:focus-within .nav-dropdown {
