@@ -1,4 +1,4 @@
-use crate::types::{Glow, Texture};
+use crate::types::{Glow, Mode, Texture};
 use std::collections::HashMap;
 
 /// A theme is a set of named color tokens. Any page rendered with this theme
@@ -24,17 +24,37 @@ pub struct Theme {
 }
 
 impl Theme {
-    pub fn named(name: &str) -> Theme {
+    /// Resolve a theme name + mode to a concrete Theme. `dark` and `light`
+    /// are self-contained and ignore `mode`. Rainbow themes pick up the
+    /// mode-appropriate base and swap the accent on top.
+    pub fn named(name: &str, mode: Mode) -> Theme {
         match name {
+            "dark" => dark(),
             "light" => light(),
-            "red" => red(),
-            "orange" => orange(),
-            "yellow" => yellow(),
-            "green" => green(),
-            "blue" => blue(),
-            "indigo" => indigo(),
-            "violet" => violet(),
-            _ => dark(),
+            other => {
+                let base = match mode {
+                    Mode::Dark => dark(),
+                    Mode::Light => light(),
+                };
+                // Muted, earthy accents sibling to the dark theme's sage
+                // (#899878). ~45% saturation, ~60% lightness — they sit on
+                // a dark bg without screaming. Users can still override any
+                // accent via `colors:` for a brighter brand pop.
+                let accent = match other {
+                    "red" => "#BB7777",
+                    "orange" => "#BB8C66",
+                    "yellow" => "#B8A866",
+                    "green" => "#7A9878",
+                    "blue" => "#7897B8",
+                    "indigo" => "#8A7FBB",
+                    "violet" => "#AB7FBB",
+                    _ => return dark(),
+                };
+                Theme {
+                    accent: accent.into(),
+                    ..base
+                }
+            }
         }
     }
 
@@ -144,39 +164,6 @@ pub fn dark() -> Theme {
     }
 }
 
-/// Stock rainbow themes: the neutral dark base with a single accent swap.
-/// Surface/border overlays already flow through `--text-rgb`, so only the
-/// accent (and everything downstream of `--accent-rgb`) changes per color.
-/// Semantic palette (green/yellow/red as SemColors) is intentionally left on
-/// the dark base so status colors stay consistent across themes.
-fn dark_with_accent(accent: &str) -> Theme {
-    Theme {
-        accent: accent.into(),
-        ..dark()
-    }
-}
-
-pub fn red() -> Theme {
-    dark_with_accent("#EF4444")
-}
-pub fn orange() -> Theme {
-    dark_with_accent("#F97316")
-}
-pub fn yellow() -> Theme {
-    dark_with_accent("#EAB308")
-}
-pub fn green() -> Theme {
-    dark_with_accent("#22C55E")
-}
-pub fn blue() -> Theme {
-    dark_with_accent("#3B82F6")
-}
-pub fn indigo() -> Theme {
-    dark_with_accent("#6366F1")
-}
-pub fn violet() -> Theme {
-    dark_with_accent("#A855F7")
-}
 
 #[cfg(test)]
 mod tests {
@@ -216,21 +203,20 @@ mod tests {
 
     #[test]
     fn rainbow_themes_swap_accent_only() {
-        // Each rainbow theme keeps the dark base — same bg, same text — and
-        // swaps just the accent hex. Guards against someone accidentally
-        // rewriting the whole palette.
+        // Each rainbow theme keeps the chosen base — same bg, same text — and
+        // swaps just the accent hex. Default mode is Dark.
         let cases = [
-            ("red", "#EF4444"),
-            ("orange", "#F97316"),
-            ("yellow", "#EAB308"),
-            ("green", "#22C55E"),
-            ("blue", "#3B82F6"),
-            ("indigo", "#6366F1"),
-            ("violet", "#A855F7"),
+            ("red", "#BB7777"),
+            ("orange", "#BB8C66"),
+            ("yellow", "#B8A866"),
+            ("green", "#7A9878"),
+            ("blue", "#7897B8"),
+            ("indigo", "#8A7FBB"),
+            ("violet", "#AB7FBB"),
         ];
         let d = dark();
         for (name, hex) in cases {
-            let t = Theme::named(name);
+            let t = Theme::named(name, Mode::Dark);
             assert_eq!(t.accent, hex, "{} accent", name);
             assert_eq!(t.bg, d.bg, "{} keeps dark bg", name);
             assert_eq!(t.text, d.text, "{} keeps dark text", name);
@@ -238,8 +224,26 @@ mod tests {
     }
 
     #[test]
+    fn rainbow_themes_on_light_mode_use_light_base() {
+        // Same accent swap, but base comes from light(), not dark().
+        let l = light();
+        let t = Theme::named("red", Mode::Light);
+        assert_eq!(t.accent, "#BB7777");
+        assert_eq!(t.bg, l.bg, "light-mode red uses light bg");
+        assert_eq!(t.text, l.text, "light-mode red uses light text");
+    }
+
+    #[test]
+    fn dark_and_light_themes_ignore_mode() {
+        // `theme: dark` + mode: light should still return the full dark theme.
+        // Same for `theme: light` + mode: dark.
+        assert_eq!(Theme::named("dark", Mode::Light).bg, dark().bg);
+        assert_eq!(Theme::named("light", Mode::Dark).bg, light().bg);
+    }
+
+    #[test]
     fn unknown_theme_falls_back_to_dark() {
-        let t = Theme::named("purple-mountain-majesty");
+        let t = Theme::named("purple-mountain-majesty", Mode::Dark);
         assert_eq!(t.accent, dark().accent);
     }
 

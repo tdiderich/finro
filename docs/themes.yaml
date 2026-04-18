@@ -5,7 +5,7 @@ components:
   - type: header
     title: Stock themes
     eyebrow: Reference
-    subtitle: "Set `theme: <name>` in your `kazam.yaml`. Every theme keeps the neutral dark base and only swaps the accent — so eyebrows, buttons, active tabs, and the top glow all pick up the color without affecting content readability."
+    subtitle: "Set `theme: <name>` in your `kazam.yaml`. The seven rainbow themes pick up a muted, earth-toned accent on top of the neutral dark base (or a light base via `mode: light`). Readable content, quiet brand color."
 
   - type: section
     eyebrow: ROYGBIV
@@ -15,58 +15,58 @@ components:
         body: |
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;">
             <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
-              <div style="height:64px;background:#EF4444;"></div>
+              <div style="height:64px;background:#BB7777;"></div>
               <div style="padding:14px 16px;">
                 <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">red</div>
-                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#EF4444</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#BB7777</div>
                 <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: red</code>
               </div>
             </div>
             <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
-              <div style="height:64px;background:#F97316;"></div>
+              <div style="height:64px;background:#BB8C66;"></div>
               <div style="padding:14px 16px;">
                 <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">orange</div>
-                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#F97316</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#BB8C66</div>
                 <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: orange</code>
               </div>
             </div>
             <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
-              <div style="height:64px;background:#EAB308;"></div>
+              <div style="height:64px;background:#B8A866;"></div>
               <div style="padding:14px 16px;">
                 <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">yellow</div>
-                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#EAB308</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#B8A866</div>
                 <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: yellow</code>
               </div>
             </div>
             <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
-              <div style="height:64px;background:#22C55E;"></div>
+              <div style="height:64px;background:#7A9878;"></div>
               <div style="padding:14px 16px;">
                 <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">green</div>
-                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#22C55E</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#7A9878</div>
                 <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: green</code>
               </div>
             </div>
             <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
-              <div style="height:64px;background:#3B82F6;"></div>
+              <div style="height:64px;background:#7897B8;"></div>
               <div style="padding:14px 16px;">
                 <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">blue</div>
-                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#3B82F6</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#7897B8</div>
                 <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: blue</code>
               </div>
             </div>
             <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
-              <div style="height:64px;background:#6366F1;"></div>
+              <div style="height:64px;background:#8A7FBB;"></div>
               <div style="padding:14px 16px;">
                 <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">indigo</div>
-                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#6366F1</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#8A7FBB</div>
                 <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: indigo</code>
               </div>
             </div>
             <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
-              <div style="height:64px;background:#A855F7;"></div>
+              <div style="height:64px;background:#AB7FBB;"></div>
               <div style="padding:14px 16px;">
                 <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">violet</div>
-                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#A855F7</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#AB7FBB</div>
                 <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: violet</code>
               </div>
             </div>
@@ -98,30 +98,28 @@ components:
           </div>
 
   - type: section
-    eyebrow: Apply
-    heading: Usage
+    eyebrow: Usage
+    heading: Apply a theme
     components:
       - type: code
         language: yaml
         code: |
           # kazam.yaml
           name: My Site
-          theme: violet            # swap to any rainbow color
+          theme: violet            # any rainbow color, or dark/light
+          mode: light              # optional — flips rainbow themes onto light base
           texture: grid            # pairs with any theme
           glow: accent             # picks up the active accent
-          nav:
-            - label: Home
-              href: index.html
 
       - type: markdown
         body: |
-          Need a custom accent outside the stock set? Override any theme token directly — the named theme is just a starting point.
+          `mode` only affects the rainbow themes (`red` / `orange` / …). `theme: dark` and `theme: light` are self-contained and ignore it. Need a custom accent outside the stock set? Override any theme token directly with `colors:` — the named theme is just a starting point.
 
       - type: code
         language: yaml
         code: |
-          # kazam.yaml
+          # kazam.yaml — your brand color on top of the dark base
           theme: dark
           colors:
-            accent: '#14B8B8'      # your brand color
+            accent: '#14B8B8'
             accent_soft: 'rgba(var(--accent-rgb), 0.08)'

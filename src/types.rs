@@ -527,6 +527,18 @@ pub enum NavLayout {
     Sidebar,
 }
 
+/// Base tone for the site. Only affects rainbow themes (`red`/`orange`/…/
+/// `violet`), which pick up the accent color on top of either a dark or
+/// light neutral base. `theme: dark` and `theme: light` are self-contained
+/// and ignore this field.
+#[derive(Deserialize, Default, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum Mode {
+    #[default]
+    Dark,
+    Light,
+}
+
 #[derive(Deserialize)]
 pub struct SiteConfig {
     pub name: String,
@@ -552,6 +564,10 @@ pub struct SiteConfig {
     /// Nav layout for `shell: standard` pages. Defaults to `top`.
     #[serde(default)]
     pub nav_layout: NavLayout,
+    /// Base tone for rainbow themes — dark (default) or light. Ignored when
+    /// `theme:` is already `dark` or `light`.
+    #[serde(default)]
+    pub mode: Mode,
 }
 
 /// Site-wide background pattern. All variants are subtle by design.
@@ -665,7 +681,7 @@ fn mime_for(path: &str) -> &'static str {
 impl SiteConfig {
     pub fn resolved_theme(&self) -> crate::theme::Theme {
         let base = self.theme.as_deref().unwrap_or("dark");
-        crate::theme::Theme::named(base).with_overrides(&self.colors)
+        crate::theme::Theme::named(base, self.mode).with_overrides(&self.colors)
     }
 }
 
@@ -681,6 +697,7 @@ impl Default for SiteConfig {
             texture: Texture::None,
             glow: Glow::None,
             nav_layout: NavLayout::Top,
+            mode: Mode::Dark,
         }
     }
 }

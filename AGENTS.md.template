@@ -28,6 +28,7 @@ Any non-`.yaml` file (images, SVGs, fonts) is copied verbatim into the output.
 ```yaml
 name: Site Name
 theme: dark              # dark | light | red | orange | yellow | green | blue | indigo | violet
+mode: dark               # optional: dark (default) | light — flips rainbow themes onto the light base
 colors:                  # optional per-token overrides
   accent: '#14b8b8'
 favicon: favicon.svg
@@ -54,10 +55,12 @@ sidebar` moves the full nav into a fixed 240px left sidebar; parent entries
 with children become labeled sections, their leaves become indented links.
 Sidebar layout is only applied to `shell: standard` pages.
 
-`theme` picks a built-in palette. The seven rainbow themes share the neutral
-dark base (bg/text/surfaces) and only swap the accent color — safe to use
-with any `texture`/`glow` combination. Use `colors:` to override individual
-tokens on top.
+`theme` picks a built-in palette. The seven rainbow themes share the
+neutral dark base by default and only swap the accent color — safe to use
+with any `texture`/`glow` combination. Set `mode: light` to flip any
+rainbow theme onto the light base (#F7F7F2 paper + near-black text).
+`theme: dark` and `theme: light` are self-contained and ignore `mode`.
+Use `colors:` to override individual tokens on top.
 
 `texture` paints a subtle pattern behind every page (tinted via the active
 theme's text color, so dark/light just work). `glow` paints a soft
