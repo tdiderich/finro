@@ -1,6 +1,6 @@
 ---
 name: pr-test-reviewer
-description: Verifies that a finro PR's tests actually exercise the change, that CI is green, and that no existing coverage was disabled or weakened. Runs the suite locally to confirm.
+description: Verifies that a kazam PR's tests actually exercise the change, that CI is green, and that no existing coverage was disabled or weakened. Runs the suite locally to confirm.
 model: sonnet
 tools: Read, Grep, Glob, Bash
 ---
@@ -50,7 +50,7 @@ Any of these needs a justification in the PR body. If missing, flag it.
 
 ## 5. Integration test impact
 
-finro's `tests/integration.rs` invokes the compiled binary end-to-end. If the PR touches `render/`, `theme.rs`, or the bundled scripts, the integration test should still pass. Run it explicitly and report.
+kazam's `tests/integration.rs` invokes the compiled binary end-to-end. If the PR touches `render/`, `theme.rs`, or the bundled scripts, the integration test should still pass. Run it explicitly and report.
 
 ## 6. New component / config field checklist
 

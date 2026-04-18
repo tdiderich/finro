@@ -157,14 +157,14 @@ components:
               - type: markdown
                 body: |
                   Yes — pick `dark` or `light` as the base via the `theme:` key
-                  in `finro.yaml`, and override any individual token with a
+                  in `kazam.yaml`, and override any individual token with a
                   `colors:` map. See the [Theming section of the guide](../guide.html).
 
           - title: Does it work without a server?
             components:
               - type: markdown
                 body: |
-                  Yes — `finro build` produces plain HTML files. Open them
+                  Yes — `kazam build` produces plain HTML files. Open them
                   directly with `file://` URLs. Nav and interactive components
                   all work locally.
 

@@ -37,7 +37,7 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
         }
 
         let fname = path.file_name().unwrap_or_default();
-        if fname == "finro.yaml" {
+        if fname == "kazam.yaml" {
             continue;
         }
 
@@ -61,7 +61,7 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
                 .unwrap_or_default();
 
             // The "View source" pill + rendered source-view page are opt-in
-            // via `view_source: true` in finro.yaml. Most sites don't need it;
+            // via `view_source: true` in kazam.yaml. Most sites don't need it;
             // docs/examples sites do.
             let source_view_href = if config.view_source {
                 format!("{}.source.html", source_stem)
@@ -151,10 +151,10 @@ fn base_path_for(rel: &Path) -> String {
 }
 
 fn load_config(dir: &Path) -> Result<SiteConfig> {
-    let config_path = dir.join("finro.yaml");
+    let config_path = dir.join("kazam.yaml");
     if config_path.exists() {
         let content = fs::read_to_string(&config_path)?;
-        serde_yaml::from_str(&content).context("parsing finro.yaml")
+        serde_yaml::from_str(&content).context("parsing kazam.yaml")
     } else {
         Ok(SiteConfig::default())
     }

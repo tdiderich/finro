@@ -1,0 +1,125 @@
+title: Themes
+shell: standard
+
+components:
+  - type: header
+    title: Stock themes
+    eyebrow: Reference
+    subtitle: "Set `theme: <name>` in your `kazam.yaml`. The seven rainbow themes pick up a muted, earth-toned accent on top of the neutral dark base (or a light base via `mode: light`). Readable content, quiet brand color."
+
+  - type: section
+    eyebrow: ROYGBIV
+    heading: Rainbow set
+    components:
+      - type: markdown
+        body: |
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;">
+            <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;">
+              <div style="height:64px;background:#BB7777;"></div>
+              <div style="padding:14px 16px;">
+                <div style="font-size:15px;font-weight:600;color:var(--snow);margin-bottom:4px;">red</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:var(--muted);">#BB7777</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:var(--surface-strong);padding:2px 6px;border-radius:4px;color:var(--snow);">theme: red</code>
+              </div>
+            </div>
+            <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;">
+              <div style="height:64px;background:#BB8C66;"></div>
+              <div style="padding:14px 16px;">
+                <div style="font-size:15px;font-weight:600;color:var(--snow);margin-bottom:4px;">orange</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:var(--muted);">#BB8C66</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:var(--surface-strong);padding:2px 6px;border-radius:4px;color:var(--snow);">theme: orange</code>
+              </div>
+            </div>
+            <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;">
+              <div style="height:64px;background:#B8A866;"></div>
+              <div style="padding:14px 16px;">
+                <div style="font-size:15px;font-weight:600;color:var(--snow);margin-bottom:4px;">yellow</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:var(--muted);">#B8A866</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:var(--surface-strong);padding:2px 6px;border-radius:4px;color:var(--snow);">theme: yellow</code>
+              </div>
+            </div>
+            <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;">
+              <div style="height:64px;background:#7A9878;"></div>
+              <div style="padding:14px 16px;">
+                <div style="font-size:15px;font-weight:600;color:var(--snow);margin-bottom:4px;">green</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:var(--muted);">#7A9878</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:var(--surface-strong);padding:2px 6px;border-radius:4px;color:var(--snow);">theme: green</code>
+              </div>
+            </div>
+            <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;">
+              <div style="height:64px;background:#7897B8;"></div>
+              <div style="padding:14px 16px;">
+                <div style="font-size:15px;font-weight:600;color:var(--snow);margin-bottom:4px;">blue</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:var(--muted);">#7897B8</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:var(--surface-strong);padding:2px 6px;border-radius:4px;color:var(--snow);">theme: blue</code>
+              </div>
+            </div>
+            <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;">
+              <div style="height:64px;background:#8A7FBB;"></div>
+              <div style="padding:14px 16px;">
+                <div style="font-size:15px;font-weight:600;color:var(--snow);margin-bottom:4px;">indigo</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:var(--muted);">#8A7FBB</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:var(--surface-strong);padding:2px 6px;border-radius:4px;color:var(--snow);">theme: indigo</code>
+              </div>
+            </div>
+            <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;">
+              <div style="height:64px;background:#AB7FBB;"></div>
+              <div style="padding:14px 16px;">
+                <div style="font-size:15px;font-weight:600;color:var(--snow);margin-bottom:4px;">violet</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:var(--muted);">#AB7FBB</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:var(--surface-strong);padding:2px 6px;border-radius:4px;color:var(--snow);">theme: violet</code>
+              </div>
+            </div>
+          </div>
+
+  - type: section
+    eyebrow: Neutral
+    heading: Base themes
+    components:
+      - type: markdown
+        body: |
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
+            <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;">
+              <div style="height:64px;background:#899878;"></div>
+              <div style="padding:14px 16px;">
+                <div style="font-size:15px;font-weight:600;color:var(--snow);margin-bottom:4px;">dark</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:var(--muted);">#899878 · sage accent on #121113</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:var(--surface-strong);padding:2px 6px;border-radius:4px;color:var(--snow);">theme: dark</code>
+              </div>
+            </div>
+            <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;">
+              <div style="height:64px;background:#222725;"></div>
+              <div style="padding:14px 16px;">
+                <div style="font-size:15px;font-weight:600;color:var(--snow);margin-bottom:4px;">light</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:var(--muted);">#222725 accent on #F7F7F2 paper</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:var(--surface-strong);padding:2px 6px;border-radius:4px;color:var(--snow);">theme: light</code>
+              </div>
+            </div>
+          </div>
+
+  - type: section
+    eyebrow: Usage
+    heading: Apply a theme
+    components:
+      - type: code
+        language: yaml
+        code: |
+          # kazam.yaml
+          name: My Site
+          theme: violet            # any rainbow color, or dark/light
+          mode: light              # optional — flips rainbow themes onto light base
+          texture: grid            # pairs with any theme
+          glow: accent             # picks up the active accent
+
+      - type: markdown
+        body: |
+          `mode` only affects the rainbow themes (`red` / `orange` / …). `theme: dark` and `theme: light` are self-contained and ignore it. Need a custom accent outside the stock set? Override any theme token directly with `colors:` — the named theme is just a starting point.
+
+      - type: code
+        language: yaml
+        code: |
+          # kazam.yaml — your brand color on top of the dark base
+          theme: dark
+          colors:
+            accent: '#14B8B8'
+            accent_soft: 'rgba(var(--accent-rgb), 0.08)'

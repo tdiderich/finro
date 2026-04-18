@@ -1,15 +1,15 @@
 [package]
-name = "finro"
+name = "kazam"
 version = "0.3.0"
 edition = "2021"
 description = "Beautiful sites from simple YAML"
 license = "MIT"
-repository = "https://github.com/tdiderich/finro"
-homepage = "https://tdiderich.github.io/finro/"
+repository = "https://github.com/tdiderich/kazam"
+homepage = "https://tdiderich.github.io/kazam/"
 readme = "README.md"
 
 [[bin]]
-name = "finro"
+name = "kazam"
 path = "src/main.rs"
 
 [dependencies]

@@ -1,11 +1,11 @@
-# AGENTS.md — finro authoring guide for LLMs
+# AGENTS.md — kazam authoring guide for LLMs
 
-This file tells LLMs (Claude, GPT, etc.) how to author pages in a finro site.
+This file tells LLMs (Claude, GPT, etc.) how to author pages in a kazam site.
 Read this before generating or editing any `.yaml` file.
 
-## What finro is
+## What kazam is
 
-finro is a Rust CLI that turns YAML files into themed static HTML. Every `.yaml`
+kazam is a Rust CLI that turns YAML files into themed static HTML. Every `.yaml`
 file in the source directory becomes one page of output. The format is designed
 for you — the machine — to generate easily: consistent `type:` tags, no nested
 conditionals, no templating logic.
@@ -14,7 +14,7 @@ conditionals, no templating logic.
 
 ```
 my-site/
-  finro.yaml         # site-wide config (name, theme, nav, favicon)
+  kazam.yaml         # site-wide config (name, theme, nav, favicon)
   index.yaml         # → _site/index.html
   guide.yaml         # → _site/guide.html
   reference/
@@ -23,20 +23,49 @@ my-site/
 
 Any non-`.yaml` file (images, SVGs, fonts) is copied verbatim into the output.
 
-## finro.yaml — site config
+## kazam.yaml — site config
 
 ```yaml
 name: Site Name
-theme: dark              # or "light"
+theme: dark              # dark | light | red | orange | yellow | green | blue | indigo | violet
+mode: dark               # optional: dark (default) | light — flips rainbow themes onto the light base
 colors:                  # optional per-token overrides
   accent: '#14b8b8'
 favicon: favicon.svg
+texture: dots            # optional: none | dots | grid | grain | topography | diagonal
+glow: accent             # optional: none | accent | corner
+nav_layout: top          # optional: top (default) | sidebar
 nav:
   - label: Home
     href: index.html
   - label: Guide
     href: guide.html
+  - label: Components     # parent with a dropdown / sidebar section
+    href: components/index.html   # optional — acts as default link when clicked
+    children:
+      - label: Content
+        href: components/content.html
+      - label: Grids
+        href: components/grids.html
 ```
+
+`nav_layout: top` (default) renders the nav in the sticky top bar. Parent
+entries with `children:` render as a hover/focus dropdown. `nav_layout:
+sidebar` moves the full nav into a fixed 240px left sidebar; parent entries
+with children become labeled sections, their leaves become indented links.
+Sidebar layout is only applied to `shell: standard` pages.
+
+`theme` picks a built-in palette. The seven rainbow themes share the
+neutral dark base by default and only swap the accent color — safe to use
+with any `texture`/`glow` combination. Set `mode: light` to flip any
+rainbow theme onto the light base (#F7F7F2 paper + near-black text).
+`theme: dark` and `theme: light` are self-contained and ignore `mode`.
+Use `colors:` to override individual tokens on top.
+
+`texture` paints a subtle pattern behind every page (tinted via the active
+theme's text color, so dark/light just work). `glow` paints a soft
+accent-colored radial behind the header area. Both are off by default;
+both are stripped under `@media print`.
 
 ## Page structure
 
@@ -48,6 +77,8 @@ title: Page Title           # required
 shell: standard             # standard | document | deck
 eyebrow: Reference          # optional — small label in document/deck headers
 subtitle: Q4 2026           # optional — date / context in document/deck
+texture: none               # optional — override site-wide texture on this page
+glow: corner                # optional — override site-wide glow on this page
 components:                 # for standard + document shells
   - type: header
     title: Hello
@@ -55,6 +86,11 @@ slides:                     # for deck shell only
   - label: Slide One
     components: [...]
 ```
+
+`texture:` and `glow:` at the page level override the site-wide values in
+`kazam.yaml`. Setting either to `none` turns that layer off on this page;
+setting it to any other preset swaps it in. Omit to inherit the site-wide
+value.
 
 ## Shells
 
@@ -391,7 +427,7 @@ Every colored component accepts the same 5-value palette:
 ## Running
 
 ```bash
-finro dev .              # watch + serve at localhost:3000 (live reload)
-finro build .            # one-shot build to _site/
-finro build . --release  # minified production build
+kazam dev .              # watch + serve at localhost:3000 (live reload)
+kazam build .            # one-shot build to _site/
+kazam build . --release  # minified production build
 ```

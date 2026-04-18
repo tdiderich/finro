@@ -5,7 +5,7 @@ components:
   - type: header
     title: Component Primitives
     eyebrow: Demo
-    subtitle: Every reusable component available in finro
+    subtitle: Every reusable component available in kazam
 
   - type: section
     eyebrow: Interactive
@@ -126,7 +126,7 @@ components:
     components:
       - type: accordion
         items:
-          - title: What is finro?
+          - title: What is kazam?
             components:
               - type: markdown
                 body: |

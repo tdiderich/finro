@@ -185,7 +185,7 @@ components:
 
       - type: image
         src: ../assets/demo-dashboard.svg
-        alt: Sample finro dashboard showing three customer cards
+        alt: Sample kazam dashboard showing three customer cards
         caption: A live SVG rendered through the image component.
         max_width: 600
 

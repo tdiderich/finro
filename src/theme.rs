@@ -1,3 +1,4 @@
+use crate::types::{Glow, Mode, Texture};
 use std::collections::HashMap;
 
 /// A theme is a set of named color tokens. Any page rendered with this theme
@@ -23,10 +24,37 @@ pub struct Theme {
 }
 
 impl Theme {
-    pub fn named(name: &str) -> Theme {
+    /// Resolve a theme name + mode to a concrete Theme. `dark` and `light`
+    /// are self-contained and ignore `mode`. Rainbow themes pick up the
+    /// mode-appropriate base and swap the accent on top.
+    pub fn named(name: &str, mode: Mode) -> Theme {
         match name {
+            "dark" => dark(),
             "light" => light(),
-            _ => dark(),
+            other => {
+                let base = match mode {
+                    Mode::Dark => dark(),
+                    Mode::Light => light(),
+                };
+                // Muted, earthy accents sibling to the dark theme's sage
+                // (#899878). ~45% saturation, ~60% lightness — they sit on
+                // a dark bg without screaming. Users can still override any
+                // accent via `colors:` for a brighter brand pop.
+                let accent = match other {
+                    "red" => "#BB7777",
+                    "orange" => "#BB8C66",
+                    "yellow" => "#B8A866",
+                    "green" => "#7A9878",
+                    "blue" => "#7897B8",
+                    "indigo" => "#8A7FBB",
+                    "violet" => "#AB7FBB",
+                    _ => return dark(),
+                };
+                Theme {
+                    accent: accent.into(),
+                    ..base
+                }
+            }
         }
     }
 
@@ -117,18 +145,22 @@ fn hex_to_rgb_triple(hex: &str) -> Option<String> {
 }
 
 pub fn dark() -> Theme {
+    // Surface/border at the old 3–7% range read too subtle against
+    // #121113 — cards, code blocks, and meta grids faded into the bg.
+    // Bumped to 5/9/11% for clearer card definition without making the
+    // chrome feel heavy.
     Theme {
         bg: "#121113".into(),
-        surface: "rgba(var(--text-rgb), 0.03)".into(),
-        surface_strong: "rgba(var(--text-rgb), 0.06)".into(),
-        border: "rgba(var(--text-rgb), 0.07)".into(),
+        surface: "rgba(var(--text-rgb), 0.08)".into(),
+        surface_strong: "rgba(var(--text-rgb), 0.09)".into(),
+        border: "rgba(var(--text-rgb), 0.11)".into(),
         border_strong: "rgba(var(--accent-rgb), 0.35)".into(),
         accent: "#899878".into(),
-        accent_soft: "rgba(var(--accent-rgb), 0.08)".into(),
+        accent_soft: "rgba(var(--accent-rgb), 0.10)".into(),
         text: "#F7F7F2".into(),
         text_muted: "#B0B3AD".into(),
-        text_subtle: "#5C5F5A".into(),
-        overlay_hover: "rgba(var(--text-rgb), 0.05)".into(),
+        text_subtle: "#6E726C".into(),
+        overlay_hover: "rgba(var(--text-rgb), 0.10)".into(),
         green: "#899878".into(),
         yellow: "#E4E6C3".into(),
         red: "#C97B8A".into(),
@@ -137,18 +169,24 @@ pub fn dark() -> Theme {
 }
 
 pub fn light() -> Theme {
+    // Light mode needs roughly 2x the overlay opacity dark mode uses — a
+    // 4% near-black wash on paper reads as invisible, while a 4% white
+    // wash on #121113 reads clearly. Bumping surface/border/overlay values
+    // keeps card definition, code blocks, and meta grids from washing out.
+    // `text_subtle` also moves off sage onto a neutral muted gray so label
+    // chrome ("AUTHOR", table headers) stays legible on paper.
     Theme {
         bg: "#F7F7F2".into(),
-        surface: "rgba(var(--text-rgb), 0.04)".into(),
-        surface_strong: "rgba(var(--text-rgb), 0.08)".into(),
-        border: "rgba(var(--text-rgb), 0.12)".into(),
+        surface: "rgba(var(--text-rgb), 0.08)".into(),
+        surface_strong: "rgba(var(--text-rgb), 0.10)".into(),
+        border: "rgba(var(--text-rgb), 0.16)".into(),
         border_strong: "rgba(var(--accent-rgb), 0.45)".into(),
         accent: "#222725".into(),
-        accent_soft: "rgba(var(--accent-rgb), 0.06)".into(),
+        accent_soft: "rgba(var(--accent-rgb), 0.08)".into(),
         text: "#121113".into(),
         text_muted: "#3D423F".into(),
-        text_subtle: "#899878".into(),
-        overlay_hover: "rgba(var(--text-rgb), 0.06)".into(),
+        text_subtle: "#6B6F65".into(),
+        overlay_hover: "rgba(var(--text-rgb), 0.12)".into(),
         green: "#5A7A4A".into(),
         yellow: "#9A9540".into(),
         red: "#8B4A5A".into(),
@@ -156,10 +194,147 @@ pub fn light() -> Theme {
     }
 }
 
-pub fn render_css(theme: &Theme) -> String {
+pub fn render_css(theme: &Theme, texture: Texture, glow: Glow) -> String {
     let mut out = theme.root_block();
     out.push_str(STATIC_CSS);
+    out.push_str(&decoration_css(theme, texture, glow));
     out
+}
+
+/// Site-wide decorations (texture + glow) painted on `body::before` and
+/// `body::after`. Each layer sits at `z-index: -1` so it covers body's
+/// background-color but stays behind all in-flow content. Both layers are
+/// stripped under `@media print` to keep PDFs/exports clean.
+fn decoration_css(theme: &Theme, texture: Texture, glow: Glow) -> String {
+    if matches!(texture, Texture::None) && matches!(glow, Glow::None) {
+        return String::new();
+    }
+    let text_rgb = hex_to_rgb_triple(&theme.text).unwrap_or_else(|| "255, 255, 255".into());
+    let accent_rgb = hex_to_rgb_triple(&theme.accent).unwrap_or_else(|| "60, 206, 206".into());
+
+    let mut out = String::new();
+    out.push_str(&texture_css(texture, &text_rgb));
+    out.push_str(&glow_css(glow, &accent_rgb));
+    if !out.is_empty() {
+        out.push_str("@media print { body::before, body::after { display: none !important; } }\n");
+    }
+    out
+}
+
+fn texture_css(texture: Texture, text_rgb: &str) -> String {
+    let layer = "content: ''; position: fixed; inset: 0; pointer-events: none; z-index: -1;";
+    match texture {
+        Texture::None => String::new(),
+        Texture::Dots => format!(
+            "body::before {{ {layer} \
+             background-image: radial-gradient(rgba({rgb}, 0.07) 1px, transparent 1px); \
+             background-size: 24px 24px; }}\n",
+            layer = layer,
+            rgb = text_rgb,
+        ),
+        Texture::Grid => format!(
+            "body::before {{ {layer} \
+             background-image: \
+               linear-gradient(rgba({rgb}, 0.04) 1px, transparent 1px), \
+               linear-gradient(90deg, rgba({rgb}, 0.04) 1px, transparent 1px); \
+             background-size: 44px 44px; }}\n",
+            layer = layer,
+            rgb = text_rgb,
+        ),
+        Texture::Diagonal => format!(
+            "body::before {{ {layer} \
+             background-image: repeating-linear-gradient(45deg, \
+               rgba({rgb}, 0.04) 0 1px, transparent 1px 14px); }}\n",
+            layer = layer,
+            rgb = text_rgb,
+        ),
+        Texture::Grain => {
+            let svg = format!(
+                "<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'>\
+<filter id='n'>\
+<feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/>\
+<feColorMatrix values='0 0 0 0 {r} 0 0 0 0 {g} 0 0 0 0 {b} 0 0 0 0.55 0'/>\
+</filter>\
+<rect width='100%' height='100%' filter='url(#n)'/></svg>",
+                r = rgb_component_to_unit(text_rgb, 0),
+                g = rgb_component_to_unit(text_rgb, 1),
+                b = rgb_component_to_unit(text_rgb, 2),
+            );
+            format!(
+                "body::before {{ {layer} opacity: 0.18; \
+                 background-image: url(\"data:image/svg+xml;utf8,{enc}\"); }}\n",
+                layer = layer,
+                enc = url_encode_svg(&svg),
+            )
+        }
+        Texture::Topography => {
+            // Two stacked wavy contours with offsets — gives a calm topo feel.
+            let svg = format!(
+                "<svg xmlns='http://www.w3.org/2000/svg' width='240' height='160' viewBox='0 0 240 160'>\
+<g fill='none' stroke='rgb({rgb})' stroke-opacity='0.07' stroke-width='1'>\
+<path d='M -10 30 Q 60 10 120 30 T 250 30'/>\
+<path d='M -10 60 Q 60 40 120 60 T 250 60'/>\
+<path d='M -10 90 Q 60 70 120 90 T 250 90'/>\
+<path d='M -10 120 Q 60 100 120 120 T 250 120'/>\
+<path d='M -10 150 Q 60 130 120 150 T 250 150'/>\
+</g></svg>",
+                rgb = text_rgb,
+            );
+            format!(
+                "body::before {{ {layer} \
+                 background-image: url(\"data:image/svg+xml;utf8,{enc}\"); }}\n",
+                layer = layer,
+                enc = url_encode_svg(&svg),
+            )
+        }
+    }
+}
+
+fn glow_css(glow: Glow, accent_rgb: &str) -> String {
+    let layer = "content: ''; position: fixed; pointer-events: none; z-index: -1;";
+    match glow {
+        Glow::None => String::new(),
+        Glow::Accent => format!(
+            "body::after {{ {layer} \
+             top: -320px; left: 50%; width: 1200px; height: 720px; \
+             margin-left: -600px; \
+             background: radial-gradient(ellipse at center, \
+               rgba({rgb}, 0.10) 0%, transparent 65%); }}\n",
+            layer = layer,
+            rgb = accent_rgb,
+        ),
+        Glow::Corner => format!(
+            "body::after {{ {layer} \
+             top: -220px; right: -220px; width: 720px; height: 620px; \
+             background: radial-gradient(circle at top right, \
+               rgba({rgb}, 0.14) 0%, transparent 60%); }}\n",
+            layer = layer,
+            rgb = accent_rgb,
+        ),
+    }
+}
+
+fn url_encode_svg(svg: &str) -> String {
+    svg.replace('%', "%25")
+        .replace('#', "%23")
+        .replace('<', "%3C")
+        .replace('>', "%3E")
+        .replace('"', "%22")
+        .replace('\'', "%27")
+        .replace(' ', "%20")
+        .replace('\n', "%0A")
+}
+
+/// Pull one channel out of a `"r, g, b"` triple and return it as a 0..1 float
+/// for use in an SVG `feColorMatrix` row.
+fn rgb_component_to_unit(triple: &str, idx: usize) -> String {
+    let val = triple
+        .split(',')
+        .nth(idx)
+        .and_then(|s| s.trim().parse::<u32>().ok())
+        .unwrap_or(255);
+    let unit = (val.min(255) as f32) / 255.0;
+    format!("{:.4}", unit)
 }
 
 const STATIC_CSS: &str = r#"
@@ -225,10 +400,10 @@ a.site-bar-name:hover { opacity: 1; color: var(--teal); }
   font-size: 13px; font-weight: 500;
   padding: 6px 12px;
   border-radius: 6px;
-  color: rgba(var(--text-rgb), 0.55);
+  color: rgba(var(--text-rgb), 0.7);
   transition: all 0.15s;
 }
-.site-bar .nav-link:hover { color: var(--snow); background: rgba(var(--text-rgb), 0.05); }
+.site-bar .nav-link:hover { color: var(--snow); background: rgba(var(--text-rgb), 0.08); }
 .site-bar .nav-link-active { color: var(--teal) !important; background: rgba(var(--accent-rgb), 0.08) !important; }
 
 body.shell-standard .site-bar, body.shell-document .site-bar {
@@ -237,6 +412,131 @@ body.shell-standard .site-bar, body.shell-document .site-bar {
   z-index: 10;
   background: rgba(var(--bg-rgb), 0.92);
   backdrop-filter: blur(12px);
+}
+
+/* ──────── Nav dropdowns (parents with children, top layout) ──────── */
+
+.site-bar nav .nav-link-group { position: relative; display: flex; align-items: center; }
+.site-bar nav .nav-link-parent {
+  display: inline-flex; align-items: center; gap: 4px;
+  font: inherit;
+  font-size: 13px; font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: rgba(var(--text-rgb), 0.7);
+  background: none; border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.site-bar nav .nav-link-parent:hover { color: var(--snow); background: rgba(var(--text-rgb), 0.08); }
+.site-bar nav .nav-chevron { font-size: 9px; opacity: 0.6; margin-top: 1px; }
+.site-bar nav .nav-dropdown {
+  position: absolute;
+  /* Touch the bottom of the button — no hover gap between trigger and
+     panel, otherwise the pointer leaves the :hover region while moving
+     toward the menu and the dropdown snaps shut. */
+  top: 100%;
+  right: 0;
+  min-width: 180px;
+  background: var(--bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  /* The 6px top padding gives visual breathing room without a dead hover
+     zone — the whole panel edge-to-edge is still a hover target. */
+  padding: 6px 4px 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 0.15s, transform 0.15s;
+  z-index: 100;
+  display: flex; flex-direction: column; gap: 2px;
+}
+/* Safety bridge: a transparent strip above the dropdown that keeps the
+   cursor inside the parent's :hover region while traversing. */
+.site-bar nav .nav-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 0;
+  right: 0;
+  height: 8px;
+}
+.site-bar nav .nav-link-group:hover .nav-dropdown,
+.site-bar nav .nav-link-group:focus-within .nav-dropdown {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.site-bar nav .nav-dropdown .nav-link {
+  display: block;
+  padding: 7px 12px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* ──────── Sidebar nav layout ──────── */
+
+body.nav-layout-sidebar .site-sidebar {
+  position: fixed;
+  top: 56px;
+  bottom: 0;
+  left: 0;
+  width: 240px;
+  overflow-y: auto;
+  padding: 24px 12px;
+  border-right: 1px solid var(--card-border);
+  background: var(--bg);
+  z-index: 5;
+}
+body.nav-layout-sidebar .site-sidebar nav {
+  display: flex; flex-direction: column; gap: 2px;
+}
+body.nav-layout-sidebar .sidebar-section { margin-top: 20px; }
+body.nav-layout-sidebar .sidebar-section:first-child { margin-top: 0; }
+body.nav-layout-sidebar .sidebar-section-label {
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+  padding: 0 12px;
+  margin-bottom: 6px;
+}
+body.nav-layout-sidebar .sidebar-link {
+  display: block;
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: rgba(var(--text-rgb), 0.7);
+  transition: color 0.15s, background 0.15s;
+}
+body.nav-layout-sidebar .sidebar-link-top { font-weight: 500; }
+body.nav-layout-sidebar .sidebar-link:hover {
+  color: var(--snow);
+  background: rgba(var(--text-rgb), 0.08);
+}
+body.nav-layout-sidebar .sidebar-link.nav-link-active {
+  color: var(--teal);
+  background: rgba(var(--accent-rgb), 0.08);
+}
+body.nav-layout-sidebar .main-content {
+  margin-left: 240px;
+}
+body.nav-layout-sidebar .container {
+  max-width: none;
+  padding-left: 48px;
+  padding-right: 48px;
+}
+@media (max-width: 768px) {
+  body.nav-layout-sidebar .site-sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--card-border);
+    padding: 16px 24px;
+  }
+  body.nav-layout-sidebar .main-content { margin-left: 0; }
 }
 
 /* ──────────────────── Standard shell ──────────────────── */
@@ -252,8 +552,8 @@ body.shell-document .doc-root {
   padding: 40px 20px 100px;
 }
 body.shell-document .doc-card {
-  background: rgba(var(--text-rgb), 0.02);
-  border: 1px solid rgba(var(--text-rgb), 0.06);
+  background: rgba(var(--text-rgb), 0.05);
+  border: 1px solid rgba(var(--text-rgb), 0.09);
   border-radius: 16px;
   padding: 40px 48px;
   box-shadow: 0 4px 40px rgba(0,0,0,0.3);
@@ -262,7 +562,7 @@ body.shell-document .doc-body { line-height: 1.7; color: rgba(var(--text-rgb),0.
 body.shell-document .doc-footer {
   margin-top: 40px;
   padding-top: 20px;
-  border-top: 1px solid rgba(var(--text-rgb),0.05);
+  border-top: 1px solid rgba(var(--text-rgb),0.08);
 }
 
 /* ──────────────────── Deck shell ──────────────────── */
@@ -272,7 +572,6 @@ body.shell-deck .deck-root {
   inset: 0;
   display: flex;
   flex-direction: column;
-  background: var(--bg);
 }
 
 body.shell-deck .deck-viewport { flex: 1; overflow: hidden; position: relative; }
@@ -312,7 +611,7 @@ body.shell-deck .deck-nav {
   align-items: center;
   justify-content: space-between;
   padding: 0 48px;
-  border-top: 1px solid rgba(var(--text-rgb),0.05);
+  border-top: 1px solid rgba(var(--text-rgb),0.08);
 }
 body.shell-deck .deck-nav-label {
   font-size: 11px;
@@ -433,10 +732,10 @@ a.c-card { color: inherit; }
   padding: 4px 10px;
   border-radius: 100px;
   white-space: nowrap;
-  background: rgba(var(--text-rgb), 0.06);
+  background: rgba(var(--text-rgb), 0.09);
   opacity: 0.8;
 }
-.c-badge-default { background: rgba(var(--text-rgb), 0.06); color: var(--snow); opacity: 0.8; }
+.c-badge-default { background: rgba(var(--text-rgb), 0.09); color: var(--snow); opacity: 0.8; }
 .c-badge-green { background: rgba(52, 211, 153, 0.12); color: var(--green); opacity: 1; }
 .c-badge-yellow { background: rgba(251, 191, 36, 0.12); color: var(--yellow); opacity: 1; }
 .c-badge-red { background: rgba(248, 113, 113, 0.12); color: var(--red); opacity: 1; }
@@ -486,8 +785,8 @@ a.c-card { color: inherit; }
 .c-sel-cards-arrow .sel-card { flex: 1 1 0; min-width: 0; }
 .sel-card {
   text-align: left;
-  background: rgba(var(--text-rgb), 0.02);
-  border: 1px solid rgba(var(--text-rgb), 0.07);
+  background: rgba(var(--text-rgb), 0.05);
+  border: 1px solid rgba(var(--text-rgb), 0.10);
   border-radius: 12px;
   padding: 24px 20px;
   cursor: pointer;
@@ -533,7 +832,7 @@ a.c-card { color: inherit; }
   width: 8px; height: 8px;
   border-radius: 50%;
   margin: 0 auto 8px;
-  background: rgba(240,240,247,0.1);
+  background: rgba(var(--text-rgb),0.12);
 }
 .c-timeline-phase.completed .c-timeline-dot { background: var(--green); }
 .c-timeline-phase.active .c-timeline-dot { background: var(--teal); box-shadow: 0 0 8px rgba(var(--accent-rgb),0.5); }
@@ -541,20 +840,20 @@ a.c-card { color: inherit; }
   font-size: 11px; font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  color: rgba(240,240,247,0.25);
+  color: rgba(var(--text-rgb),0.4);
   margin-bottom: 10px;
 }
 .c-timeline-phase.completed .c-timeline-label { color: var(--green); }
 .c-timeline-phase.active .c-timeline-label { color: var(--teal); }
-.c-timeline-bar { height: 3px; background: rgba(240,240,247,0.06); }
+.c-timeline-bar { height: 3px; background: rgba(var(--text-rgb),0.1); }
 .c-timeline-bar.completed { background: var(--green); }
 .c-timeline-bar.active { background: var(--teal); }
 
 /* Stat Grid */
 .c-stat-grid { display: grid; gap: 14px; }
 .c-stat {
-  background: rgba(var(--text-rgb),0.025);
-  border: 1px solid rgba(240,240,247,0.06);
+  background: rgba(var(--text-rgb),0.05);
+  border: 1px solid rgba(var(--text-rgb),0.1);
   border-radius: 12px;
   padding: 20px 22px;
   position: relative;
@@ -570,25 +869,25 @@ a.c-card { color: inherit; }
 }
 .c-stat-label {
   font-size: 11px; font-weight: 600;
-  color: rgba(240,240,247,0.35);
+  color: rgba(var(--text-rgb),0.55);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 .c-stat-value { font-size: 28px; font-weight: 700; line-height: 1.1; }
-.c-stat-detail { font-size: 13px; color: rgba(240,240,247,0.4); line-height: 1.4; }
+.c-stat-detail { font-size: 13px; color: rgba(var(--text-rgb),0.6); line-height: 1.4; }
 
 /* Before / After */
 .c-before-after { display: flex; flex-direction: column; gap: 20px; }
 .c-ba-card {
   padding: 32px 36px;
-  background: rgba(var(--text-rgb),0.02);
+  background: rgba(var(--text-rgb),0.05);
   border: 1px solid rgba(var(--accent-rgb),0.08);
   border-radius: 14px;
   display: flex; flex-direction: column; gap: 12px;
 }
 .c-ba-title { font-size: 22px; font-weight: 700; }
-.c-ba-before { font-size: 16px; color: rgba(240,240,247,0.35); line-height: 1.5; }
-.c-ba-after { font-size: 16px; color: rgba(240,240,247,0.7); line-height: 1.5; }
+.c-ba-before { font-size: 16px; color: rgba(var(--text-rgb),0.55); line-height: 1.5; }
+.c-ba-after { font-size: 16px; color: rgba(var(--text-rgb),0.85); line-height: 1.5; }
 .c-ba-highlight { color: var(--teal); font-weight: 600; }
 
 /* Steps */
@@ -598,7 +897,7 @@ a.c-card { color: inherit; }
   align-items: flex-start;
   gap: 16px;
   padding: 20px 24px;
-  background: rgba(var(--text-rgb),0.02);
+  background: rgba(var(--text-rgb),0.05);
   border: 1px solid rgba(var(--accent-rgb),0.08);
   border-radius: 12px;
 }
@@ -621,7 +920,7 @@ a.c-card { color: inherit; }
   opacity: 0.6;
 }
 .c-step-title { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
-.c-step-detail { font-size: 14px; color: rgba(240,240,247,0.5); line-height: 1.5; }
+.c-step-detail { font-size: 14px; color: rgba(var(--text-rgb),0.7); line-height: 1.5; }
 
 /* Markdown */
 .c-markdown {
@@ -641,13 +940,13 @@ a.c-card { color: inherit; }
 .c-markdown code {
   font-family: 'SF Mono', 'Monaco', monospace;
   font-size: 13px;
-  background: rgba(var(--text-rgb), 0.06);
+  background: rgba(var(--text-rgb), 0.09);
   padding: 2px 6px;
   border-radius: 4px;
   color: var(--teal);
 }
 .c-markdown pre {
-  background: rgba(var(--text-rgb), 0.04);
+  background: rgba(var(--text-rgb), 0.07);
   border: 1px solid var(--card-border);
   border-radius: 8px;
   padding: 20px;
@@ -667,7 +966,7 @@ a.c-card { color: inherit; }
 }
 .c-markdown td {
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(var(--text-rgb), 0.04);
+  border-bottom: 1px solid rgba(var(--text-rgb), 0.07);
   color: var(--light-muted);
 }
 .c-markdown tr:last-child td { border-bottom: none; }
@@ -695,7 +994,7 @@ body.shell-document .doc-body strong { color: #fff; }
   padding: 10px 14px;
   border: 1px solid var(--card-border);
   border-radius: 8px;
-  background: rgba(var(--text-rgb),0.02);
+  background: rgba(var(--text-rgb),0.05);
   color: var(--snow);
   font-size: 14px;
   font-family: inherit;
@@ -705,7 +1004,7 @@ body.shell-document .doc-body strong { color: #fff; }
 .c-table {
   width: 100%;
   border-collapse: collapse;
-  background: rgba(var(--text-rgb),0.02);
+  background: rgba(var(--text-rgb),0.05);
   border: 1px solid var(--card-border);
   border-radius: 10px;
   overflow: hidden;
@@ -718,7 +1017,7 @@ body.shell-document .doc-body strong { color: #fff; }
   color: var(--muted);
   padding: 14px 18px;
   border-bottom: 1px solid var(--card-border);
-  background: rgba(var(--text-rgb),0.02);
+  background: rgba(var(--text-rgb),0.05);
   user-select: none;
 }
 .c-table th[data-sortable] { cursor: pointer; transition: color 0.15s; }
@@ -732,7 +1031,7 @@ body.shell-document .doc-body strong { color: #fff; }
 .c-table th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--teal); }
 .c-table td {
   padding: 14px 18px;
-  border-bottom: 1px solid rgba(var(--text-rgb), 0.04);
+  border-bottom: 1px solid rgba(var(--text-rgb), 0.07);
   color: var(--light-muted);
   font-size: 14px;
 }
@@ -746,7 +1045,7 @@ body.shell-document .doc-body strong { color: #fff; }
   padding: 16px 20px;
   border-radius: 0 10px 10px 0;
   border-left: 3px solid;
-  background: rgba(var(--text-rgb), 0.05);
+  background: rgba(var(--text-rgb), 0.08);
 }
 .c-callout-info { border-left-color: var(--teal); }
 .c-callout-warn { border-left-color: var(--yellow); background: rgba(251, 191, 36, 0.04); }
@@ -766,7 +1065,7 @@ body.shell-document .doc-body strong { color: #fff; }
 
 /* Code */
 .c-code {
-  background: rgba(var(--text-rgb), 0.04);
+  background: rgba(var(--text-rgb), 0.07);
   border: 1px solid var(--card-border);
   border-radius: 8px;
   padding: 20px;
@@ -826,7 +1125,7 @@ body.shell-document .doc-body strong { color: #fff; }
 /* Accordion */
 .c-accordion { display: flex; flex-direction: column; gap: 8px; }
 .c-accordion-item {
-  background: rgba(var(--text-rgb),0.02);
+  background: rgba(var(--text-rgb),0.05);
   border: 1px solid var(--card-border);
   border-radius: 10px;
   overflow: hidden;
@@ -880,8 +1179,8 @@ body.shell-document .doc-body strong { color: #fff; }
   font-size: 12px; font-weight: 500;
   padding: 3px 10px;
   border-radius: 6px;
-  background: rgba(var(--text-rgb), 0.04);
-  border: 1px solid rgba(var(--text-rgb), 0.08);
+  background: rgba(var(--text-rgb), 0.07);
+  border: 1px solid rgba(var(--text-rgb), 0.12);
   color: var(--light-muted);
   font-family: 'SF Mono', 'Monaco', monospace;
 }
@@ -920,7 +1219,7 @@ body.shell-document .doc-body strong { color: #fff; }
   font-size: 11px; font-weight: 600;
   padding: 2px 6px;
   border-radius: 4px;
-  background: rgba(var(--text-rgb), 0.08);
+  background: rgba(var(--text-rgb), 0.12);
   border: 1px solid rgba(var(--text-rgb), 0.12);
   border-bottom-width: 2px;
   color: var(--snow);
@@ -988,7 +1287,7 @@ body.shell-document .doc-body strong { color: #fff; }
   color: var(--light-muted);
   border: 1px solid transparent;
 }
-.c-button-ghost:hover { color: var(--snow); background: rgba(var(--text-rgb), 0.04); }
+.c-button-ghost:hover { color: var(--snow); background: rgba(var(--text-rgb), 0.07); }
 
 /* Definition List */
 .c-definition-list {
@@ -1078,7 +1377,7 @@ body.shell-document .doc-body strong { color: #fff; }
 }
 .c-avatar-group .c-avatar:first-child { margin-left: 0; }
 .c-avatar-more {
-  background: rgba(var(--text-rgb), 0.06) !important;
+  background: rgba(var(--text-rgb), 0.09) !important;
   color: var(--light-muted) !important;
   border-color: rgba(var(--text-rgb), 0.1) !important;
 }
@@ -1093,7 +1392,7 @@ body.shell-document .doc-body strong { color: #fff; }
 .c-progress-value { color: var(--snow); font-weight: 600; font-variant-numeric: tabular-nums; }
 .c-progress-track {
   height: 8px;
-  background: rgba(var(--text-rgb), 0.06);
+  background: rgba(var(--text-rgb), 0.09);
   border-radius: 100px;
   overflow: hidden;
 }
@@ -1177,9 +1476,11 @@ body.shell-deck { page: deck-page; }
   .no-print { display: none !important; }
   .view-source { display: none !important; }
 
-  /* ── Shared: preserve accent colors, drop the site bar ── */
+  /* ── Shared: preserve accent colors, drop the site bar + sidebar ── */
   *, *::before, *::after { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   .site-bar { display: none !important; }
+  .site-sidebar { display: none !important; }
+  body.nav-layout-sidebar .main-content { margin-left: 0 !important; }
 
   /* ── Standard shell ── (dark theme preserved) ── */
   html, body.shell-standard { background: var(--bg) !important; }
@@ -1218,3 +1519,93 @@ body.shell-deck { page: deck-page; }
   body.shell-deck .deck-nav { display: none !important; }
 }
 "#;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn no_decoration_css_when_both_none() {
+        assert!(decoration_css(&dark(), Texture::None, Glow::None).is_empty());
+    }
+
+    #[test]
+    fn dots_uses_text_rgb_and_print_strips() {
+        let css = decoration_css(&dark(), Texture::Dots, Glow::None);
+        assert!(css.contains("body::before"));
+        assert!(css.contains("radial-gradient(rgba(247, 247, 242"));
+        assert!(css.contains("@media print"));
+    }
+
+    #[test]
+    fn glow_uses_accent_rgb() {
+        let css = decoration_css(&dark(), Texture::None, Glow::Accent);
+        assert!(css.contains("body::after"));
+        assert!(css.contains("rgba(137, 152, 120"));
+    }
+
+    #[test]
+    fn grain_emits_url_encoded_svg_data_uri() {
+        let css = decoration_css(&dark(), Texture::Grain, Glow::None);
+        assert!(css.contains("data:image/svg+xml;utf8,"));
+        // SVG body must be URL-encoded — no raw <, >, # in the URL payload.
+        let uri_start = css.find("data:image/svg+xml;utf8,").unwrap();
+        let uri_end = css[uri_start..].find('"').unwrap() + uri_start;
+        let payload = &css[uri_start..uri_end];
+        assert!(!payload.contains('<'));
+        assert!(!payload.contains('>'));
+    }
+
+    #[test]
+    fn rainbow_themes_swap_accent_only() {
+        // Each rainbow theme keeps the chosen base — same bg, same text — and
+        // swaps just the accent hex. Default mode is Dark.
+        let cases = [
+            ("red", "#BB7777"),
+            ("orange", "#BB8C66"),
+            ("yellow", "#B8A866"),
+            ("green", "#7A9878"),
+            ("blue", "#7897B8"),
+            ("indigo", "#8A7FBB"),
+            ("violet", "#AB7FBB"),
+        ];
+        let d = dark();
+        for (name, hex) in cases {
+            let t = Theme::named(name, Mode::Dark);
+            assert_eq!(t.accent, hex, "{} accent", name);
+            assert_eq!(t.bg, d.bg, "{} keeps dark bg", name);
+            assert_eq!(t.text, d.text, "{} keeps dark text", name);
+        }
+    }
+
+    #[test]
+    fn rainbow_themes_on_light_mode_use_light_base() {
+        // Same accent swap, but base comes from light(), not dark().
+        let l = light();
+        let t = Theme::named("red", Mode::Light);
+        assert_eq!(t.accent, "#BB7777");
+        assert_eq!(t.bg, l.bg, "light-mode red uses light bg");
+        assert_eq!(t.text, l.text, "light-mode red uses light text");
+    }
+
+    #[test]
+    fn dark_and_light_themes_ignore_mode() {
+        // `theme: dark` + mode: light should still return the full dark theme.
+        // Same for `theme: light` + mode: dark.
+        assert_eq!(Theme::named("dark", Mode::Light).bg, dark().bg);
+        assert_eq!(Theme::named("light", Mode::Dark).bg, light().bg);
+    }
+
+    #[test]
+    fn unknown_theme_falls_back_to_dark() {
+        let t = Theme::named("purple-mountain-majesty", Mode::Dark);
+        assert_eq!(t.accent, dark().accent);
+    }
+
+    #[test]
+    fn topography_bakes_text_color_into_stroke() {
+        let css = decoration_css(&dark(), Texture::Topography, Glow::None);
+        // URL-encoded SVG keeps commas/parens raw, only spaces become %20.
+        assert!(css.contains("rgb(247,%20247,%20242)"));
+    }
+}

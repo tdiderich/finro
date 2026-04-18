@@ -10,7 +10,7 @@ components:
   - type: "callout"
     variant: "info"
     title: "How this page got here"
-    body: "A ~40-line Python script (stdlib only) fetched the HN top-stories endpoint and wrote this YAML file. `finro build` rendered it. See the [walkthrough](hackernews.html) for the script."
+    body: "A ~40-line Python script (stdlib only) fetched the HN top-stories endpoint and wrote this YAML file. `kazam build` rendered it. See the [walkthrough](hackernews.html) for the script."
   - type: "card_grid"
     min_width: 280
     cards:

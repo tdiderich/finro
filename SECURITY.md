@@ -4,7 +4,7 @@
 
 **Please do not open a public issue for security reports.** Use GitHub's private disclosure channel:
 
-- Go to https://github.com/tdiderich/finro/security/advisories/new
+- Go to https://github.com/tdiderich/kazam/security/advisories/new
 - Describe the issue, reproduction steps, and impact
 
 Expect an initial response within 7 days. We'll coordinate disclosure with you before the fix and advisory go public.
@@ -12,17 +12,17 @@ Expect an initial response within 7 days. We'll coordinate disclosure with you b
 ## Scope
 
 **In scope:**
-- `finro` CLI source code (`src/**`)
+- `kazam` CLI source code (`src/**`)
 - Build/test infrastructure (`.github/workflows/**`)
 - Default theme CSS, bundled scripts, and scaffolded templates in the release binary
 
 **Out of scope:**
-- Content authored by end users in their own `.yaml` files. finro renders user-provided markdown/HTML — if you inject a `<script>` into your own site via `type: markdown`, that's your site, not a finro bug.
+- Content authored by end users in their own `.yaml` files. kazam renders user-provided markdown/HTML — if you inject a `<script>` into your own site via `type: markdown`, that's your site, not a kazam bug.
 - Bugs in transitive Cargo dependencies. Report those upstream; we'll track the advisory via `cargo-audit` and bump once a patched version is available.
 
 ## Supply-chain protections
 
-`cargo install --git https://github.com/tdiderich/finro` fetches and compiles whatever is on `main` at the moment you run it. That means a malicious commit to `main` would ship to every installer. The repo protects against that with:
+`cargo install --git https://github.com/tdiderich/kazam` fetches and compiles whatever is on `main` at the moment you run it. That means a malicious commit to `main` would ship to every installer. The repo protects against that with:
 
 ### Repo-level (GitHub)
 
@@ -37,7 +37,7 @@ Expect an initial response within 7 days. We'll coordinate disclosure with you b
 
 - `Cargo.lock` is committed, so every build from a given commit resolves to the exact same transitive dep graph.
 - `cargo-audit` runs in CI. A new RustSec advisory against any transitive dep fails the build.
-- **New dependencies require justification in the PR.** finro's ~10 direct crates are deliberate; a PR that adds a crate for a minor convenience will typically be pushed back.
+- **New dependencies require justification in the PR.** kazam's ~10 direct crates are deliberate; a PR that adds a crate for a minor convenience will typically be pushed back.
 - **No build scripts that reach the network.** Dependencies that do will be rejected or vendored.
 
 ### What contributors should not do
@@ -52,9 +52,9 @@ These will get a PR closed immediately and may be reported:
 
 ### What users can do
 
-- Pin a specific commit: `cargo install --git https://github.com/tdiderich/finro --rev <sha>`. That locks you to a version you can audit.
+- Pin a specific commit: `cargo install --git https://github.com/tdiderich/kazam --rev <sha>`. That locks you to a version you can audit.
 - Check releases (when we start tagging them) for signed tags before installing.
-- Run `cargo audit` against your own Cargo lockfile if you embed finro into a larger workflow.
+- Run `cargo audit` against your own Cargo lockfile if you embed kazam into a larger workflow.
 
 ## Responsible disclosure
 

@@ -1,5 +1,5 @@
-//! `finro init <name>` scaffolds a new site directory with a minimal,
-//! well-commented starter — finro.yaml, index.yaml, AGENTS.md, .gitignore.
+//! `kazam init <name>` scaffolds a new site directory with a minimal,
+//! well-commented starter — kazam.yaml, index.yaml, AGENTS.md, .gitignore.
 
 use anyhow::{bail, Context, Result};
 use std::fs;
@@ -23,8 +23,8 @@ pub fn run(path: &str) -> Result<()> {
     fs::create_dir_all(dir).with_context(|| format!("creating {:?}", dir))?;
 
     fs::write(
-        dir.join("finro.yaml"),
-        FINRO_YAML.replace("{{SITE_NAME}}", &site_name),
+        dir.join("kazam.yaml"),
+        KAZAM_YAML.replace("{{SITE_NAME}}", &site_name),
     )?;
     fs::write(
         dir.join("index.yaml"),
@@ -34,26 +34,32 @@ pub fn run(path: &str) -> Result<()> {
     fs::write(dir.join(".gitignore"), GITIGNORE)?;
 
     println!("\n  ✓ Created {} with:", path);
-    println!("    finro.yaml       site config (name, theme, nav)");
+    println!("    kazam.yaml       site config (name, theme, nav)");
     println!("    index.yaml       home page");
     println!("    AGENTS.md        LLM authoring guide");
     println!("    .gitignore");
     println!();
     println!("  Next:");
     println!("    cd {}", path);
-    println!("    finro dev .          # watch + serve at localhost:3000");
+    println!("    kazam dev .          # watch + serve at localhost:3000");
     println!();
 
     Ok(())
 }
 
-const FINRO_YAML: &str = r##"# Site configuration. Shared across every page.
+const KAZAM_YAML: &str = r##"# Site configuration. Shared across every page.
 # Every available field is listed below — uncomment the ones you want.
 
 name: {{SITE_NAME}}
 
-# Theme: "dark" (default) or "light".
+# Theme: "dark" (default), "light", or one of the rainbow accents:
+# red | orange | yellow | green | blue | indigo | violet. Rainbow themes
+# sit on a neutral base and only swap the accent color.
 theme: dark
+
+# Base tone for rainbow themes: "dark" (default) or "light". Ignored when
+# theme is already dark or light.
+# mode: light
 
 # Override individual theme tokens. Keys not listed here fall back to the
 # base theme's default. Full list of tokens: bg, surface, surface_strong,
@@ -85,14 +91,36 @@ theme: dark
 # sites. Off by default — most sites don't need it.
 # view_source: true
 
+# Subtle background pattern painted behind every page. Tinted via the
+# theme's text color so it adapts to dark/light. Off by default.
+# Options: none | dots | grid | grain | topography | diagonal
+# texture: dots
+
+# Soft accent-colored radial glow painted behind the page header area.
+# Off by default. Options: none | accent | corner
+# glow: accent
+
+# Nav layout: "top" (default — sticky top bar, dropdowns for nested
+# entries) or "sidebar" (fixed left-side sidebar, nested entries become
+# labeled sections). Only applies to shell: standard pages.
+# nav_layout: sidebar
+
 # Nav appears in the sticky header of every `shell: standard` page.
 # Hrefs are auto-resolved per-page based on directory depth, so
-# `index.html` works from any subdirectory.
+# `index.html` works from any subdirectory. Parent entries with
+# `children:` render as a dropdown (top layout) or a labeled section
+# (sidebar layout).
 nav:
   - label: Home
     href: index.html
   # - label: Docs
   #   href: docs.html
+  # - label: Reference
+  #   children:
+  #     - label: API
+  #       href: reference/api.html
+  #     - label: Config
+  #       href: reference/config.html
   # - label: GitHub
   #   href: https://github.com/your-org/your-repo
 "##;
@@ -105,7 +133,7 @@ components:
   - type: header
     title: {{SITE_NAME}}
     eyebrow: Welcome
-    subtitle: A starter site scaffolded by `finro init`.
+    subtitle: A starter site scaffolded by `kazam init`.
 
   - type: section
     eyebrow: Next steps
@@ -122,8 +150,8 @@ components:
           - label: Read AGENTS.md
             href: AGENTS.md
             variant: primary
-          - label: finro source
-            href: https://github.com/tdiderich/finro
+          - label: kazam source
+            href: https://github.com/tdiderich/kazam
             variant: secondary
             external: true
 
@@ -150,7 +178,7 @@ components:
       - type: callout
         variant: info
         title: Tip
-        body: "Run `finro dev .` to watch your files and live-reload the browser on every save."
+        body: "Run `kazam dev .` to watch your files and live-reload the browser on every save."
 "#;
 
 const GITIGNORE: &str = r#"/_site

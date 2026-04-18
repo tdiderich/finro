@@ -1,11 +1,11 @@
-title: finro — beautiful sites from simple YAML
+title: kazam — beautiful sites from simple YAML
 shell: standard
 
 components:
   - type: header
-    title: finro
-    eyebrow: YAML → beautiful static sites
-    subtitle: A Rust CLI that turns structured YAML into themed HTML. Built for a world where LLMs are the primary authors.
+    title: kazam
+    eyebrow: YAML → beautiful sites
+    subtitle: An agent first approach to building static docs, knowledge bases, slides, and more.
 
   - type: section
     eyebrow: Use cases
@@ -53,7 +53,7 @@ components:
             badge:
               label: pattern
               color: teal
-            description: Scripts emit YAML, finro renders. Live data from HN, GitHub, Linear, Sheets, or any JSON endpoint.
+            description: Scripts emit YAML, kazam renders. Live data from HN, GitHub, Linear, Sheets, or any JSON endpoint.
             links:
               - label: See walkthrough →
                 href: examples/hackernews.html
@@ -64,7 +64,7 @@ components:
             badge:
               label: standard
               color: default
-            description: Hero, features, stats, testimonial, CTA. Not what finro was built for — but if you need to ship one alongside your docs, it's a few components away.
+            description: Hero, features, stats, testimonial, CTA. Not what kazam was built for — but if you need to ship one alongside your docs, it's a few components away.
             links:
               - label: See example →
                 href: examples/landing.html
@@ -81,7 +81,7 @@ components:
           Now LLMs write the content. And a plain markdown render — grey text on white, no
           cards, no badges, no interactive tables — feels like a waste of what's possible.
 
-          finro is markdown's inverse: **the format is still trivial to generate, but the
+          kazam is markdown's inverse: **the format is still trivial to generate, but the
           output is genuinely beautiful**. Components are structured (LLM-friendly), themed,
           and composable. No React. No framework. Single binary, zero runtime.
 

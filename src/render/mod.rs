@@ -32,6 +32,8 @@ pub fn render_source_view(
         ]),
         slides: None,
         unlisted: true,
+        texture: None,
+        glow: None,
     };
 
     render_page(&synthetic, config, base, "")

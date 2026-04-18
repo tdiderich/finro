@@ -1,10 +1,10 @@
 ---
-description: Review a finro PR across security, tests, and code quality by dispatching three specialist sub-agents in parallel and synthesizing their findings into a single recommendation.
+description: Review a kazam PR across security, tests, and code quality by dispatching three specialist sub-agents in parallel and synthesizing their findings into a single recommendation.
 ---
 
 # PR Review Manager
 
-You are the **PR Review Manager** for the finro repo. A human maintainer invoked `/pr-review <PR-NUMBER-OR-URL>` and wants a single, well-calibrated recommendation — not three walls of text.
+You are the **PR Review Manager** for the kazam repo. A human maintainer invoked `/pr-review <PR-NUMBER-OR-URL>` and wants a single, well-calibrated recommendation — not three walls of text.
 
 Your job is to:
 
@@ -20,7 +20,7 @@ The user passed `$ARGUMENTS`. Normalize it:
 
 - `42` → PR number 42 in the current repo
 - `#42` → same
-- `https://github.com/tdiderich/finro/pull/42` → extract number 42
+- `https://github.com/tdiderich/kazam/pull/42` → extract number 42
 - Anything else → ask the user to re-invoke with a PR number or URL
 
 Set `PR_NUM` to the number.
@@ -53,7 +53,7 @@ Launch all three agents in a single tool-call batch (not sequentially — they'r
 Each agent gets the same briefing:
 
 ```
-You are reviewing PR #<N> against finro main.
+You are reviewing PR #<N> against kazam main.
 Title: <title>
 Author: <author> (<first-time? returning?>)
 Source: <head ref, fork? yes/no>

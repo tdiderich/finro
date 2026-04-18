@@ -1,0 +1,32 @@
+name: kazam
+mode: dark
+favicon: assets/favicon.svg
+view_source: true
+texture: grid
+glow: accent
+nav:
+  - label: Home
+    href: index.html
+  - label: Guide
+    href: guide.html
+  - label: Components
+    href: components/index.html
+    children:
+      - label: All components
+        href: components/index.html
+      - label: Content
+        href: components/content.html
+      - label: Grids
+        href: components/grids.html
+      - label: Indicators
+        href: components/indicators.html
+      - label: Interactive
+        href: components/interactive.html
+      - label: Layout
+        href: components/layout.html
+      - label: Navigation
+        href: components/navigation.html
+  - label: Themes
+    href: themes.html
+  - label: Deploy
+    href: deploy.html

@@ -164,9 +164,9 @@ components:
           - title: Install the binary
             detail: Build from source with cargo build --release.
           - title: Create a site directory
-            detail: Any directory of .yaml files — finro walks it recursively.
+            detail: Any directory of .yaml files — kazam walks it recursively.
           - title: Run dev mode
-            detail: finro dev ./my-site watches and live-reloads at localhost:3000.
+            detail: kazam dev ./my-site watches and live-reloads at localhost:3000.
 
       - type: code
         language: yaml
@@ -179,7 +179,7 @@ components:
               - title: Create a site directory
                 detail: Any directory of .yaml files.
               - title: Run dev mode
-                detail: finro dev ./my-site
+                detail: kazam dev ./my-site
 
   # ── empty_state ────────────────────────────
   - type: section

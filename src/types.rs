@@ -34,6 +34,15 @@ pub struct Page {
     /// Exclude this page from llms.txt. Useful for drafts.
     #[serde(default)]
     pub unlisted: bool,
+    /// Override the site-wide `texture` on this page. `Some(Texture::None)`
+    /// turns the texture off on this page; any other `Some(_)` swaps in a
+    /// different preset. `None` (unset) means inherit the site-wide value.
+    #[serde(default)]
+    pub texture: Option<Texture>,
+    /// Override the site-wide `glow` on this page. Same semantics as `texture`
+    /// above: unset = inherit, any Some value wins over the site config.
+    #[serde(default)]
+    pub glow: Option<Glow>,
 }
 
 #[derive(Deserialize)]
@@ -497,7 +506,37 @@ pub struct EmptyStateAction {
 #[derive(Deserialize)]
 pub struct NavLink {
     pub label: String,
-    pub href: String,
+    /// Leaf href. Optional only so that a parent grouping entry with `children`
+    /// can be a pure label (e.g. "Components ▾" with a dropdown of leaves).
+    pub href: Option<String>,
+    /// Nested children render as a top-nav dropdown or as nested sidebar
+    /// entries depending on `SiteConfig.nav_layout`.
+    #[serde(default)]
+    pub children: Option<Vec<NavLink>>,
+}
+
+/// How the sticky nav is laid out on `shell: standard` pages. Other shells
+/// ignore this.
+#[derive(Deserialize, Default, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum NavLayout {
+    /// Horizontal top-bar nav (default). Nested entries render as dropdowns.
+    #[default]
+    Top,
+    /// Fixed left-side sidebar. Nested entries render as labeled sections.
+    Sidebar,
+}
+
+/// Base tone for the site. Only affects rainbow themes (`red`/`orange`/…/
+/// `violet`), which pick up the accent color on top of either a dark or
+/// light neutral base. `theme: dark` and `theme: light` are self-contained
+/// and ignore this field.
+#[derive(Deserialize, Default, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum Mode {
+    #[default]
+    Dark,
+    Light,
 }
 
 #[derive(Deserialize)]
@@ -513,6 +552,52 @@ pub struct SiteConfig {
     /// useful for docs/examples sites, noise for most end-user sites.
     #[serde(default)]
     pub view_source: bool,
+    /// Subtle background pattern painted behind every page. Tinted via the
+    /// theme's `--text-rgb` so it stays consistent across light/dark.
+    /// Defaults to `none`.
+    #[serde(default)]
+    pub texture: Texture,
+    /// Soft accent-colored glow painted behind the page header area.
+    /// Defaults to `none`.
+    #[serde(default)]
+    pub glow: Glow,
+    /// Nav layout for `shell: standard` pages. Defaults to `top`.
+    #[serde(default)]
+    pub nav_layout: NavLayout,
+    /// Base tone for rainbow themes — dark (default) or light. Ignored when
+    /// `theme:` is already `dark` or `light`.
+    #[serde(default)]
+    pub mode: Mode,
+}
+
+/// Site-wide background pattern. All variants are subtle by design.
+#[derive(Deserialize, Default, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum Texture {
+    #[default]
+    None,
+    /// 1px dots on a 24px grid.
+    Dots,
+    /// Thin gridlines on a 40px grid.
+    Grid,
+    /// SVG fractal-noise grain.
+    Grain,
+    /// Wavy contour-line topography.
+    Topography,
+    /// 45° diagonal stripes.
+    Diagonal,
+}
+
+/// Soft accent-tinted radial gradient. Sits above the texture, below content.
+#[derive(Deserialize, Default, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum Glow {
+    #[default]
+    None,
+    /// Wide soft glow centered above the fold.
+    Accent,
+    /// Tighter glow tucked into the top-right corner.
+    Corner,
 }
 
 /// Favicon config: either a single path, or a struct with named slots.
@@ -596,7 +681,7 @@ fn mime_for(path: &str) -> &'static str {
 impl SiteConfig {
     pub fn resolved_theme(&self) -> crate::theme::Theme {
         let base = self.theme.as_deref().unwrap_or("dark");
-        crate::theme::Theme::named(base).with_overrides(&self.colors)
+        crate::theme::Theme::named(base, self.mode).with_overrides(&self.colors)
     }
 }
 
@@ -609,6 +694,10 @@ impl Default for SiteConfig {
             nav: None,
             favicon: None,
             view_source: false,
+            texture: Texture::None,
+            glow: Glow::None,
+            nav_layout: NavLayout::Top,
+            mode: Mode::Dark,
         }
     }
 }

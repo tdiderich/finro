@@ -1,6 +1,6 @@
-title: Why finro
+title: Why kazam
 shell: deck
-eyebrow: finro
+eyebrow: kazam
 subtitle: A tour in 7 slides
 
 slides:
@@ -9,11 +9,11 @@ slides:
     components:
       - type: image
         src: /assets/favicon.svg
-        alt: finro
+        alt: kazam
         max_width: 96
         align: center
       - type: header
-        title: "Why finro"
+        title: "Why kazam"
         subtitle: "YAML in, themed static HTML out"
         align: center
 
@@ -35,7 +35,7 @@ slides:
 
           - title: Internal tools
             before: A random Flask app spun up for a one-off internal dashboard
-            after: A YAML emitter + finro
+            after: A YAML emitter + kazam
             after_context: whoever writes the data can ship the UI
 
   - label: How it works
@@ -48,7 +48,7 @@ slides:
         cards:
           - title: Write YAML
             description: One file per page. Structured components, not free-form HTML.
-          - title: "`finro build`"
+          - title: "`kazam build`"
             description: A single Rust binary walks the directory and renders each page.
           - title: Themed output
             description: Every page picks up the site's theme, shell, and nav — no per-page boilerplate.
@@ -58,7 +58,7 @@ slides:
   - label: What you get
     components:
       - type: header
-        title: What finro gives you out of the box
+        title: What kazam gives you out of the box
       - type: stat_grid
         columns: 4
         stats:
@@ -106,11 +106,11 @@ slides:
       - type: header
         title: Real sites, no frontend team
       - type: blockquote
-        body: "Built finro and replaced an app in less than a day."
+        body: "Built kazam and replaced an app in less than a day."
         attribution: Tyler Diderich
       - type: callout
         variant: info
-        title: This deck is itself a finro deck
+        title: This deck is itself a kazam deck
         body: Open `examples/deck.yaml` to see the 30 lines of YAML behind these slides.
 
   - label: Get started
@@ -121,10 +121,10 @@ slides:
         numbered: true
         items:
           - title: Install
-            detail: "`cargo install --git https://github.com/tdiderich/finro`"
+            detail: "`cargo install --git https://github.com/tdiderich/kazam`"
           - title: Scaffold
-            detail: "`finro init my-site` — drops a starter `finro.yaml` and `index.yaml`"
+            detail: "`kazam init my-site` — drops a starter `kazam.yaml` and `index.yaml`"
           - title: Dev loop
-            detail: "`finro dev my-site --port 3000` — live reload on YAML change"
+            detail: "`kazam dev my-site --port 3000` — live reload on YAML change"
           - title: Ship
-            detail: "`finro build my-site --out dist --release` — minified HTML/CSS, ready to upload"
+            detail: "`kazam build my-site --out dist --release` — minified HTML/CSS, ready to upload"

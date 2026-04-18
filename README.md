@@ -1,31 +1,31 @@
-# finro
+# kazam
 
 YAML in, themed static HTML out. One Rust binary, no frontend build system.
 
-**Full docs + live examples:** https://tdiderich.github.io/finro/
+**Full docs + live examples:** https://tdiderich.github.io/kazam/
 
 ## Quickstart
 
 Install Rust via [rustup](https://rustup.rs), then:
 
 ```bash
-cargo install --git https://github.com/tdiderich/finro
-finro --version         # finro 0.3.0
+cargo install --git https://github.com/tdiderich/kazam
+kazam --version         # kazam 0.3.0
 ```
 
 Scaffold a new site:
 
 ```bash
-finro init my-site
+kazam init my-site
 cd my-site
 ```
 
-This drops a `finro.yaml` (site config) + `index.yaml` (landing page) into `my-site/`.
+This drops a `kazam.yaml` (site config) + `index.yaml` (landing page) into `my-site/`.
 
 ## Dev loop
 
 ```bash
-finro dev . --port 3000
+kazam dev . --port 3000
 ```
 
 Watches the directory, rebuilds on every `.yaml` save, serves at `localhost:3000` with live reload. Edit a file, switch tabs, see it.
@@ -33,11 +33,11 @@ Watches the directory, rebuilds on every `.yaml` save, serves at `localhost:3000
 ## Build
 
 ```bash
-finro build . --out dist                 # one-shot build
-finro build . --out dist --release       # minified production build
+kazam build . --out dist                 # one-shot build
+kazam build . --out dist --release       # minified production build
 ```
 
-Output is plain static HTML/CSS — drop it on S3, Pages, Vercel, or any static host. Recipes: https://tdiderich.github.io/finro/deploy.html
+Output is plain static HTML/CSS — drop it on S3, Pages, Vercel, or any static host. Recipes: https://tdiderich.github.io/kazam/deploy.html
 
 ## Samples
 
@@ -57,7 +57,7 @@ components:
     cards:
       - title: Write YAML
         description: One file per page.
-      - title: finro build
+      - title: kazam build
         description: Rust binary renders each page.
       - title: Ship static HTML
         description: Upload anywhere.
@@ -87,7 +87,7 @@ slides:
 ```
 
 ```yaml
-# finro.yaml — site config
+# kazam.yaml — site config
 name: Acme
 theme: dark
 favicon: assets/logo.svg
@@ -98,17 +98,17 @@ nav:
   - { label: Docs, href: docs.html }
 ```
 
-Live versions of each of these (and ~30 more components) are at https://tdiderich.github.io/finro/ — the docs site is itself built with finro.
+Live versions of each of these (and ~30 more components) are at https://tdiderich.github.io/kazam/ — the docs site is itself built with kazam.
 
 ## For LLMs
 
-`AGENTS.md` is the authoring guide — point Claude/GPT/Codex at it when generating finro YAML. Or have the agent run:
+`AGENTS.md` is the authoring guide — point Claude/GPT/Codex at it when generating kazam YAML. Or have the agent run:
 
 ```bash
-finro agents
+kazam agents
 ```
 
-which prints the guide bundled with the installed binary (so it always matches the version in use) with a preamble linking to the hosted component catalog. `finro init` also scaffolds an `AGENTS.md` + `llms.txt` into new sites so agents find them without being told.
+which prints the guide bundled with the installed binary (so it always matches the version in use) with a preamble linking to the hosted component catalog. `kazam init` also scaffolds an `AGENTS.md` + `llms.txt` into new sites so agents find them without being told.
 
 ## Contributing
 

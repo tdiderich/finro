@@ -1,13 +1,13 @@
-# Contributing to finro
+# Contributing to kazam
 
-Thanks for the interest. finro is small on purpose — Rust CLI, YAML in, HTML out — and the goal is to keep it that way. This guide covers how to propose a change, what we value in a PR, and how contributors can safely use coding agents alongside their own work.
+Thanks for the interest. kazam is small on purpose — Rust CLI, YAML in, HTML out — and the goal is to keep it that way. This guide covers how to propose a change, what we value in a PR, and how contributors can safely use coding agents alongside their own work.
 
 ## What kind of contributions are valued
 
 - **Bug fixes** with a reproducer in the description.
 - **New components** that compose with existing ones. A component earns its place by unlocking a real page type; a one-off CSS trick usually doesn't.
 - **Theme tokens / print / accessibility improvements** to existing components.
-- **Docs** — the hosted site lives in `docs/`, authored in finro itself. Adding examples is always welcome.
+- **Docs** — the hosted site lives in `docs/`, authored in kazam itself. Adding examples is always welcome.
 - **CI / dev ergonomics.**
 
 If you're unsure whether a change fits, open a small issue first and describe the use case.
@@ -15,11 +15,11 @@ If you're unsure whether a change fits, open a small issue first and describe th
 ## Getting set up
 
 ```bash
-git clone https://github.com/YOUR-FORK/finro
-cd finro
+git clone https://github.com/YOUR-FORK/kazam
+cd kazam
 cargo build --release
 cargo test --release
-./target/release/finro dev docs --port 3002   # live-edit the docs site
+./target/release/kazam dev docs --port 3002   # live-edit the docs site
 ```
 
 Use the latest stable Rust toolchain via [rustup](https://rustup.rs). The repo pins nothing — if stable works, we support it.
@@ -35,7 +35,7 @@ Use the latest stable Rust toolchain via [rustup](https://rustup.rs). The repo p
    cargo fmt --check
    cargo clippy --release -- -D warnings
    ```
-5. Push your branch and open a PR against `tdiderich/finro:main`.
+5. Push your branch and open a PR against `tdiderich/kazam:main`.
 6. A maintainer reviews. Expect small turnaround and occasional pushback on scope.
 
 ## PR checklist
@@ -43,7 +43,7 @@ Use the latest stable Rust toolchain via [rustup](https://rustup.rs). The repo p
 - [ ] `cargo test --release` passes
 - [ ] `cargo fmt --check` passes
 - [ ] `cargo clippy --release -- -D warnings` passes (or justify any exception in the PR)
-- [ ] If you changed the output HTML or CSS, eyeball the docs site (`finro dev docs --port 3002`) to confirm nothing regressed.
+- [ ] If you changed the output HTML or CSS, eyeball the docs site (`kazam dev docs --port 3002`) to confirm nothing regressed.
 - [ ] If you added a component or config field, update `AGENTS.md.template` and the relevant page under `docs/components/`.
 - [ ] Commit messages are in the imperative mood ("add X", not "added X").
 
@@ -51,15 +51,15 @@ Use the latest stable Rust toolchain via [rustup](https://rustup.rs). The repo p
 
 - Prefer small, well-named functions over macros or generics.
 - Keep components self-contained: one render fn in `src/render/components.rs`, matching styles in `src/theme.rs`, type in `src/types.rs`.
-- Don't introduce a new runtime dependency without a good reason. finro's value is partly that it ships as one tiny binary.
+- Don't introduce a new runtime dependency without a good reason. kazam's value is partly that it ships as one tiny binary.
 - Inline scripts for interactivity go in `src/render/scripts.rs`. We don't ship a JS build system and don't intend to.
 - Theme-aware colors use CSS custom props (`var(--accent-rgb)`, `var(--text-rgb)`, etc.), not hardcoded rgba literals. If you find a hardcoded color, fix it.
 
 ## Using coding agents
 
-finro is fine territory for LLM-assisted contributions. A couple of expectations:
+kazam is fine territory for LLM-assisted contributions. A couple of expectations:
 
-- **Point the agent at `AGENTS.md`** when it's writing finro YAML (pages, examples, docs content). `finro agents` dumps the same guide.
+- **Point the agent at `AGENTS.md`** when it's writing kazam YAML (pages, examples, docs content). `kazam agents` dumps the same guide.
 - **Review the agent's diff yourself before opening a PR.** Autonomous-mode commits that the contributor hasn't read are the usual source of low-quality PRs we'll close.
 - **Don't paste secrets or third-party code** into agent prompts or into the repo. See `SECURITY.md` for more.
 - **Disclose agent usage in the PR body** if a meaningful portion was agent-authored. We're not against it; we just want the review to focus on the right things.
@@ -78,9 +78,9 @@ src/
   theme.rs                Theme tokens + STATIC_CSS
   types.rs                All YAML-facing types (serde structs)
   llms.rs                 llms.txt emission
-  init.rs / agents.rs     `finro init` / `finro agents` scaffolding
+  init.rs / agents.rs     `kazam init` / `kazam agents` scaffolding
   minify.rs               Release-mode HTML/CSS/JS minification
-docs/                     The hosted docs site (itself a finro site)
+docs/                     The hosted docs site (itself a kazam site)
 AGENTS.md.template        Authoring guide bundled into the binary
 tests/                    Integration tests
 ```
