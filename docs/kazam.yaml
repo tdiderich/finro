@@ -2,7 +2,7 @@ name: kazam
 mode: dark
 favicon: assets/favicon.svg
 view_source: true
-texture: grid
+texture: dots
 glow: accent
 nav:
   - label: Home
