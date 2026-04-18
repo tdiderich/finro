@@ -131,6 +131,77 @@ fn init_creates_minimal_site_that_builds() {
 }
 
 #[test]
+fn page_level_texture_and_glow_override_site_config() {
+    // Site-wide sets texture: grid + glow: accent. One page sets texture:
+    // none (opt out) and another sets glow: corner (different preset). The
+    // rendered HTML for each page must reflect the per-page override, not
+    // the site-wide default.
+    let dir = tmp_dir("overrides");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("kazam.yaml"),
+        "name: Overrides\ntheme: dark\ntexture: grid\nglow: accent\n",
+    )
+    .unwrap();
+    // Default page: inherits site-wide (should have grid + accent glow).
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Index\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    // Opts out of texture entirely.
+    std::fs::write(
+        dir.join("plain.yaml"),
+        "title: Plain\nshell: standard\ntexture: none\ncomponents:\n  - type: header\n    title: Plain\n",
+    )
+    .unwrap();
+    // Swaps to the corner glow variant + different texture.
+    std::fs::write(
+        dir.join("corner.yaml"),
+        "title: Corner\nshell: standard\ntexture: dots\nglow: corner\ncomponents:\n  - type: header\n    title: Corner\n",
+    )
+    .unwrap();
+
+    let out = tmp_dir("overrides-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+
+    let index = read(&out.join("index.html"));
+    let plain = read(&out.join("plain.html"));
+    let corner = read(&out.join("corner.html"));
+
+    // Inherits both site-wide layers.
+    assert_contains(&index, "linear-gradient"); // grid texture signature
+    assert_contains(&index, "ellipse at center"); // accent glow signature
+
+    // plain.yaml turned texture off — the grid texture signature should
+    // be absent even though the site-wide config specifies it. (The print
+    // `body::before, body::after { display: none }` rule still appears
+    // because glow is still active, so we check for the texture signature
+    // specifically rather than any mention of body::before.)
+    assert!(
+        !plain.contains("linear-gradient"),
+        "plain page should not render the grid texture"
+    );
+    // But plain still inherits the site-wide accent glow.
+    assert_contains(&plain, "ellipse at center");
+
+    // corner.yaml swapped to dots + corner glow.
+    assert_contains(&corner, "radial-gradient(rgba"); // dots texture signature
+    assert_contains(&corner, "circle at top right"); // corner glow signature
+    assert!(
+        !corner.contains("ellipse at center"),
+        "corner page should not have the accent ellipse glow"
+    );
+}
+
+#[test]
 fn init_refuses_existing_dir() {
     let dir = tmp_dir("init-exists");
     std::fs::create_dir_all(&dir).unwrap();

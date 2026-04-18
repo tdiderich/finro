@@ -8,6 +8,10 @@ fn head(page: &Page, config: &SiteConfig, base: &str) -> String {
         Some(f) => f.render(base),
         None => default_favicon(&theme),
     };
+    // Page-level texture/glow overrides beat the site-wide defaults. An
+    // explicit `none` at the page level turns the effect off on that page.
+    let texture = page.texture.unwrap_or(config.texture);
+    let glow = page.glow.unwrap_or(config.glow);
     format!(
         r#"<head>
 <meta charset="UTF-8">
@@ -19,7 +23,7 @@ fn head(page: &Page, config: &SiteConfig, base: &str) -> String {
         title = esc(&page.title),
         site = esc(&config.name),
         favicon = favicon,
-        css = theme::render_css(&theme, config.texture, config.glow),
+        css = theme::render_css(&theme, texture, glow),
     )
 }
 

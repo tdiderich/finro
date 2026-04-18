@@ -34,6 +34,15 @@ pub struct Page {
     /// Exclude this page from llms.txt. Useful for drafts.
     #[serde(default)]
     pub unlisted: bool,
+    /// Override the site-wide `texture` on this page. `Some(Texture::None)`
+    /// turns the texture off on this page; any other `Some(_)` swaps in a
+    /// different preset. `None` (unset) means inherit the site-wide value.
+    #[serde(default)]
+    pub texture: Option<Texture>,
+    /// Override the site-wide `glow` on this page. Same semantics as `texture`
+    /// above: unset = inherit, any Some value wins over the site config.
+    #[serde(default)]
+    pub glow: Option<Glow>,
 }
 
 #[derive(Deserialize)]

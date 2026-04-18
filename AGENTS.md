@@ -60,6 +60,8 @@ title: Page Title           # required
 shell: standard             # standard | document | deck
 eyebrow: Reference          # optional — small label in document/deck headers
 subtitle: Q4 2026           # optional — date / context in document/deck
+texture: none               # optional — override site-wide texture on this page
+glow: corner                # optional — override site-wide glow on this page
 components:                 # for standard + document shells
   - type: header
     title: Hello
@@ -67,6 +69,11 @@ slides:                     # for deck shell only
   - label: Slide One
     components: [...]
 ```
+
+`texture:` and `glow:` at the page level override the site-wide values in
+`kazam.yaml`. Setting either to `none` turns that layer off on this page;
+setting it to any other preset swaps it in. Omit to inherit the site-wide
+value.
 
 ## Shells
 
