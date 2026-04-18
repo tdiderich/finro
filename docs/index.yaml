@@ -242,3 +242,63 @@ components:
               variant: info
               title: Components
               body: "**Which** primitives compose the page. 17 typed components. Nesting for `section`, `tabs`, `columns`, `accordion`."
+
+  - type: section
+    eyebrow: Fit
+    heading: Is this the right tool for what you're building?
+    components:
+      - type: markdown
+        body: |
+          kazam is narrow on purpose. It replaces the toolchain around **static content** —
+          docs, references, internal pages, decks, briefs. It is **not** a replacement for a
+          real web application framework. Here's the honest line.
+
+      - type: markdown
+        body: "### Use kazam for"
+
+      - type: table
+        columns:
+          - key: use_case
+            label: Use case
+          - key: why
+            label: Why it fits
+        rows:
+          - use_case: Documentation sites & API references
+            why: Structured content, client-side table filter/sort, themed output. What kazam was built for.
+          - use_case: Personal sites & portfolios
+            why: Low interactivity, SEO-friendly static HTML. The tool's author replaced their CRA site this way.
+          - use_case: Internal KBs, runbooks, handbooks
+            why: YAML in git = reviewable in PRs. Card grids and tables cover most navigation patterns.
+          - use_case: Pitch decks, QBRs, strategy reviews
+            why: "`shell: deck` gives full-viewport slides with keyboard nav and clean PDF export."
+          - use_case: Meeting agendas, briefs, one-pagers
+            why: "`shell: document` centers a printable card. Exports cleanly to PDF."
+          - use_case: Build-time dashboards
+            why: Cron a script that emits YAML from your API, rebuild, deploy. Live-ish data, zero runtime.
+          - use_case: Simple landing pages
+            why: Hero, features, stats, CTA — all native components. Not its specialty, but it ships one fine.
+
+      - type: markdown
+        body: "### Reach for something else for"
+
+      - type: table
+        columns:
+          - key: use_case
+            label: Use case
+          - key: instead
+            label: Reach for instead
+        rows:
+          - use_case: Apps with logged-in state or user accounts
+            instead: Next.js, Remix, Rails, Django — kazam has no auth, no sessions, no server.
+          - use_case: E-commerce checkout & payments
+            instead: Shopify, or a real app framework with a backend.
+          - use_case: Real-time feeds, chat, collaborative editing
+            instead: Anything with a websocket. Static output can't push.
+          - use_case: CMSes for non-technical authors
+            instead: Notion, Sanity, Contentful. Authoring kazam content means editing YAML in git.
+          - use_case: Per-request personalized pages
+            instead: Next.js / Remix SSR. kazam builds once, serves the same bytes to everyone.
+          - use_case: Rich client-side SPAs & admin dashboards
+            instead: React / Vue / Svelte. kazam emits zero JS by design.
+          - use_case: Blogs with comments or user-generated content
+            instead: Ghost, WordPress, or any app with a real backend. A read-only blog is fine.
