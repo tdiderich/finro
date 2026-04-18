@@ -7,124 +7,21 @@ components:
     eyebrow: YAML → beautiful sites
     subtitle: One Rust binary. No framework, no npm, no runtime JS. Designed so AI agents can author your site end-to-end.
 
-  - type: section
-    eyebrow: Why
-    heading: Markdown isn't enough. Next.js is too much.
-    components:
-      - type: markdown
-        body: |
-          Markdown was designed for humans typing prose. It renders plain pages — grey text on
-          white, no cards, no badges, no interactive tables. That was fine when humans wrote
-          all the content.
-
-          Now LLMs write the content, and plain markdown wastes what's possible. The usual
-          response is to reach for Next.js or a framework-backed docs tool — and inherit a
-          thousand-package npm tree, a webpack build, a client runtime, and a supply chain
-          you'll never audit.
-
-          kazam is the middle path: **the format stays trivial to generate, but the output is
-          genuinely beautiful — and it ships as pure HTML and CSS.** Structured components,
-          LLM-friendly schema, themed, composable. No React. No framework. No runtime JS.
-          One Rust binary.
-
-  - type: section
-    eyebrow: Receipts, not a pitch
-    heading: What kazam replaces
-    components:
-      - type: markdown
-        body: |
-          A real personal site migrated from Create-React-App to kazam.
-          Whole repo, not a hand-picked excerpt.
-
-      - type: stat_grid
-        columns: 3
-        stats:
-          - label: Hand-authored LOC
-            value: "−88%"
-            detail: 1,722 → 210
-            color: green
-          - label: npm dependencies
-            value: "0"
-            detail: was react, tailwind, axios, +1000s transitive
-            color: green
-          - label: Migration
-            value: 1 conversation
-            detail: one-shot rebuild
-            color: default
-
-      - type: before_after
-        items:
-          - title: Source you maintain
-            before: 1,722 lines across React components, hooks, CSS modules, and Tailwind config.
-            after: "**210 lines of YAML** — `kazam.yaml` + one file per page."
-          - title: Dependency graph
-            before: "react, react-router, axios, tailwind, react-gravatar, react-toggle + thousands of transitive npm packages you'll never audit."
-            after: "**Zero npm dependencies.** ~10 direct Rust crates, `cargo-audit` in CI, `Cargo.lock` committed."
-          - title: Build & deploy
-            before: webpack build, Firebase Hosting, two cloud functions to patch over SPA quirks.
-            after: "**One Rust binary** emits static HTML. Firebase Hosting serves `_site/` — no functions, no runtime."
-
-  - type: section
-    eyebrow: Use cases
-    heading: What to build with it
-    components:
-      - type: card_grid
-        cards:
-          - title: Documentation sites
-            badge:
-              label: standard
-              color: default
-            description: API refs, guides, onboarding docs. Tabs for code samples, sortable tables for references.
-            links:
-              - label: See example →
-                href: examples/doc.html
-
-          - title: Internal KBs & wikis
-            badge:
-              label: standard
-              color: default
-            description: Handbooks, runbooks, service catalogs. Card grids for navigation, tables for operational data.
-            links:
-              - label: See example →
-                href: examples/kb.html
-
-          - title: Meeting agendas & briefs
-            badge:
-              label: document
-              color: default
-            description: One-pagers and pre-reads. Centered card layout, print-optimized, exports clean to PDF.
-            links:
-              - label: See example →
-                href: examples/agenda.html
-
-          - title: Decks & presentations
-            badge:
-              label: deck
-              color: default
-            description: QBRs, strategy reviews, pitch decks. Full-viewport slides with keyboard nav and PDF export.
-            links:
-              - label: See example →
-                href: examples/deck.html
-
-          - title: Dashboards from APIs
-            badge:
-              label: pattern
-              color: teal
-            description: Scripts emit YAML, kazam renders. Live data from HN, GitHub, Linear, Sheets, or any JSON endpoint.
-            links:
-              - label: See walkthrough →
-                href: examples/hackernews.html
-              - label: Live HN top 30 →
-                href: examples/hackernews-live.html
-
-          - title: Landing pages
-            badge:
-              label: standard
-              color: default
-            description: Hero, features, stats, testimonial, CTA. Not what kazam was built for — but if you need to ship one alongside your docs, it's a few components away.
-            links:
-              - label: See example →
-                href: examples/landing.html
+  - type: stat_grid
+    columns: 3
+    stats:
+      - label: Hand-authored LOC
+        value: "−88%"
+        detail: 1,722 → 210 on a real CRA migration
+        color: green
+      - label: npm dependencies
+        value: "0"
+        detail: was react, tailwind, axios, +1000s transitive
+        color: green
+      - label: Migration
+        value: 1 conversation
+        detail: one-shot rebuild with an agent
+        color: default
 
   - type: section
     eyebrow: 30 seconds
@@ -175,130 +72,25 @@ components:
             color: yellow
 
   - type: section
-    eyebrow: Agents
-    heading: Built to be authored by AI
+    eyebrow: Read more
+    heading: Three ways in
     components:
-      - type: markdown
-        body: |
-          kazam's #1 audience isn't humans typing YAML — it's Claude, GPT, and Codex generating
-          it. Every page on this site was written that way.
+      - type: card_grid
+        cards:
+          - title: Is it a fit?
+            description: The 1,722 → 210 migration story, use cases, and the honest line on what kazam is not.
+            links:
+              - label: See the fit →
+                href: about.html
 
-      - type: columns
-        equal_heights: true
-        columns:
-          - - type: callout
-              variant: info
-              title: Bundled authoring guide
-              body: "`AGENTS.md` ships inside the binary. Run `kazam agents` and it prints the exact syntax for the version installed — no drift between the docs an agent reads and the parser it's feeding."
-          - - type: callout
-              variant: info
-              title: Discoverable by default
-              body: "`kazam init` scaffolds `AGENTS.md` and `llms.txt` into new sites. Any agent opening the repo finds them without being told."
-          - - type: callout
-              variant: info
-              title: Typed schema, not prose rules
-              body: "Components are narrow and composable — the shape LLMs produce correctly on the first try. Validation is structural: the YAML parses or it doesn't."
+          - title: How does it work?
+            description: The three orthogonal axes, the agent-first authoring model, and why static output has no JS supply chain.
+            links:
+              - label: Under the hood →
+                href: how.html
 
-  - type: section
-    eyebrow: Security
-    heading: No JavaScript supply chain
-    components:
-      - type: markdown
-        body: |
-          Static sites shouldn't carry a framework-sized attack surface. kazam's doesn't.
-
-      - type: columns
-        equal_heights: true
-        columns:
-          - - type: callout
-              variant: success
-              title: Zero runtime JS
-              body: Output is HTML and CSS. No hydration, no client router, no bundled framework. Your attack surface is whatever bytes your CDN serves.
-          - - type: callout
-              variant: success
-              title: ~10 direct Rust crates
-              body: "`Cargo.lock` committed, `cargo-audit` runs in CI, new dependencies require justification. No post-install scripts, no npm-style drive-by compromise."
-          - - type: callout
-              variant: success
-              title: Protected main
-              body: Branch protection, required CODEOWNER review, required CI checks, no force-pushes, signed release tags. `SECURITY.md` has the full scope.
-
-  - type: section
-    eyebrow: Design
-    heading: Three axes, orthogonal
-    components:
-      - type: columns
-        equal_heights: true
-        columns:
-          - - type: callout
-              variant: info
-              title: Shell
-              body: "**How** the page is chromed. Every shell shares a built-in nav bar (site name, eyebrow crumb, subtitle). `standard` adds nav links and flowing content, `document` adds a centered card optimized for print, `deck` adds full-viewport slides with keyboard nav and PDF export."
-          - - type: callout
-              variant: info
-              title: Page
-              body: "**What** the page is — just a title and an ordered list of components. Or for deck shell, a list of slides."
-          - - type: callout
-              variant: info
-              title: Components
-              body: "**Which** primitives compose the page. 17 typed components. Nesting for `section`, `tabs`, `columns`, `accordion`."
-
-  - type: section
-    eyebrow: Fit
-    heading: Is this the right tool for what you're building?
-    components:
-      - type: markdown
-        body: |
-          kazam is narrow on purpose. It replaces the toolchain around **static content** —
-          docs, references, internal pages, decks, briefs. It is **not** a replacement for a
-          real web application framework. Here's the honest line.
-
-      - type: markdown
-        body: "### Use kazam for"
-
-      - type: table
-        columns:
-          - key: use_case
-            label: Use case
-          - key: why
-            label: Why it fits
-        rows:
-          - use_case: Documentation sites & API references
-            why: Structured content, client-side table filter/sort, themed output. What kazam was built for.
-          - use_case: Personal sites & portfolios
-            why: Low interactivity, SEO-friendly static HTML. The tool's author replaced their CRA site this way.
-          - use_case: Internal KBs, runbooks, handbooks
-            why: YAML in git = reviewable in PRs. Card grids and tables cover most navigation patterns.
-          - use_case: Pitch decks, QBRs, strategy reviews
-            why: "`shell: deck` gives full-viewport slides with keyboard nav and clean PDF export."
-          - use_case: Meeting agendas, briefs, one-pagers
-            why: "`shell: document` centers a printable card. Exports cleanly to PDF."
-          - use_case: Build-time dashboards
-            why: Cron a script that emits YAML from your API, rebuild, deploy. Live-ish data, zero runtime.
-          - use_case: Simple landing pages
-            why: Hero, features, stats, CTA — all native components. Not its specialty, but it ships one fine.
-
-      - type: markdown
-        body: "### Reach for something else for"
-
-      - type: table
-        columns:
-          - key: use_case
-            label: Use case
-          - key: instead
-            label: Reach for instead
-        rows:
-          - use_case: Apps with logged-in state or user accounts
-            instead: Next.js, Remix, Rails, Django — kazam has no auth, no sessions, no server.
-          - use_case: E-commerce checkout & payments
-            instead: Shopify, or a real app framework with a backend.
-          - use_case: Real-time feeds, chat, collaborative editing
-            instead: Anything with a websocket. Static output can't push.
-          - use_case: CMSes for non-technical authors
-            instead: Notion, Sanity, Contentful. Authoring kazam content means editing YAML in git.
-          - use_case: Per-request personalized pages
-            instead: Next.js / Remix SSR. kazam builds once, serves the same bytes to everyone.
-          - use_case: Rich client-side SPAs & admin dashboards
-            instead: React / Vue / Svelte. kazam emits zero JS by design.
-          - use_case: Blogs with comments or user-generated content
-            instead: Ghost, WordPress, or any app with a real backend. A read-only blog is fine.
+          - title: Install it
+            description: "`cargo install`, `kazam init`, `kazam dev`. You're live on localhost in 60 seconds."
+            links:
+              - label: Start the guide →
+                href: guide.html

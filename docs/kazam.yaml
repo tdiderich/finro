@@ -7,6 +7,10 @@ glow: accent
 nav:
   - label: Home
     href: index.html
+  - label: About
+    href: about.html
+  - label: How it works
+    href: how.html
   - label: Guide
     href: guide.html
   - label: Components
