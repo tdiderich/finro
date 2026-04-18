@@ -14,60 +14,60 @@ components:
       - type: markdown
         body: |
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;">
-            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
+            <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;">
               <div style="height:64px;background:#BB7777;"></div>
               <div style="padding:14px 16px;">
-                <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">red</div>
-                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#BB7777</div>
-                <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: red</code>
+                <div style="font-size:15px;font-weight:600;color:var(--snow);margin-bottom:4px;">red</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:var(--muted);">#BB7777</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:var(--surface-strong);padding:2px 6px;border-radius:4px;color:var(--snow);">theme: red</code>
               </div>
             </div>
-            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
+            <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;">
               <div style="height:64px;background:#BB8C66;"></div>
               <div style="padding:14px 16px;">
-                <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">orange</div>
-                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#BB8C66</div>
-                <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: orange</code>
+                <div style="font-size:15px;font-weight:600;color:var(--snow);margin-bottom:4px;">orange</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:var(--muted);">#BB8C66</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:var(--surface-strong);padding:2px 6px;border-radius:4px;color:var(--snow);">theme: orange</code>
               </div>
             </div>
-            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
+            <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;">
               <div style="height:64px;background:#B8A866;"></div>
               <div style="padding:14px 16px;">
-                <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">yellow</div>
-                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#B8A866</div>
-                <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: yellow</code>
+                <div style="font-size:15px;font-weight:600;color:var(--snow);margin-bottom:4px;">yellow</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:var(--muted);">#B8A866</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:var(--surface-strong);padding:2px 6px;border-radius:4px;color:var(--snow);">theme: yellow</code>
               </div>
             </div>
-            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
+            <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;">
               <div style="height:64px;background:#7A9878;"></div>
               <div style="padding:14px 16px;">
-                <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">green</div>
-                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#7A9878</div>
-                <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: green</code>
+                <div style="font-size:15px;font-weight:600;color:var(--snow);margin-bottom:4px;">green</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:var(--muted);">#7A9878</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:var(--surface-strong);padding:2px 6px;border-radius:4px;color:var(--snow);">theme: green</code>
               </div>
             </div>
-            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
+            <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;">
               <div style="height:64px;background:#7897B8;"></div>
               <div style="padding:14px 16px;">
-                <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">blue</div>
-                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#7897B8</div>
-                <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: blue</code>
+                <div style="font-size:15px;font-weight:600;color:var(--snow);margin-bottom:4px;">blue</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:var(--muted);">#7897B8</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:var(--surface-strong);padding:2px 6px;border-radius:4px;color:var(--snow);">theme: blue</code>
               </div>
             </div>
-            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
+            <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;">
               <div style="height:64px;background:#8A7FBB;"></div>
               <div style="padding:14px 16px;">
-                <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">indigo</div>
-                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#8A7FBB</div>
-                <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: indigo</code>
+                <div style="font-size:15px;font-weight:600;color:var(--snow);margin-bottom:4px;">indigo</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:var(--muted);">#8A7FBB</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:var(--surface-strong);padding:2px 6px;border-radius:4px;color:var(--snow);">theme: indigo</code>
               </div>
             </div>
-            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
+            <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;">
               <div style="height:64px;background:#AB7FBB;"></div>
               <div style="padding:14px 16px;">
-                <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">violet</div>
-                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#AB7FBB</div>
-                <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: violet</code>
+                <div style="font-size:15px;font-weight:600;color:var(--snow);margin-bottom:4px;">violet</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:var(--muted);">#AB7FBB</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:var(--surface-strong);padding:2px 6px;border-radius:4px;color:var(--snow);">theme: violet</code>
               </div>
             </div>
           </div>
@@ -79,20 +79,20 @@ components:
       - type: markdown
         body: |
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
-            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
+            <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;">
               <div style="height:64px;background:#899878;"></div>
               <div style="padding:14px 16px;">
-                <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">dark</div>
-                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#899878 · sage accent on #121113</div>
-                <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: dark</code>
+                <div style="font-size:15px;font-weight:600;color:var(--snow);margin-bottom:4px;">dark</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:var(--muted);">#899878 · sage accent on #121113</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:var(--surface-strong);padding:2px 6px;border-radius:4px;color:var(--snow);">theme: dark</code>
               </div>
             </div>
-            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
+            <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;">
               <div style="height:64px;background:#222725;"></div>
               <div style="padding:14px 16px;">
-                <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">light</div>
-                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#222725 accent on #F7F7F2 paper</div>
-                <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: light</code>
+                <div style="font-size:15px;font-weight:600;color:var(--snow);margin-bottom:4px;">light</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:var(--muted);">#222725 accent on #F7F7F2 paper</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:var(--surface-strong);padding:2px 6px;border-radius:4px;color:var(--snow);">theme: light</code>
               </div>
             </div>
           </div>

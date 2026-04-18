@@ -1,6 +1,6 @@
 name: kazam
 theme: red
-mode: light
+mode: dark
 favicon: assets/favicon.svg
 view_source: true
 texture: grid
