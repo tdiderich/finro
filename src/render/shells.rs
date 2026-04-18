@@ -44,6 +44,10 @@ fn default_favicon(theme: &theme::Theme) -> String {
     format!(r#"<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,{encoded}">"#)
 }
 
+/// Top-bar nav (horizontal). Parent entries with `children:` render as a
+/// hover/focus-within dropdown; leaf entries render as a plain link. Returns
+/// `(html, has_any_nav)` so the caller can decide whether to bundle the
+/// nav-related JS.
 fn nav_html(config: &SiteConfig, base: &str) -> (String, bool) {
     let Some(links) = &config.nav else {
         return (String::new(), false);
@@ -53,14 +57,104 @@ fn nav_html(config: &SiteConfig, base: &str) -> (String, bool) {
     }
     let mut out = String::from("<nav>");
     for link in links {
-        out.push_str(&format!(
-            r#"<a href="{}" class="nav-link">{}</a>"#,
-            esc(&resolve_href(&link.href, base)),
-            esc(&link.label)
-        ));
+        out.push_str(&render_nav_entry(link, base));
     }
     out.push_str("</nav>");
     (out, true)
+}
+
+fn render_nav_entry(link: &crate::types::NavLink, base: &str) -> String {
+    match &link.children {
+        Some(children) if !children.is_empty() => {
+            let mut dd = String::from(r#"<div class="nav-dropdown">"#);
+            for child in children {
+                // Children render as plain links even if they themselves
+                // have `children:` — we don't nest dropdowns beyond one
+                // level, to keep the UX predictable.
+                let href = child
+                    .href
+                    .as_deref()
+                    .map(|h| resolve_href(h, base))
+                    .unwrap_or_default();
+                dd.push_str(&format!(
+                    r#"<a href="{}" class="nav-link">{}</a>"#,
+                    esc(&href),
+                    esc(&child.label)
+                ));
+            }
+            dd.push_str("</div>");
+            // The outer `<button>` is focusable so keyboard users can open
+            // the dropdown via Tab + Enter. `focus-within` on the parent
+            // keeps the panel open while focus is inside.
+            format!(
+                r#"<div class="nav-link-group"><button type="button" class="nav-link nav-link-parent" aria-haspopup="true">{label}<span class="nav-chevron">▾</span></button>{dd}</div>"#,
+                label = esc(&link.label),
+                dd = dd,
+            )
+        }
+        _ => {
+            let href = link
+                .href
+                .as_deref()
+                .map(|h| resolve_href(h, base))
+                .unwrap_or_default();
+            format!(
+                r#"<a href="{}" class="nav-link">{}</a>"#,
+                esc(&href),
+                esc(&link.label)
+            )
+        }
+    }
+}
+
+/// Sidebar nav (vertical, fixed to the left). Renders every `NavLink`. Parent
+/// entries with `children:` become labeled sections; leaf entries at the top
+/// level become standalone links. Only emitted when `nav_layout: sidebar`.
+fn sidebar_html(config: &SiteConfig, base: &str) -> String {
+    let Some(links) = &config.nav else {
+        return String::new();
+    };
+    if links.is_empty() {
+        return String::new();
+    }
+    let mut out = String::from(r#"<aside class="site-sidebar"><nav>"#);
+    for link in links {
+        match &link.children {
+            Some(children) if !children.is_empty() => {
+                out.push_str(&format!(
+                    r#"<div class="sidebar-section"><div class="sidebar-section-label">{}</div>"#,
+                    esc(&link.label)
+                ));
+                for child in children {
+                    let href = child
+                        .href
+                        .as_deref()
+                        .map(|h| resolve_href(h, base))
+                        .unwrap_or_default();
+                    out.push_str(&format!(
+                        r#"<a href="{}" class="sidebar-link">{}</a>"#,
+                        esc(&href),
+                        esc(&child.label)
+                    ));
+                }
+                out.push_str("</div>");
+            }
+            _ => {
+                let href = link
+                    .href
+                    .as_deref()
+                    .map(|h| resolve_href(h, base))
+                    .unwrap_or_default();
+                out.push_str(&format!(
+                    r#"<a href="{}" class="sidebar-link sidebar-link-top">{}</a>"#,
+                    esc(&href),
+                    esc(&link.label)
+                ));
+            }
+        }
+    }
+    out.push_str("</nav></aside>");
+    out
 }
 
 fn site_bar(page: &Page, config: &SiteConfig, base: &str, right_html: &str) -> String {
@@ -105,10 +199,24 @@ pub mod standard {
         base: &str,
         source_href: &str,
     ) -> String {
-        let (nav, has_nav) = nav_html(config, base);
+        let is_sidebar = matches!(config.nav_layout, crate::types::NavLayout::Sidebar);
+        // Sidebar layout moves the full nav (including nested children) into
+        // a left-side <aside>; the top bar then only shows site name +
+        // subtitle. Top layout keeps the existing inline nav in the bar.
+        let (nav_in_bar, has_nav) = if is_sidebar {
+            (String::new(), config.nav.as_ref().is_some_and(|n| !n.is_empty()))
+        } else {
+            nav_html(config, base)
+        };
         let mut right = subtitle_span(page);
-        right.push_str(&nav);
+        right.push_str(&nav_in_bar);
         let bar = site_bar(page, config, base, &right);
+
+        let sidebar = if is_sidebar {
+            sidebar_html(config, base)
+        } else {
+            String::new()
+        };
 
         let mut scripts = body.scripts.clone();
         if has_nav {
@@ -117,12 +225,18 @@ pub mod standard {
         scripts.push("reload");
         let view_src = view_source_html(source_href);
 
+        let body_class = if is_sidebar {
+            format!("{} nav-layout-sidebar", Shell::Standard.class())
+        } else {
+            Shell::Standard.class().to_string()
+        };
+
         format!(
             r#"<!DOCTYPE html>
 <html lang="en">
 {head}
 <body class="{cls}">
-{bar}<main class="container main-content">
+{bar}{sidebar}<main class="container main-content">
 {body}
 </main>
 {view_src}
@@ -130,8 +244,9 @@ pub mod standard {
 </body>
 </html>"#,
             head = head(page, config, base),
-            cls = Shell::Standard.class(),
+            cls = body_class,
             bar = bar,
+            sidebar = sidebar,
             body = body.html,
             view_src = view_src,
             scripts = collect_scripts(&scripts),

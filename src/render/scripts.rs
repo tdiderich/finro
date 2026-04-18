@@ -33,7 +33,7 @@ const RELOAD: &str = r#"
 const NAV: &str = r#"
 document.addEventListener('DOMContentLoaded', function () {
   var here = window.location.pathname.replace(/\/$/, '/index.html');
-  document.querySelectorAll('.nav-link').forEach(function (a) {
+  document.querySelectorAll('.nav-link, .sidebar-link').forEach(function (a) {
     try {
       var target = new URL(a.href).pathname.replace(/\/$/, '/index.html');
       if (target === here) a.classList.add('nav-link-active');

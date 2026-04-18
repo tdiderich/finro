@@ -493,6 +493,116 @@ body.shell-standard .site-bar, body.shell-document .site-bar {
   backdrop-filter: blur(12px);
 }
 
+/* ──────── Nav dropdowns (parents with children, top layout) ──────── */
+
+.site-bar nav .nav-link-group { position: relative; display: flex; align-items: center; }
+.site-bar nav .nav-link-parent {
+  display: inline-flex; align-items: center; gap: 4px;
+  font: inherit;
+  font-size: 13px; font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: rgba(var(--text-rgb), 0.55);
+  background: none; border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.site-bar nav .nav-link-parent:hover { color: var(--snow); background: rgba(var(--text-rgb), 0.05); }
+.site-bar nav .nav-chevron { font-size: 9px; opacity: 0.6; margin-top: 1px; }
+.site-bar nav .nav-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 180px;
+  background: var(--bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 0.15s, transform 0.15s;
+  z-index: 100;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.site-bar nav .nav-link-group:hover .nav-dropdown,
+.site-bar nav .nav-link-group:focus-within .nav-dropdown {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.site-bar nav .nav-dropdown .nav-link {
+  display: block;
+  padding: 7px 12px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* ──────── Sidebar nav layout ──────── */
+
+body.nav-layout-sidebar .site-sidebar {
+  position: fixed;
+  top: 56px;
+  bottom: 0;
+  left: 0;
+  width: 240px;
+  overflow-y: auto;
+  padding: 24px 12px;
+  border-right: 1px solid var(--card-border);
+  background: var(--bg);
+  z-index: 5;
+}
+body.nav-layout-sidebar .site-sidebar nav {
+  display: flex; flex-direction: column; gap: 2px;
+}
+body.nav-layout-sidebar .sidebar-section { margin-top: 20px; }
+body.nav-layout-sidebar .sidebar-section:first-child { margin-top: 0; }
+body.nav-layout-sidebar .sidebar-section-label {
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+  padding: 0 12px;
+  margin-bottom: 6px;
+}
+body.nav-layout-sidebar .sidebar-link {
+  display: block;
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: rgba(var(--text-rgb), 0.55);
+  transition: color 0.15s, background 0.15s;
+}
+body.nav-layout-sidebar .sidebar-link-top { font-weight: 500; }
+body.nav-layout-sidebar .sidebar-link:hover {
+  color: var(--snow);
+  background: rgba(var(--text-rgb), 0.05);
+}
+body.nav-layout-sidebar .sidebar-link.nav-link-active {
+  color: var(--teal);
+  background: rgba(var(--accent-rgb), 0.08);
+}
+body.nav-layout-sidebar .main-content {
+  margin-left: 240px;
+}
+body.nav-layout-sidebar .container {
+  max-width: none;
+  padding-left: 48px;
+  padding-right: 48px;
+}
+@media (max-width: 768px) {
+  body.nav-layout-sidebar .site-sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--card-border);
+    padding: 16px 24px;
+  }
+  body.nav-layout-sidebar .main-content { margin-left: 0; }
+}
+
 /* ──────────────────── Standard shell ──────────────────── */
 
 body.shell-standard .main-content { padding-top: 60px; padding-bottom: 100px; }
@@ -1430,9 +1540,11 @@ body.shell-deck { page: deck-page; }
   .no-print { display: none !important; }
   .view-source { display: none !important; }
 
-  /* ── Shared: preserve accent colors, drop the site bar ── */
+  /* ── Shared: preserve accent colors, drop the site bar + sidebar ── */
   *, *::before, *::after { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   .site-bar { display: none !important; }
+  .site-sidebar { display: none !important; }
+  body.nav-layout-sidebar .main-content { margin-left: 0 !important; }
 
   /* ── Standard shell ── (dark theme preserved) ── */
   html, body.shell-standard { background: var(--bg) !important; }

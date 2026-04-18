@@ -202,6 +202,76 @@ fn page_level_texture_and_glow_override_site_config() {
 }
 
 #[test]
+fn nested_nav_renders_dropdown_in_top_layout() {
+    let dir = tmp_dir("nav-dropdown");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("kazam.yaml"),
+        "name: NavTest\ntheme: dark\nnav:\n  - label: Home\n    href: index.html\n  - label: Docs\n    children:\n      - label: Guide\n        href: guide.html\n      - label: Reference\n        href: ref.html\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+
+    let out = tmp_dir("nav-dropdown-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+
+    let index = read(&out.join("index.html"));
+    assert_contains(&index, r#"class="nav-link-group""#);
+    assert_contains(&index, r#"class="nav-link nav-link-parent""#);
+    assert_contains(&index, r#"class="nav-dropdown""#);
+    // Both children render inside the dropdown
+    assert_contains(&index, "Guide");
+    assert_contains(&index, "Reference");
+}
+
+#[test]
+fn sidebar_layout_renders_aside_and_hides_top_nav() {
+    let dir = tmp_dir("nav-sidebar");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("kazam.yaml"),
+        "name: SideTest\ntheme: dark\nnav_layout: sidebar\nnav:\n  - label: Overview\n    href: index.html\n  - label: Guides\n    children:\n      - label: Intro\n        href: intro.html\n      - label: Advanced\n        href: advanced.html\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+
+    let out = tmp_dir("nav-sidebar-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+
+    let index = read(&out.join("index.html"));
+    // Sidebar aside + body class present
+    assert_contains(&index, "nav-layout-sidebar");
+    assert_contains(&index, r#"class="site-sidebar""#);
+    assert_contains(&index, r#"class="sidebar-section""#);
+    assert_contains(&index, r#"class="sidebar-section-label">Guides"#);
+    // Both nested children render in the sidebar
+    assert_contains(&index, "Intro");
+    assert_contains(&index, "Advanced");
+}
+
+#[test]
 fn init_refuses_existing_dir() {
     let dir = tmp_dir("init-exists");
     std::fs::create_dir_all(&dir).unwrap();

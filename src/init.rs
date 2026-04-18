@@ -96,14 +96,27 @@ theme: dark
 # Off by default. Options: none | accent | corner
 # glow: accent
 
+# Nav layout: "top" (default — sticky top bar, dropdowns for nested
+# entries) or "sidebar" (fixed left-side sidebar, nested entries become
+# labeled sections). Only applies to shell: standard pages.
+# nav_layout: sidebar
+
 # Nav appears in the sticky header of every `shell: standard` page.
 # Hrefs are auto-resolved per-page based on directory depth, so
-# `index.html` works from any subdirectory.
+# `index.html` works from any subdirectory. Parent entries with
+# `children:` render as a dropdown (top layout) or a labeled section
+# (sidebar layout).
 nav:
   - label: Home
     href: index.html
   # - label: Docs
   #   href: docs.html
+  # - label: Reference
+  #   children:
+  #     - label: API
+  #       href: reference/api.html
+  #     - label: Config
+  #       href: reference/config.html
   # - label: GitHub
   #   href: https://github.com/your-org/your-repo
 "##;

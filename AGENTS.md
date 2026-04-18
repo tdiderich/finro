@@ -33,12 +33,26 @@ colors:                  # optional per-token overrides
 favicon: favicon.svg
 texture: dots            # optional: none | dots | grid | grain | topography | diagonal
 glow: accent             # optional: none | accent | corner
+nav_layout: top          # optional: top (default) | sidebar
 nav:
   - label: Home
     href: index.html
   - label: Guide
     href: guide.html
+  - label: Components     # parent with a dropdown / sidebar section
+    href: components/index.html   # optional — acts as default link when clicked
+    children:
+      - label: Content
+        href: components/content.html
+      - label: Grids
+        href: components/grids.html
 ```
+
+`nav_layout: top` (default) renders the nav in the sticky top bar. Parent
+entries with `children:` render as a hover/focus dropdown. `nav_layout:
+sidebar` moves the full nav into a fixed 240px left sidebar; parent entries
+with children become labeled sections, their leaves become indented links.
+Sidebar layout is only applied to `shell: standard` pages.
 
 `theme` picks a built-in palette. The seven rainbow themes share the neutral
 dark base (bg/text/surfaces) and only swap the accent color — safe to use

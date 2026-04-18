@@ -506,7 +506,25 @@ pub struct EmptyStateAction {
 #[derive(Deserialize)]
 pub struct NavLink {
     pub label: String,
-    pub href: String,
+    /// Leaf href. Optional only so that a parent grouping entry with `children`
+    /// can be a pure label (e.g. "Components ▾" with a dropdown of leaves).
+    pub href: Option<String>,
+    /// Nested children render as a top-nav dropdown or as nested sidebar
+    /// entries depending on `SiteConfig.nav_layout`.
+    #[serde(default)]
+    pub children: Option<Vec<NavLink>>,
+}
+
+/// How the sticky nav is laid out on `shell: standard` pages. Other shells
+/// ignore this.
+#[derive(Deserialize, Default, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum NavLayout {
+    /// Horizontal top-bar nav (default). Nested entries render as dropdowns.
+    #[default]
+    Top,
+    /// Fixed left-side sidebar. Nested entries render as labeled sections.
+    Sidebar,
 }
 
 #[derive(Deserialize)]
@@ -531,6 +549,9 @@ pub struct SiteConfig {
     /// Defaults to `none`.
     #[serde(default)]
     pub glow: Glow,
+    /// Nav layout for `shell: standard` pages. Defaults to `top`.
+    #[serde(default)]
+    pub nav_layout: NavLayout,
 }
 
 /// Site-wide background pattern. All variants are subtle by design.
@@ -659,6 +680,7 @@ impl Default for SiteConfig {
             view_source: false,
             texture: Texture::None,
             glow: Glow::None,
+            nav_layout: NavLayout::Top,
         }
     }
 }

@@ -4,8 +4,8 @@ shell: standard
 components:
   - type: header
     title: kazam
-    eyebrow: YAML → beautiful static sites
-    subtitle: A Rust CLI that turns structured YAML into themed HTML. Built for a world where LLMs are the primary authors.
+    eyebrow: YAML → beautiful sites
+    subtitle: An agent first approach to building static docs, knowledge bases, slides, and more.
 
   - type: section
     eyebrow: Use cases
