@@ -72,6 +72,10 @@ fn build_docs_site() {
 
     // Source YAMLs copied next to rendered HTML
     assert!(out.join("components/content.yaml").exists());
+
+    // Site-wide texture + glow layers landed in CSS
+    assert_contains(&index, "body::before");
+    assert_contains(&index, "body::after");
 }
 
 #[test]

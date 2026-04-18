@@ -513,6 +513,45 @@ pub struct SiteConfig {
     /// useful for docs/examples sites, noise for most end-user sites.
     #[serde(default)]
     pub view_source: bool,
+    /// Subtle background pattern painted behind every page. Tinted via the
+    /// theme's `--text-rgb` so it stays consistent across light/dark.
+    /// Defaults to `none`.
+    #[serde(default)]
+    pub texture: Texture,
+    /// Soft accent-colored glow painted behind the page header area.
+    /// Defaults to `none`.
+    #[serde(default)]
+    pub glow: Glow,
+}
+
+/// Site-wide background pattern. All variants are subtle by design.
+#[derive(Deserialize, Default, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum Texture {
+    #[default]
+    None,
+    /// 1px dots on a 24px grid.
+    Dots,
+    /// Thin gridlines on a 40px grid.
+    Grid,
+    /// SVG fractal-noise grain.
+    Grain,
+    /// Wavy contour-line topography.
+    Topography,
+    /// 45° diagonal stripes.
+    Diagonal,
+}
+
+/// Soft accent-tinted radial gradient. Sits above the texture, below content.
+#[derive(Deserialize, Default, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum Glow {
+    #[default]
+    None,
+    /// Wide soft glow centered above the fold.
+    Accent,
+    /// Tighter glow tucked into the top-right corner.
+    Corner,
 }
 
 /// Favicon config: either a single path, or a struct with named slots.
@@ -609,6 +648,8 @@ impl Default for SiteConfig {
             nav: None,
             favicon: None,
             view_source: false,
+            texture: Texture::None,
+            glow: Glow::None,
         }
     }
 }

@@ -85,6 +85,15 @@ theme: dark
 # sites. Off by default — most sites don't need it.
 # view_source: true
 
+# Subtle background pattern painted behind every page. Tinted via the
+# theme's text color so it adapts to dark/light. Off by default.
+# Options: none | dots | grid | grain | topography | diagonal
+# texture: dots
+
+# Soft accent-colored radial glow painted behind the page header area.
+# Off by default. Options: none | accent | corner
+# glow: accent
+
 # Nav appears in the sticky header of every `shell: standard` page.
 # Hrefs are auto-resolved per-page based on directory depth, so
 # `index.html` works from any subdirectory.

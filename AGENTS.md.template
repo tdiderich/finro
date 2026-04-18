@@ -31,12 +31,19 @@ theme: dark              # or "light"
 colors:                  # optional per-token overrides
   accent: '#14b8b8'
 favicon: favicon.svg
+texture: dots            # optional: none | dots | grid | grain | topography | diagonal
+glow: accent             # optional: none | accent | corner
 nav:
   - label: Home
     href: index.html
   - label: Guide
     href: guide.html
 ```
+
+`texture` paints a subtle pattern behind every page (tinted via the active
+theme's text color, so dark/light just work). `glow` paints a soft
+accent-colored radial behind the header area. Both are off by default;
+both are stripped under `@media print`.
 
 ## Page structure
 

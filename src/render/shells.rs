@@ -19,7 +19,7 @@ fn head(page: &Page, config: &SiteConfig, base: &str) -> String {
         title = esc(&page.title),
         site = esc(&config.name),
         favicon = favicon,
-        css = theme::render_css(&theme),
+        css = theme::render_css(&theme, config.texture, config.glow),
     )
 }
 

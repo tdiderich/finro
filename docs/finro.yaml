@@ -2,6 +2,8 @@ name: finro
 theme: dark
 favicon: assets/favicon.svg
 view_source: true
+texture: grid
+glow: accent
 nav:
   - label: Home
     href: index.html

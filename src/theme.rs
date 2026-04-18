@@ -1,3 +1,4 @@
+use crate::types::{Glow, Texture};
 use std::collections::HashMap;
 
 /// A theme is a set of named color tokens. Any page rendered with this theme
@@ -136,6 +137,50 @@ pub fn dark() -> Theme {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn no_decoration_css_when_both_none() {
+        assert!(decoration_css(&dark(), Texture::None, Glow::None).is_empty());
+    }
+
+    #[test]
+    fn dots_uses_text_rgb_and_print_strips() {
+        let css = decoration_css(&dark(), Texture::Dots, Glow::None);
+        assert!(css.contains("body::before"));
+        assert!(css.contains("radial-gradient(rgba(247, 247, 242"));
+        assert!(css.contains("@media print"));
+    }
+
+    #[test]
+    fn glow_uses_accent_rgb() {
+        let css = decoration_css(&dark(), Texture::None, Glow::Accent);
+        assert!(css.contains("body::after"));
+        assert!(css.contains("rgba(137, 152, 120"));
+    }
+
+    #[test]
+    fn grain_emits_url_encoded_svg_data_uri() {
+        let css = decoration_css(&dark(), Texture::Grain, Glow::None);
+        assert!(css.contains("data:image/svg+xml;utf8,"));
+        // SVG body must be URL-encoded — no raw <, >, # in the URL payload.
+        let uri_start = css.find("data:image/svg+xml;utf8,").unwrap();
+        let uri_end = css[uri_start..].find('"').unwrap() + uri_start;
+        let payload = &css[uri_start..uri_end];
+        assert!(!payload.contains('<'));
+        assert!(!payload.contains('>'));
+    }
+
+    #[test]
+    fn topography_bakes_text_color_into_stroke() {
+        let css = decoration_css(&dark(), Texture::Topography, Glow::None);
+        // URL-encoded SVG keeps commas/parens raw, only spaces become %20.
+        assert!(css.contains("rgb(247,%20247,%20242)"));
+    }
+}
+
 pub fn light() -> Theme {
     Theme {
         bg: "#F7F7F2".into(),
@@ -156,10 +201,149 @@ pub fn light() -> Theme {
     }
 }
 
-pub fn render_css(theme: &Theme) -> String {
+pub fn render_css(theme: &Theme, texture: Texture, glow: Glow) -> String {
     let mut out = theme.root_block();
     out.push_str(STATIC_CSS);
+    out.push_str(&decoration_css(theme, texture, glow));
     out
+}
+
+/// Site-wide decorations (texture + glow) painted on `body::before` and
+/// `body::after`. Each layer sits at `z-index: -1` so it covers body's
+/// background-color but stays behind all in-flow content. Both layers are
+/// stripped under `@media print` to keep PDFs/exports clean.
+fn decoration_css(theme: &Theme, texture: Texture, glow: Glow) -> String {
+    if matches!(texture, Texture::None) && matches!(glow, Glow::None) {
+        return String::new();
+    }
+    let text_rgb = hex_to_rgb_triple(&theme.text).unwrap_or_else(|| "255, 255, 255".into());
+    let accent_rgb = hex_to_rgb_triple(&theme.accent).unwrap_or_else(|| "60, 206, 206".into());
+
+    let mut out = String::new();
+    out.push_str(&texture_css(texture, &text_rgb));
+    out.push_str(&glow_css(glow, &accent_rgb));
+    if !out.is_empty() {
+        out.push_str(
+            "@media print { body::before, body::after { display: none !important; } }\n",
+        );
+    }
+    out
+}
+
+fn texture_css(texture: Texture, text_rgb: &str) -> String {
+    let layer = "content: ''; position: fixed; inset: 0; pointer-events: none; z-index: -1;";
+    match texture {
+        Texture::None => String::new(),
+        Texture::Dots => format!(
+            "body::before {{ {layer} \
+             background-image: radial-gradient(rgba({rgb}, 0.07) 1px, transparent 1px); \
+             background-size: 24px 24px; }}\n",
+            layer = layer,
+            rgb = text_rgb,
+        ),
+        Texture::Grid => format!(
+            "body::before {{ {layer} \
+             background-image: \
+               linear-gradient(rgba({rgb}, 0.04) 1px, transparent 1px), \
+               linear-gradient(90deg, rgba({rgb}, 0.04) 1px, transparent 1px); \
+             background-size: 44px 44px; }}\n",
+            layer = layer,
+            rgb = text_rgb,
+        ),
+        Texture::Diagonal => format!(
+            "body::before {{ {layer} \
+             background-image: repeating-linear-gradient(45deg, \
+               rgba({rgb}, 0.04) 0 1px, transparent 1px 14px); }}\n",
+            layer = layer,
+            rgb = text_rgb,
+        ),
+        Texture::Grain => {
+            let svg = format!(
+                "<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'>\
+<filter id='n'>\
+<feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/>\
+<feColorMatrix values='0 0 0 0 {r} 0 0 0 0 {g} 0 0 0 0 {b} 0 0 0 0.55 0'/>\
+</filter>\
+<rect width='100%' height='100%' filter='url(#n)'/></svg>",
+                r = rgb_component_to_unit(text_rgb, 0),
+                g = rgb_component_to_unit(text_rgb, 1),
+                b = rgb_component_to_unit(text_rgb, 2),
+            );
+            format!(
+                "body::before {{ {layer} opacity: 0.18; \
+                 background-image: url(\"data:image/svg+xml;utf8,{enc}\"); }}\n",
+                layer = layer,
+                enc = url_encode_svg(&svg),
+            )
+        }
+        Texture::Topography => {
+            // Two stacked wavy contours with offsets — gives a calm topo feel.
+            let svg = format!(
+                "<svg xmlns='http://www.w3.org/2000/svg' width='240' height='160' viewBox='0 0 240 160'>\
+<g fill='none' stroke='rgb({rgb})' stroke-opacity='0.07' stroke-width='1'>\
+<path d='M -10 30 Q 60 10 120 30 T 250 30'/>\
+<path d='M -10 60 Q 60 40 120 60 T 250 60'/>\
+<path d='M -10 90 Q 60 70 120 90 T 250 90'/>\
+<path d='M -10 120 Q 60 100 120 120 T 250 120'/>\
+<path d='M -10 150 Q 60 130 120 150 T 250 150'/>\
+</g></svg>",
+                rgb = text_rgb,
+            );
+            format!(
+                "body::before {{ {layer} \
+                 background-image: url(\"data:image/svg+xml;utf8,{enc}\"); }}\n",
+                layer = layer,
+                enc = url_encode_svg(&svg),
+            )
+        }
+    }
+}
+
+fn glow_css(glow: Glow, accent_rgb: &str) -> String {
+    let layer = "content: ''; position: fixed; pointer-events: none; z-index: -1;";
+    match glow {
+        Glow::None => String::new(),
+        Glow::Accent => format!(
+            "body::after {{ {layer} \
+             top: -320px; left: 50%; width: 1200px; height: 720px; \
+             margin-left: -600px; \
+             background: radial-gradient(ellipse at center, \
+               rgba({rgb}, 0.10) 0%, transparent 65%); }}\n",
+            layer = layer,
+            rgb = accent_rgb,
+        ),
+        Glow::Corner => format!(
+            "body::after {{ {layer} \
+             top: -220px; right: -220px; width: 720px; height: 620px; \
+             background: radial-gradient(circle at top right, \
+               rgba({rgb}, 0.14) 0%, transparent 60%); }}\n",
+            layer = layer,
+            rgb = accent_rgb,
+        ),
+    }
+}
+
+fn url_encode_svg(svg: &str) -> String {
+    svg.replace('%', "%25")
+        .replace('#', "%23")
+        .replace('<', "%3C")
+        .replace('>', "%3E")
+        .replace('"', "%22")
+        .replace('\'', "%27")
+        .replace(' ', "%20")
+        .replace('\n', "%0A")
+}
+
+/// Pull one channel out of a `"r, g, b"` triple and return it as a 0..1 float
+/// for use in an SVG `feColorMatrix` row.
+fn rgb_component_to_unit(triple: &str, idx: usize) -> String {
+    let val = triple
+        .split(',')
+        .nth(idx)
+        .and_then(|s| s.trim().parse::<u32>().ok())
+        .unwrap_or(255);
+    let unit = (val.min(255) as f32) / 255.0;
+    format!("{:.4}", unit)
 }
 
 const STATIC_CSS: &str = r#"
@@ -272,7 +456,6 @@ body.shell-deck .deck-root {
   inset: 0;
   display: flex;
   flex-direction: column;
-  background: var(--bg);
 }
 
 body.shell-deck .deck-viewport { flex: 1; overflow: hidden; position: relative; }
