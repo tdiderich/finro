@@ -24,10 +24,25 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
         .follow_links(true)
         .into_iter()
         .filter_entry(|e| {
-            !e.path()
+            // Skip the output directory (e.g. _site/ nested in source dir)
+            if e.path()
                 .canonicalize()
                 .map(|p| p.starts_with(&out_canonical))
                 .unwrap_or(false)
+            {
+                return false;
+            }
+            // Skip hidden entries (.git, .DS_Store, .vscode, etc.) at any depth
+            // except the source dir itself, which is often passed as "." and
+            // would be filtered by a naive starts-with check.
+            if e.depth() > 0 {
+                if let Some(name) = e.file_name().to_str() {
+                    if name.starts_with('.') {
+                        return false;
+                    }
+                }
+            }
+            true
         })
     {
         let entry = entry?;

@@ -272,6 +272,50 @@ fn sidebar_layout_renders_aside_and_hides_top_nav() {
 }
 
 #[test]
+fn build_skips_hidden_entries_and_is_idempotent() {
+    // Source directory with a hidden dir (simulating .git) alongside the
+    // yaml files. Kazam should not copy the hidden dir into the output,
+    // and running build twice in a row should succeed both times.
+    let dir = tmp_dir("hidden");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Hidden\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+
+    // Hidden directory with a nested file — must be skipped.
+    let hidden = dir.join(".stealth");
+    std::fs::create_dir_all(hidden.join("nested")).unwrap();
+    std::fs::write(hidden.join("nested/file.bin"), b"should-not-copy").unwrap();
+
+    let out = tmp_dir("hidden-out");
+
+    let run = || {
+        Command::new(bin())
+            .args(["build"])
+            .arg(&dir)
+            .arg("--out")
+            .arg(&out)
+            .status()
+            .expect("run kazam build")
+    };
+
+    assert!(run().success(), "first build failed");
+    assert!(
+        run().success(),
+        "second build failed — walker not idempotent"
+    );
+
+    // Hidden dir must not be present in output.
+    assert!(
+        !out.join(".stealth").exists(),
+        "hidden dir leaked into output"
+    );
+}
+
+#[test]
 fn init_refuses_existing_dir() {
     let dir = tmp_dir("init-exists");
     std::fs::create_dir_all(&dir).unwrap();
