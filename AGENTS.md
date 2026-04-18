@@ -27,7 +27,7 @@ Any non-`.yaml` file (images, SVGs, fonts) is copied verbatim into the output.
 
 ```yaml
 name: Site Name
-theme: dark              # or "light"
+theme: dark              # dark | light | red | orange | yellow | green | blue | indigo | violet
 colors:                  # optional per-token overrides
   accent: '#14b8b8'
 favicon: favicon.svg
@@ -39,6 +39,11 @@ nav:
   - label: Guide
     href: guide.html
 ```
+
+`theme` picks a built-in palette. The seven rainbow themes share the neutral
+dark base (bg/text/surfaces) and only swap the accent color — safe to use
+with any `texture`/`glow` combination. Use `colors:` to override individual
+tokens on top.
 
 `texture` paints a subtle pattern behind every page (tinted via the active
 theme's text color, so dark/light just work). `glow` paints a soft

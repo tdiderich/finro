@@ -52,7 +52,9 @@ const KAZAM_YAML: &str = r##"# Site configuration. Shared across every page.
 
 name: {{SITE_NAME}}
 
-# Theme: "dark" (default) or "light".
+# Theme: "dark" (default), "light", or one of the rainbow accents:
+# red | orange | yellow | green | blue | indigo | violet. The rainbow
+# themes share the neutral dark base and only swap the accent color.
 theme: dark
 
 # Override individual theme tokens. Keys not listed here fall back to the

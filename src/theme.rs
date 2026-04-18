@@ -27,6 +27,13 @@ impl Theme {
     pub fn named(name: &str) -> Theme {
         match name {
             "light" => light(),
+            "red" => red(),
+            "orange" => orange(),
+            "yellow" => yellow(),
+            "green" => green(),
+            "blue" => blue(),
+            "indigo" => indigo(),
+            "violet" => violet(),
             _ => dark(),
         }
     }
@@ -137,6 +144,40 @@ pub fn dark() -> Theme {
     }
 }
 
+/// Stock rainbow themes: the neutral dark base with a single accent swap.
+/// Surface/border overlays already flow through `--text-rgb`, so only the
+/// accent (and everything downstream of `--accent-rgb`) changes per color.
+/// Semantic palette (green/yellow/red as SemColors) is intentionally left on
+/// the dark base so status colors stay consistent across themes.
+fn dark_with_accent(accent: &str) -> Theme {
+    Theme {
+        accent: accent.into(),
+        ..dark()
+    }
+}
+
+pub fn red() -> Theme {
+    dark_with_accent("#EF4444")
+}
+pub fn orange() -> Theme {
+    dark_with_accent("#F97316")
+}
+pub fn yellow() -> Theme {
+    dark_with_accent("#EAB308")
+}
+pub fn green() -> Theme {
+    dark_with_accent("#22C55E")
+}
+pub fn blue() -> Theme {
+    dark_with_accent("#3B82F6")
+}
+pub fn indigo() -> Theme {
+    dark_with_accent("#6366F1")
+}
+pub fn violet() -> Theme {
+    dark_with_accent("#A855F7")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -171,6 +212,35 @@ mod tests {
         let payload = &css[uri_start..uri_end];
         assert!(!payload.contains('<'));
         assert!(!payload.contains('>'));
+    }
+
+    #[test]
+    fn rainbow_themes_swap_accent_only() {
+        // Each rainbow theme keeps the dark base — same bg, same text — and
+        // swaps just the accent hex. Guards against someone accidentally
+        // rewriting the whole palette.
+        let cases = [
+            ("red", "#EF4444"),
+            ("orange", "#F97316"),
+            ("yellow", "#EAB308"),
+            ("green", "#22C55E"),
+            ("blue", "#3B82F6"),
+            ("indigo", "#6366F1"),
+            ("violet", "#A855F7"),
+        ];
+        let d = dark();
+        for (name, hex) in cases {
+            let t = Theme::named(name);
+            assert_eq!(t.accent, hex, "{} accent", name);
+            assert_eq!(t.bg, d.bg, "{} keeps dark bg", name);
+            assert_eq!(t.text, d.text, "{} keeps dark text", name);
+        }
+    }
+
+    #[test]
+    fn unknown_theme_falls_back_to_dark() {
+        let t = Theme::named("purple-mountain-majesty");
+        assert_eq!(t.accent, dark().accent);
     }
 
     #[test]

@@ -11,5 +11,7 @@ nav:
     href: guide.html
   - label: Components
     href: components/index.html
+  - label: Themes
+    href: themes.html
   - label: Deploy
     href: deploy.html

@@ -1,0 +1,107 @@
+title: Themes
+shell: standard
+eyebrow: Reference
+subtitle: Nine stock themes, one knob
+
+components:
+  - type: header
+    title: Stock themes
+    eyebrow: Reference
+    subtitle: "Set `theme: <name>` in your `kazam.yaml`. Every theme keeps the neutral dark base and only swaps the accent — so eyebrows, buttons, active tabs, and the top glow all pick up the color without affecting content readability."
+
+  - type: section
+    eyebrow: ROYGBIV
+    heading: Rainbow set
+    components:
+      - type: card_grid
+        min_width: 200
+        cards:
+          - title: red
+            description: |
+              <div style="height:8px;background:#EF4444;border-radius:4px;margin-bottom:10px;"></div>
+
+              `#EF4444` · `theme: red`
+
+          - title: orange
+            description: |
+              <div style="height:8px;background:#F97316;border-radius:4px;margin-bottom:10px;"></div>
+
+              `#F97316` · `theme: orange`
+
+          - title: yellow
+            description: |
+              <div style="height:8px;background:#EAB308;border-radius:4px;margin-bottom:10px;"></div>
+
+              `#EAB308` · `theme: yellow`
+
+          - title: green
+            description: |
+              <div style="height:8px;background:#22C55E;border-radius:4px;margin-bottom:10px;"></div>
+
+              `#22C55E` · `theme: green`
+
+          - title: blue
+            description: |
+              <div style="height:8px;background:#3B82F6;border-radius:4px;margin-bottom:10px;"></div>
+
+              `#3B82F6` · `theme: blue`
+
+          - title: indigo
+            description: |
+              <div style="height:8px;background:#6366F1;border-radius:4px;margin-bottom:10px;"></div>
+
+              `#6366F1` · `theme: indigo`
+
+          - title: violet
+            description: |
+              <div style="height:8px;background:#A855F7;border-radius:4px;margin-bottom:10px;"></div>
+
+              `#A855F7` · `theme: violet`
+
+  - type: section
+    eyebrow: Neutral
+    heading: Base themes
+    components:
+      - type: card_grid
+        min_width: 220
+        cards:
+          - title: dark
+            description: |
+              <div style="height:8px;background:#899878;border-radius:4px;margin-bottom:10px;"></div>
+
+              `#899878` sage accent · `theme: dark` (default)
+
+          - title: light
+            description: |
+              <div style="height:8px;background:#222725;border-radius:4px;margin-bottom:10px;"></div>
+
+              `#222725` near-black accent on `#F7F7F2` paper · `theme: light`
+
+  - type: section
+    eyebrow: Apply
+    heading: Usage
+    components:
+      - type: code
+        language: yaml
+        code: |
+          # kazam.yaml
+          name: My Site
+          theme: violet            # swap to any rainbow color
+          texture: grid            # pairs nicely with any theme
+          glow: accent             # picks up the active accent
+          nav:
+            - label: Home
+              href: index.html
+
+      - type: markdown
+        body: |
+          Need a custom accent outside the stock set? Override any theme token directly — the named theme is just a starting point.
+
+      - type: code
+        language: yaml
+        code: |
+          # kazam.yaml
+          theme: dark
+          colors:
+            accent: '#14B8B8'      # your brand color
+            accent_soft: 'rgba(var(--accent-rgb), 0.08)'
