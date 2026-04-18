@@ -204,7 +204,10 @@ pub mod standard {
         // a left-side <aside>; the top bar then only shows site name +
         // subtitle. Top layout keeps the existing inline nav in the bar.
         let (nav_in_bar, has_nav) = if is_sidebar {
-            (String::new(), config.nav.as_ref().is_some_and(|n| !n.is_empty()))
+            (
+                String::new(),
+                config.nav.as_ref().is_some_and(|n| !n.is_empty()),
+            )
         } else {
             nav_html(config, base)
         };

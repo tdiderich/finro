@@ -168,97 +168,6 @@ pub fn dark() -> Theme {
     }
 }
 
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn no_decoration_css_when_both_none() {
-        assert!(decoration_css(&dark(), Texture::None, Glow::None).is_empty());
-    }
-
-    #[test]
-    fn dots_uses_text_rgb_and_print_strips() {
-        let css = decoration_css(&dark(), Texture::Dots, Glow::None);
-        assert!(css.contains("body::before"));
-        assert!(css.contains("radial-gradient(rgba(247, 247, 242"));
-        assert!(css.contains("@media print"));
-    }
-
-    #[test]
-    fn glow_uses_accent_rgb() {
-        let css = decoration_css(&dark(), Texture::None, Glow::Accent);
-        assert!(css.contains("body::after"));
-        assert!(css.contains("rgba(137, 152, 120"));
-    }
-
-    #[test]
-    fn grain_emits_url_encoded_svg_data_uri() {
-        let css = decoration_css(&dark(), Texture::Grain, Glow::None);
-        assert!(css.contains("data:image/svg+xml;utf8,"));
-        // SVG body must be URL-encoded — no raw <, >, # in the URL payload.
-        let uri_start = css.find("data:image/svg+xml;utf8,").unwrap();
-        let uri_end = css[uri_start..].find('"').unwrap() + uri_start;
-        let payload = &css[uri_start..uri_end];
-        assert!(!payload.contains('<'));
-        assert!(!payload.contains('>'));
-    }
-
-    #[test]
-    fn rainbow_themes_swap_accent_only() {
-        // Each rainbow theme keeps the chosen base — same bg, same text — and
-        // swaps just the accent hex. Default mode is Dark.
-        let cases = [
-            ("red", "#BB7777"),
-            ("orange", "#BB8C66"),
-            ("yellow", "#B8A866"),
-            ("green", "#7A9878"),
-            ("blue", "#7897B8"),
-            ("indigo", "#8A7FBB"),
-            ("violet", "#AB7FBB"),
-        ];
-        let d = dark();
-        for (name, hex) in cases {
-            let t = Theme::named(name, Mode::Dark);
-            assert_eq!(t.accent, hex, "{} accent", name);
-            assert_eq!(t.bg, d.bg, "{} keeps dark bg", name);
-            assert_eq!(t.text, d.text, "{} keeps dark text", name);
-        }
-    }
-
-    #[test]
-    fn rainbow_themes_on_light_mode_use_light_base() {
-        // Same accent swap, but base comes from light(), not dark().
-        let l = light();
-        let t = Theme::named("red", Mode::Light);
-        assert_eq!(t.accent, "#BB7777");
-        assert_eq!(t.bg, l.bg, "light-mode red uses light bg");
-        assert_eq!(t.text, l.text, "light-mode red uses light text");
-    }
-
-    #[test]
-    fn dark_and_light_themes_ignore_mode() {
-        // `theme: dark` + mode: light should still return the full dark theme.
-        // Same for `theme: light` + mode: dark.
-        assert_eq!(Theme::named("dark", Mode::Light).bg, dark().bg);
-        assert_eq!(Theme::named("light", Mode::Dark).bg, light().bg);
-    }
-
-    #[test]
-    fn unknown_theme_falls_back_to_dark() {
-        let t = Theme::named("purple-mountain-majesty", Mode::Dark);
-        assert_eq!(t.accent, dark().accent);
-    }
-
-    #[test]
-    fn topography_bakes_text_color_into_stroke() {
-        let css = decoration_css(&dark(), Texture::Topography, Glow::None);
-        // URL-encoded SVG keeps commas/parens raw, only spaces become %20.
-        assert!(css.contains("rgb(247,%20247,%20242)"));
-    }
-}
-
 pub fn light() -> Theme {
     // Light mode needs roughly 2x the overlay opacity dark mode uses — a
     // 4% near-black wash on paper reads as invisible, while a 4% white
@@ -307,9 +216,7 @@ fn decoration_css(theme: &Theme, texture: Texture, glow: Glow) -> String {
     out.push_str(&texture_css(texture, &text_rgb));
     out.push_str(&glow_css(glow, &accent_rgb));
     if !out.is_empty() {
-        out.push_str(
-            "@media print { body::before, body::after { display: none !important; } }\n",
-        );
+        out.push_str("@media print { body::before, body::after { display: none !important; } }\n");
     }
     out
 }
@@ -1612,3 +1519,93 @@ body.shell-deck { page: deck-page; }
   body.shell-deck .deck-nav { display: none !important; }
 }
 "#;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn no_decoration_css_when_both_none() {
+        assert!(decoration_css(&dark(), Texture::None, Glow::None).is_empty());
+    }
+
+    #[test]
+    fn dots_uses_text_rgb_and_print_strips() {
+        let css = decoration_css(&dark(), Texture::Dots, Glow::None);
+        assert!(css.contains("body::before"));
+        assert!(css.contains("radial-gradient(rgba(247, 247, 242"));
+        assert!(css.contains("@media print"));
+    }
+
+    #[test]
+    fn glow_uses_accent_rgb() {
+        let css = decoration_css(&dark(), Texture::None, Glow::Accent);
+        assert!(css.contains("body::after"));
+        assert!(css.contains("rgba(137, 152, 120"));
+    }
+
+    #[test]
+    fn grain_emits_url_encoded_svg_data_uri() {
+        let css = decoration_css(&dark(), Texture::Grain, Glow::None);
+        assert!(css.contains("data:image/svg+xml;utf8,"));
+        // SVG body must be URL-encoded — no raw <, >, # in the URL payload.
+        let uri_start = css.find("data:image/svg+xml;utf8,").unwrap();
+        let uri_end = css[uri_start..].find('"').unwrap() + uri_start;
+        let payload = &css[uri_start..uri_end];
+        assert!(!payload.contains('<'));
+        assert!(!payload.contains('>'));
+    }
+
+    #[test]
+    fn rainbow_themes_swap_accent_only() {
+        // Each rainbow theme keeps the chosen base — same bg, same text — and
+        // swaps just the accent hex. Default mode is Dark.
+        let cases = [
+            ("red", "#BB7777"),
+            ("orange", "#BB8C66"),
+            ("yellow", "#B8A866"),
+            ("green", "#7A9878"),
+            ("blue", "#7897B8"),
+            ("indigo", "#8A7FBB"),
+            ("violet", "#AB7FBB"),
+        ];
+        let d = dark();
+        for (name, hex) in cases {
+            let t = Theme::named(name, Mode::Dark);
+            assert_eq!(t.accent, hex, "{} accent", name);
+            assert_eq!(t.bg, d.bg, "{} keeps dark bg", name);
+            assert_eq!(t.text, d.text, "{} keeps dark text", name);
+        }
+    }
+
+    #[test]
+    fn rainbow_themes_on_light_mode_use_light_base() {
+        // Same accent swap, but base comes from light(), not dark().
+        let l = light();
+        let t = Theme::named("red", Mode::Light);
+        assert_eq!(t.accent, "#BB7777");
+        assert_eq!(t.bg, l.bg, "light-mode red uses light bg");
+        assert_eq!(t.text, l.text, "light-mode red uses light text");
+    }
+
+    #[test]
+    fn dark_and_light_themes_ignore_mode() {
+        // `theme: dark` + mode: light should still return the full dark theme.
+        // Same for `theme: light` + mode: dark.
+        assert_eq!(Theme::named("dark", Mode::Light).bg, dark().bg);
+        assert_eq!(Theme::named("light", Mode::Dark).bg, light().bg);
+    }
+
+    #[test]
+    fn unknown_theme_falls_back_to_dark() {
+        let t = Theme::named("purple-mountain-majesty", Mode::Dark);
+        assert_eq!(t.accent, dark().accent);
+    }
+
+    #[test]
+    fn topography_bakes_text_color_into_stroke() {
+        let css = decoration_css(&dark(), Texture::Topography, Glow::None);
+        // URL-encoded SVG keeps commas/parens raw, only spaces become %20.
+        assert!(css.contains("rgb(247,%20247,%20242)"));
+    }
+}
