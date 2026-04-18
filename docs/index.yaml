@@ -8,6 +8,26 @@ components:
     subtitle: One Rust binary. No framework, no npm, no runtime JS. Designed so AI agents can author your site end-to-end.
 
   - type: section
+    eyebrow: Why
+    heading: Markdown isn't enough. Next.js is too much.
+    components:
+      - type: markdown
+        body: |
+          Markdown was designed for humans typing prose. It renders plain pages — grey text on
+          white, no cards, no badges, no interactive tables. That was fine when humans wrote
+          all the content.
+
+          Now LLMs write the content, and plain markdown wastes what's possible. The usual
+          response is to reach for Next.js or a framework-backed docs tool — and inherit a
+          thousand-package npm tree, a webpack build, a client runtime, and a supply chain
+          you'll never audit.
+
+          kazam is the middle path: **the format stays trivial to generate, but the output is
+          genuinely beautiful — and it ships as pure HTML and CSS.** Structured components,
+          LLM-friendly schema, themed, composable. No React. No framework. No runtime JS.
+          One Rust binary.
+
+  - type: section
     eyebrow: Receipts, not a pitch
     heading: What kazam replaces
     components:
@@ -105,26 +125,6 @@ components:
             links:
               - label: See example →
                 href: examples/landing.html
-
-  - type: section
-    eyebrow: Why
-    heading: Markdown isn't enough. Next.js is too much.
-    components:
-      - type: markdown
-        body: |
-          Markdown was designed for humans typing prose. It renders plain pages — grey text on
-          white, no cards, no badges, no interactive tables. That was fine when humans wrote
-          all the content.
-
-          Now LLMs write the content, and plain markdown wastes what's possible. The usual
-          response is to reach for Next.js or a framework-backed docs tool — and inherit a
-          thousand-package npm tree, a webpack build, a client runtime, and a supply chain
-          you'll never audit.
-
-          kazam is the middle path: **the format stays trivial to generate, but the output is
-          genuinely beautiful — and it ships as pure HTML and CSS.** Structured components,
-          LLM-friendly schema, themed, composable. No React. No framework. No runtime JS.
-          One Rust binary.
 
   - type: section
     eyebrow: 30 seconds
