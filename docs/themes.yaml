@@ -1,7 +1,5 @@
 title: Themes
 shell: standard
-eyebrow: Reference
-subtitle: Nine stock themes, one knob
 
 components:
   - type: header
@@ -13,69 +11,91 @@ components:
     eyebrow: ROYGBIV
     heading: Rainbow set
     components:
-      - type: card_grid
-        min_width: 200
-        cards:
-          - title: red
-            description: |
-              <div style="height:8px;background:#EF4444;border-radius:4px;margin-bottom:10px;"></div>
-
-              `#EF4444` · `theme: red`
-
-          - title: orange
-            description: |
-              <div style="height:8px;background:#F97316;border-radius:4px;margin-bottom:10px;"></div>
-
-              `#F97316` · `theme: orange`
-
-          - title: yellow
-            description: |
-              <div style="height:8px;background:#EAB308;border-radius:4px;margin-bottom:10px;"></div>
-
-              `#EAB308` · `theme: yellow`
-
-          - title: green
-            description: |
-              <div style="height:8px;background:#22C55E;border-radius:4px;margin-bottom:10px;"></div>
-
-              `#22C55E` · `theme: green`
-
-          - title: blue
-            description: |
-              <div style="height:8px;background:#3B82F6;border-radius:4px;margin-bottom:10px;"></div>
-
-              `#3B82F6` · `theme: blue`
-
-          - title: indigo
-            description: |
-              <div style="height:8px;background:#6366F1;border-radius:4px;margin-bottom:10px;"></div>
-
-              `#6366F1` · `theme: indigo`
-
-          - title: violet
-            description: |
-              <div style="height:8px;background:#A855F7;border-radius:4px;margin-bottom:10px;"></div>
-
-              `#A855F7` · `theme: violet`
+      - type: markdown
+        body: |
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;">
+            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
+              <div style="height:64px;background:#EF4444;"></div>
+              <div style="padding:14px 16px;">
+                <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">red</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#EF4444</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: red</code>
+              </div>
+            </div>
+            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
+              <div style="height:64px;background:#F97316;"></div>
+              <div style="padding:14px 16px;">
+                <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">orange</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#F97316</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: orange</code>
+              </div>
+            </div>
+            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
+              <div style="height:64px;background:#EAB308;"></div>
+              <div style="padding:14px 16px;">
+                <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">yellow</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#EAB308</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: yellow</code>
+              </div>
+            </div>
+            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
+              <div style="height:64px;background:#22C55E;"></div>
+              <div style="padding:14px 16px;">
+                <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">green</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#22C55E</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: green</code>
+              </div>
+            </div>
+            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
+              <div style="height:64px;background:#3B82F6;"></div>
+              <div style="padding:14px 16px;">
+                <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">blue</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#3B82F6</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: blue</code>
+              </div>
+            </div>
+            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
+              <div style="height:64px;background:#6366F1;"></div>
+              <div style="padding:14px 16px;">
+                <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">indigo</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#6366F1</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: indigo</code>
+              </div>
+            </div>
+            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
+              <div style="height:64px;background:#A855F7;"></div>
+              <div style="padding:14px 16px;">
+                <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">violet</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#A855F7</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: violet</code>
+              </div>
+            </div>
+          </div>
 
   - type: section
     eyebrow: Neutral
     heading: Base themes
     components:
-      - type: card_grid
-        min_width: 220
-        cards:
-          - title: dark
-            description: |
-              <div style="height:8px;background:#899878;border-radius:4px;margin-bottom:10px;"></div>
-
-              `#899878` sage accent · `theme: dark` (default)
-
-          - title: light
-            description: |
-              <div style="height:8px;background:#222725;border-radius:4px;margin-bottom:10px;"></div>
-
-              `#222725` near-black accent on `#F7F7F2` paper · `theme: light`
+      - type: markdown
+        body: |
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
+            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
+              <div style="height:64px;background:#899878;"></div>
+              <div style="padding:14px 16px;">
+                <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">dark</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#899878 · sage accent on #121113</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: dark</code>
+              </div>
+            </div>
+            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
+              <div style="height:64px;background:#222725;"></div>
+              <div style="padding:14px 16px;">
+                <div style="font-size:15px;font-weight:600;color:#F7F7F2;margin-bottom:4px;">light</div>
+                <div style="font-family:'SF Mono',monospace;font-size:12px;color:#B0B3AD;">#222725 accent on #F7F7F2 paper</div>
+                <code style="display:inline-block;margin-top:8px;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">theme: light</code>
+              </div>
+            </div>
+          </div>
 
   - type: section
     eyebrow: Apply
@@ -87,7 +107,7 @@ components:
           # kazam.yaml
           name: My Site
           theme: violet            # swap to any rainbow color
-          texture: grid            # pairs nicely with any theme
+          texture: grid            # pairs with any theme
           glow: accent             # picks up the active accent
           nav:
             - label: Home
