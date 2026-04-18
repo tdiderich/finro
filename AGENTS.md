@@ -235,14 +235,13 @@ consistent (2 spaces). Quote any string that looks like a number (e.g. `"47"`).
           - Use cases defined
   ```
 
-- **before_after** — transformation storytelling (QBR-style)
+- **before_after** — transformation storytelling (QBR-style). `before` and `after` support inline markdown (`**bold**`, `` `code` ``).
   ```yaml
   - type: before_after
     items:
       - title: Deployment time
         before: Manual, 2 weeks
-        after: 4 hours
-        after_context: fully automated
+        after: "**4 hours** — fully automated"
   ```
 
 - **avatar** — profile circle with initials fallback

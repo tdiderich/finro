@@ -335,8 +335,8 @@ fn before_after(items: &[BeforeAfterItem]) -> Rendered {
   <div class="c-ba-after">Now: <span class="c-ba-highlight">{after}</span>{ctx}</div>
 </div>"#,
             title = esc(&item.title),
-            before = esc(&item.before),
-            after = esc(&item.after),
+            before = parse_markdown_inline(&item.before),
+            after = parse_markdown_inline(&item.after),
             ctx = ctx_span,
         ));
     }
@@ -386,6 +386,19 @@ pub(super) fn parse_markdown(md: &str) -> String {
     let mut html = String::new();
     md_html::push_html(&mut html, parser);
     html
+}
+
+/// Parse a short string as markdown and strip the outer `<p>...</p>` wrapping
+/// so the result can be embedded inline inside another element. Falls back to
+/// the full HTML if the input spans multiple blocks.
+pub(super) fn parse_markdown_inline(md: &str) -> String {
+    let html = parse_markdown(md);
+    let trimmed = html.trim_end_matches('\n');
+    if let Some(inner) = trimmed.strip_prefix("<p>").and_then(|s| s.strip_suffix("</p>")) {
+        inner.to_string()
+    } else {
+        html
+    }
 }
 
 // ── Table ─────────────────────────────────────────
