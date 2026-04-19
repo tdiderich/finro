@@ -63,6 +63,15 @@ components:
               - label: See example →
                 href: examples/doc.html
 
+          - title: API references
+            badge:
+              label: standard
+              color: default
+            description: OpenAPI-style endpoint docs — request/response, parameters, code samples — without the Scalar/Stoplight/Redoc runtime. All from YAML.
+            links:
+              - label: See example →
+                href: examples/api.html
+
           - title: Internal KBs & wikis
             badge:
               label: standard
@@ -100,15 +109,6 @@ components:
                 href: examples/hackernews.html
               - label: Live HN top 30 →
                 href: examples/hackernews-live.html
-
-          - title: Landing pages
-            badge:
-              label: standard
-              color: default
-            description: Hero, features, stats, testimonial, CTA. Not what kazam was built for — but if you need to ship one alongside your docs, it's a few components away.
-            links:
-              - label: See example →
-                href: examples/landing.html
 
   - type: section
     eyebrow: Fit

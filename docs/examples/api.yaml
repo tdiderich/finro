@@ -1,0 +1,164 @@
+title: API reference example
+shell: standard
+
+components:
+  - type: breadcrumb
+    items:
+      - label: Home
+        href: ../index.html
+      - label: Examples
+      - label: API reference
+
+  - type: header
+    title: Search incidents
+    eyebrow: "POST · /v1/incidents/search"
+    subtitle: Return a paginated list of incidents, optionally filtered by updated time. Fictional endpoint on a fictional API — the structure is what matters.
+
+  # ── Request panel ──────────────────────────────────────────────
+  - type: section
+    eyebrow: Request
+    heading: How to call it
+    components:
+      - type: columns
+        equal_heights: true
+        columns:
+          - - type: callout
+              variant: info
+              title: Server
+              body: "`https://api.example.com`"
+          - - type: callout
+              variant: info
+              title: Authentication
+              body: "Header `X-API-Key: <your-key>`. Rotate keys from your dashboard; there are no OAuth flows on this endpoint."
+
+      - type: tabs
+        tabs:
+          - label: Shell
+            components:
+              - type: code
+                language: bash
+                code: |
+                  curl https://api.example.com/v1/incidents/search \
+                    --request POST \
+                    --header 'Content-Type: application/json' \
+                    --header 'X-API-Key: YOUR_SECRET_TOKEN' \
+                    --data '{
+                      "updated_from": "",
+                      "updated_to": "",
+                      "cursor": "",
+                      "limit": 100
+                    }'
+          - label: Python
+            components:
+              - type: code
+                language: python
+                code: |
+                  import requests
+
+                  resp = requests.post(
+                      "https://api.example.com/v1/incidents/search",
+                      headers={"X-API-Key": "YOUR_SECRET_TOKEN"},
+                      json={"limit": 100},
+                  )
+                  resp.raise_for_status()
+                  for inc in resp.json()["data"]:
+                      print(inc["id"], inc["updated_at"])
+          - label: Node.js
+            components:
+              - type: code
+                language: javascript
+                code: |
+                  const res = await fetch(
+                    "https://api.example.com/v1/incidents/search",
+                    {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        "X-API-Key": "YOUR_SECRET_TOKEN",
+                      },
+                      body: JSON.stringify({ limit: 100 }),
+                    },
+                  );
+                  const { data } = await res.json();
+
+  # ── Body parameters ────────────────────────────────────────────
+  - type: section
+    eyebrow: Body parameters
+    heading: What you send
+    components:
+      - type: markdown
+        body: |
+          **`updated_from`** &nbsp; *string · date-time · nullable*
+
+          Return incidents with `updated_at` at or after this time (ISO 8601). Timezone-naive values are treated as UTC.
+
+          ---
+
+          **`updated_to`** &nbsp; *string · date-time · nullable*
+
+          Return incidents with `updated_at` before this time (ISO 8601). Timezone-naive values are treated as UTC.
+
+          ---
+
+          **`cursor`** &nbsp; *string · nullable*
+
+          Opaque pagination cursor returned by the previous response. Omit to start from the beginning.
+
+          ---
+
+          **`limit`** &nbsp; *integer · default 100 · max 500*
+
+          Maximum number of results to return.
+
+  # ── Responses ──────────────────────────────────────────────────
+  - type: section
+    eyebrow: Responses
+    heading: What comes back
+    components:
+      - type: accordion
+        items:
+          - title: "200 · Successful Response"
+            components:
+              - type: markdown
+                body: "A page of incidents plus a `next_cursor` for pagination."
+              - type: code
+                language: json
+                code: |
+                  {
+                    "data": [
+                      {
+                        "id": "inc_01HRZX...",
+                        "severity": "high",
+                        "status": "open",
+                        "updated_at": "2026-04-17T22:14:03Z"
+                      }
+                    ],
+                    "next_cursor": "eyJvIjoxNzE..."
+                  }
+          - title: "429 · Too Many Requests"
+            components:
+              - type: markdown
+                body: "Per-key rate limit exceeded. The `Retry-After` header tells you when to resume."
+              - type: code
+                language: json
+                code: |
+                  {
+                    "error": "rate_limited",
+                    "message": "Retry after 30 seconds."
+                  }
+          - title: "default · Error"
+            components:
+              - type: markdown
+                body: "Any other failure. `error` is a stable machine-readable code; `message` is for humans."
+              - type: code
+                language: json
+                code: |
+                  {
+                    "error": "invalid_request",
+                    "message": "`limit` must be between 1 and 500."
+                  }
+
+  - type: callout
+    variant: info
+    title: This page is ~130 lines of YAML
+    body: "No OpenAPI runtime, no Scalar/Stoplight/Redoc dependency — just kazam components composed like any other page. Swap the endpoint, keep the shape."
