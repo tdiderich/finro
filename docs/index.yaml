@@ -29,24 +29,22 @@ components:
 
   - type: section
     eyebrow: Beyond docs
-    heading: And it's not just docs.
+    heading: If it's a structured artifact, kazam makes it.
     components:
       - type: markdown
         body: |
-          Figma for the docs you'd otherwise mock up in Google Docs, the decks you'd otherwise
-          build in Gamma, and the SaaS landing pages you'd otherwise wireframe in Figma.
-          **Not Figma for free-form visual exploration — that's still Figma.**
+          Slide decks, one-page briefs, landing pages, internal dashboards, API references —
+          all the structured artifacts a team produces in a week, from the same typed
+          components. The format LLMs generate correctly; the output you actually ship.
 
       - type: card_grid
         cards:
           - title: Agents can produce it
-            description: Hand Claude a brief and get a populated deck, brief, or landing page back — edit-ready.
+            description: Hand Claude a brief and get a populated deck, one-pager, or landing page back — edit-ready.
           - title: Output is the deliverable
-            description: Figma exports a PNG or unreliable CSS. kazam output is the production HTML you ship.
+            description: The HTML kazam writes is the HTML you ship. No PNG export, no CSS shim.
           - title: Git-versionable
-            description: Every change is a diff in a PR. Figma's version history is a black box by comparison.
-          - title: Printable
-            description: "`shell: document` and `shell: deck` both print clean. Figma's print story is non-existent."
+            description: Every change is a diff in a PR. Review design the way you review code.
 
   - type: section
     eyebrow: 30 seconds
