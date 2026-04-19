@@ -123,3 +123,15 @@ components:
           colors:
             accent: '#14B8B8'
             accent_soft: 'rgba(var(--accent-rgb), 0.08)'
+
+  - type: callout
+    variant: info
+    title: Next up
+    body: Once your theme looks right, the last step is shipping it. Any static host works — a dozen recipes on the next page.
+    links:
+      - label: Deploy it
+        href: deploy.html
+        variant: primary
+      - label: Back to the guide
+        href: guide.html
+        variant: secondary

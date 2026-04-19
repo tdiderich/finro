@@ -568,6 +568,21 @@ pub struct SiteConfig {
     /// `theme:` is already `dark` or `light`.
     #[serde(default)]
     pub mode: Mode,
+    /// Fallback `<meta name="description">` and `og:description` used when a
+    /// page has no subtitle of its own. Keep it short — one sentence is ideal.
+    #[serde(default)]
+    pub description: Option<String>,
+    /// Canonical base URL for the site, e.g. `https://tdiderich.github.io/kazam`.
+    /// When set, each page gets a `<link rel="canonical">` and populated
+    /// `og:url` / `twitter:url` meta. Leave unset on sites that don't care
+    /// about social unfurls.
+    #[serde(default)]
+    pub url: Option<String>,
+    /// Site-wide social card image (Open Graph + Twitter card). Path is
+    /// resolved relative to the site root. 1200×630 PNG is the standard;
+    /// SVG works on modern platforms. Optional.
+    #[serde(default)]
+    pub og_image: Option<String>,
 }
 
 /// Site-wide background pattern. All variants are subtle by design.
@@ -698,6 +713,9 @@ impl Default for SiteConfig {
             glow: Glow::None,
             nav_layout: NavLayout::Top,
             mode: Mode::Dark,
+            description: None,
+            url: None,
+            og_image: None,
         }
     }
 }

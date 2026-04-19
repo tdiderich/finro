@@ -211,3 +211,15 @@ components:
             action:
               label: Add customer
               href: /customers/new
+
+  - type: callout
+    variant: info
+    title: Next up
+    body: Navigation components thread pages together — breadcrumbs on deep pages, button groups for primary CTAs.
+    links:
+      - label: Navigation
+        href: navigation.html
+        variant: primary
+      - label: All components
+        href: index.html
+        variant: secondary

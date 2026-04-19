@@ -287,3 +287,15 @@ components:
                 definition: Annual contract value.
               - term: SLA
                 definition: Service level agreement.
+
+  - type: callout
+    variant: info
+    title: Next up
+    body: Indicators add small signal to any page — badges, tags, status dots, progress bars, keyboard hints.
+    links:
+      - label: Indicators
+        href: indicators.html
+        variant: primary
+      - label: All components
+        href: index.html
+        variant: secondary

@@ -259,3 +259,15 @@ components:
     variant: success
     title: Nothing fancy required
     body: "If your host can serve a folder of static files, it can serve a kazam build. If it can't, it's probably not worth the headache — pick one of the recipes above."
+
+  - type: callout
+    variant: info
+    title: Next up
+    body: That's the full loop — write YAML, build, deploy. Browse the component reference to see what else you can compose into a page.
+    links:
+      - label: Components reference
+        href: components/index.html
+        variant: primary
+      - label: Back to home
+        href: index.html
+        variant: secondary

@@ -40,3 +40,15 @@ components:
       - ✅ **Sam** — finalize mobile release criteria *(done Apr 10)*
       - ✅ **Priya** — pricing page design review *(done Apr 12)*
       - ⏳ **Jordan** — enterprise customer interviews *(5 of 8 complete)*
+
+  - type: callout
+    variant: info
+    title: Next up
+    body: Other example pages — a full docs site, a KB, a deck, a landing page, a dashboard from live data, a full API reference.
+    links:
+      - label: See all use cases
+        href: ../about.html
+        variant: primary
+      - label: Components reference
+        href: ../components/index.html
+        variant: secondary

@@ -4,28 +4,8 @@ shell: standard
 components:
   - type: header
     title: About kazam
-    eyebrow: Why it exists
-    subtitle: The problem kazam solves, who it's for, and what it refuses to replace.
-
-  - type: section
-    eyebrow: Why
-    heading: Markdown isn't enough. Next.js is too much.
-    components:
-      - type: markdown
-        body: |
-          Markdown was designed for humans typing prose. It renders plain pages — grey text on
-          white, no cards, no badges, no interactive tables. That was fine when humans wrote
-          all the content.
-
-          Now LLMs write the content, and plain markdown wastes what's possible. The usual
-          response is to reach for Next.js or a framework-backed docs tool — and inherit a
-          thousand-package npm tree, a webpack build, a client runtime, and a supply chain
-          you'll never audit.
-
-          kazam is the middle path: **the format stays trivial to generate, but the output is
-          genuinely beautiful — and it ships as pure HTML and CSS.** Structured components,
-          LLM-friendly schema, themed, composable. No React. No framework. No runtime JS.
-          One Rust binary.
+    eyebrow: What it replaces
+    subtitle: A real migration from React to kazam, the use cases it fits, and the honest line on what it isn't.
 
   - type: section
     eyebrow: Receipts, not a pitch
@@ -35,6 +15,22 @@ components:
         body: |
           A real personal site migrated from Create-React-App to kazam.
           Whole repo, not a hand-picked excerpt.
+
+      - type: stat_grid
+        columns: 3
+        stats:
+          - label: Hand-authored LOC
+            value: "−88%"
+            detail: 1,722 → 210
+            color: green
+          - label: npm dependencies
+            value: "0"
+            detail: was react, tailwind, axios, +1000s transitive
+            color: green
+          - label: Migration
+            value: 1 conversation
+            detail: one-shot rebuild with an agent
+            color: default
 
       - type: before_after
         items:
@@ -169,3 +165,15 @@ components:
             instead: React / Vue / Svelte. kazam emits zero JS by design.
           - use_case: Blogs with comments or user-generated content
             instead: Ghost, WordPress, or any app with a real backend. A read-only blog is fine.
+
+  - type: callout
+    variant: info
+    title: Next up
+    body: If this is a fit for what you're building, the next question is how it actually works — three shells, typed components, zero JS on the output.
+    links:
+      - label: How it works
+        href: how.html
+        variant: primary
+      - label: Install it
+        href: guide.html
+        variant: secondary

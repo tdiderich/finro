@@ -116,3 +116,15 @@ components:
             uptime: 99.94%
             errors: 0.06%
             oncall: Juan R.
+
+  - type: callout
+    variant: info
+    title: Next up
+    body: Other example pages — docs, decks, landing pages, meeting briefs, API references, dashboards from live data.
+    links:
+      - label: See all use cases
+        href: ../about.html
+        variant: primary
+      - label: Components reference
+        href: ../components/index.html
+        variant: secondary

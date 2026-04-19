@@ -7,21 +7,44 @@ components:
     eyebrow: YAML → beautiful sites
     subtitle: One Rust binary. No framework, no npm, no runtime JS. Designed so AI agents can author your site end-to-end.
 
-  - type: stat_grid
-    columns: 3
-    stats:
-      - label: Hand-authored LOC
-        value: "−88%"
-        detail: 1,722 → 210 on a real CRA migration
-        color: green
-      - label: npm dependencies
-        value: "0"
-        detail: was react, tailwind, axios, +1000s transitive
-        color: green
-      - label: Migration
-        value: 1 conversation
-        detail: one-shot rebuild with an agent
-        color: default
+  - type: section
+    eyebrow: Why
+    heading: Markdown isn't enough. Next.js is too much.
+    components:
+      - type: columns
+        equal_heights: true
+        columns:
+          - - type: callout
+              variant: info
+              title: Markdown is too simple
+              body: Plain pages — grey text on white, no cards, no badges, no interactive tables. Fine for a blog post, wastes what the web can do.
+          - - type: callout
+              variant: info
+              title: Next.js is too heavy
+              body: A thousand-package npm tree, a webpack build, a client runtime, and a supply chain you'll never audit — for a site that renders static content.
+          - - type: callout
+              variant: info
+              title: kazam is the middle path
+              body: Typed YAML components, LLM-friendly schema, themed output. Ships as pure HTML and CSS. One Rust binary.
+
+  - type: section
+    eyebrow: Beyond docs
+    heading: If it's a structured artifact, kazam makes it.
+    components:
+      - type: markdown
+        body: |
+          Slide decks, one-page briefs, landing pages, internal dashboards, API references —
+          all the structured artifacts a team produces in a week, from the same typed
+          components. The format LLMs generate correctly; the output you actually ship.
+
+      - type: card_grid
+        cards:
+          - title: Agents can produce it
+            description: Hand Claude a brief and get a populated deck, one-pager, or landing page back — edit-ready.
+          - title: Output is the deliverable
+            description: The HTML kazam writes is the HTML you ship. No PNG export, no CSS shim.
+          - title: Git-versionable
+            description: Every change is a diff in a PR. Review design the way you review code.
 
   - type: section
     eyebrow: 30 seconds
@@ -78,7 +101,7 @@ components:
       - type: card_grid
         cards:
           - title: Is it a fit?
-            description: The 1,722 → 210 migration story, use cases, and the honest line on what kazam is not.
+            description: Use cases, the honest line on what kazam is not, and a real migration story.
             links:
               - label: See the fit →
                 href: about.html

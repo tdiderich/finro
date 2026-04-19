@@ -366,6 +366,7 @@ h1, h2, h3 { font-weight: 600; color: var(--snow); }
   flex-shrink: 0;
   border-bottom: 1.5px solid var(--teal);
   background: var(--bg);
+  position: relative; /* Anchors the mobile nav panel below the bar. */
 }
 .site-bar-name {
   font-size: 14px; font-weight: 500;
@@ -396,6 +397,46 @@ a.site-bar-name:hover { opacity: 1; color: var(--teal); }
 .site-bar-print-btn:hover { background: rgba(var(--accent-rgb), 0.08); border-color: rgba(var(--accent-rgb), 0.6); }
 
 .site-bar nav { display: flex; align-items: center; gap: 4px; }
+.site-bar .site-nav-links { display: flex; align-items: center; gap: 4px; }
+.site-bar .nav-menu-toggle {
+  display: none; /* desktop: hidden. Mobile rule below shows it. */
+  font: inherit;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+  color: rgba(var(--text-rgb), 0.7);
+  width: 36px; height: 36px;
+  align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.site-bar .nav-menu-toggle:hover {
+  color: var(--snow);
+  background: rgba(var(--text-rgb), 0.08);
+}
+.site-bar .nav-menu-icon {
+  display: inline-block;
+  width: 18px; height: 2px;
+  background: currentColor;
+  position: relative;
+  transition: background 0.15s;
+}
+.site-bar .nav-menu-icon::before,
+.site-bar .nav-menu-icon::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: currentColor;
+  transition: transform 0.2s;
+}
+.site-bar .nav-menu-icon::before { top: -6px; }
+.site-bar .nav-menu-icon::after  { top:  6px; }
+/* Open state: collapse the three bars into an × */
+.site-bar nav[data-open] .nav-menu-icon { background: transparent; }
+.site-bar nav[data-open] .nav-menu-icon::before { transform: translateY(6px) rotate(45deg); }
+.site-bar nav[data-open] .nav-menu-icon::after  { transform: translateY(-6px) rotate(-45deg); }
 .site-bar .nav-link {
   font-size: 13px; font-weight: 500;
   padding: 6px 12px;
@@ -1517,6 +1558,171 @@ body.shell-deck { page: deck-page; }
   body.shell-deck .deck-slide:last-child { page-break-after: avoid; }
   body.shell-deck .deck-inner { min-height: 0 !important; padding: 0.4in 0.5in !important; }
   body.shell-deck .deck-nav { display: none !important; }
+}
+
+/* ──────────────────── Mobile responsiveness ──────────────────── */
+
+/* Tablet-ish (≤768px): stack multi-column components, tighten chrome,
+   collapse the top-bar nav into a hamburger menu. The sidebar layout has
+   its own responsive rules above and is exempt. */
+@media (max-width: 768px) {
+  .container { padding: 0 20px; }
+  .site-bar { padding: 0 20px; gap: 12px; }
+  .site-bar-subtitle { display: none; }
+
+  /* Top-bar nav → hamburger. Hide the inline link row; show the toggle. */
+  body:not(.nav-layout-sidebar) .site-bar .nav-menu-toggle {
+    display: inline-flex;
+  }
+  body:not(.nav-layout-sidebar) .site-bar .site-nav-links {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--card-border);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 8px 12px 16px;
+    max-height: calc(100vh - 56px);
+    overflow-y: auto;
+    /* Hidden by default; revealed via [data-open] below. */
+    display: none;
+    z-index: 20;
+  }
+  body:not(.nav-layout-sidebar) .site-bar nav[data-open] .site-nav-links {
+    display: flex;
+  }
+  /* Mobile panel link styling: full-width rows, no pill hover. */
+  body:not(.nav-layout-sidebar) .site-bar .site-nav-links .nav-link,
+  body:not(.nav-layout-sidebar) .site-bar .site-nav-links .nav-link-parent {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 12px 10px;
+    font-size: 15px;
+    border-radius: 0;
+    border-bottom: 1px solid rgba(var(--text-rgb), 0.06);
+  }
+  body:not(.nav-layout-sidebar) .site-bar .site-nav-links .nav-link:last-child,
+  body:not(.nav-layout-sidebar) .site-bar .site-nav-links .nav-link-group:last-child .nav-link-parent {
+    border-bottom: none;
+  }
+  /* Dropdown groups: show children inline (no hover), indented. */
+  body:not(.nav-layout-sidebar) .site-bar .site-nav-links .nav-link-group {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  body:not(.nav-layout-sidebar) .site-bar .site-nav-links .nav-chevron {
+    display: none;
+  }
+  body:not(.nav-layout-sidebar) .site-bar .site-nav-links .nav-dropdown {
+    position: static;
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+    box-shadow: none;
+    background: transparent;
+    border: none;
+    padding: 0 0 8px 16px;
+    min-width: 0;
+  }
+  body:not(.nav-layout-sidebar) .site-bar .site-nav-links .nav-dropdown::before {
+    display: none;
+  }
+  body:not(.nav-layout-sidebar) .site-bar .site-nav-links .nav-dropdown .nav-link {
+    padding: 8px 10px;
+    font-size: 14px;
+    color: rgba(var(--text-rgb), 0.6);
+    border-bottom: none;
+  }
+
+  /* Stack any inline-style multi-column grids: c-columns and c-stat-grid
+     both set grid-template-columns inline, so the override needs !important. */
+  .c-columns[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+
+  /* Card-grid with arrows: stack vertically, rotate arrows to point down. */
+  .c-card-grid-arrow { flex-direction: column; }
+  .c-card-arrow { transform: rotate(90deg); padding: 4px 0; }
+
+  /* Before/after cards: tighter padding so they don't feel oversized. */
+  .c-ba-card { padding: 24px; }
+
+  /* Section + card padding step-down. */
+  .c-card { padding: 20px; }
+
+  /* Deck shell: reduce interior padding so content isn't crushed. */
+  body.shell-deck .deck-inner { padding: 32px 24px 56px; }
+  body.shell-deck .deck-slide-cover .c-header-title { font-size: 30px; }
+}
+
+/* Phone (≤640px): collapse remaining grids, step down type, let tables scroll. */
+@media (max-width: 640px) {
+  /* Stat grid stacks to 1 column. The inline style needs !important. */
+  .c-stat-grid[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+  .c-stat { padding: 16px 18px; }
+  .c-stat-value { font-size: 24px; }
+
+  /* Header type step-down. */
+  .c-header-title { font-size: 26px; }
+  .c-header-subtitle { font-size: 15px; }
+  body.shell-deck .deck-slide-cover .c-header-title { font-size: 26px; }
+
+  /* Section heading tighter. */
+  .c-section-header { margin-bottom: 16px; }
+
+  /* Before/after final step. */
+  .c-ba-card { padding: 20px; }
+  .c-ba-title { font-size: 18px; }
+  .c-ba-before, .c-ba-after { font-size: 15px; }
+
+  /* Tables: preserve shape, scroll horizontally. */
+  .c-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .c-table { min-width: 480px; }
+  .c-table th, .c-table td { padding: 10px 12px; font-size: 13px; }
+
+  /* Tab buttons: scroll horizontally instead of wrapping. */
+  .c-tab-buttons {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+  }
+  .c-tab-buttons::-webkit-scrollbar { display: none; }
+  .tab-btn { flex-shrink: 0; }
+
+  /* Accordion tightens. */
+  .c-accordion-item { padding: 0; }
+
+  /* Code blocks: slightly smaller type on phone. */
+  .c-code { font-size: 12px; padding: 16px; }
+  .c-markdown pre { padding: 16px; }
+
+  /* Document shell: less generous padding on narrow screens. */
+  body.shell-document .doc-root { padding: 24px 12px 60px; }
+  body.shell-document .doc-card { padding: 24px 20px; }
+}
+
+/* Deck shell on narrow phones in portrait: nudge the viewer to rotate. The
+   deck is designed for landscape, but we respect pinch-zoom and swipe so
+   this is a soft hint, not a wall. */
+@media (max-width: 640px) and (orientation: portrait) {
+  body.shell-deck::before {
+    content: "↻ Tip: rotate your phone to landscape for the full deck view.";
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    padding: 8px 12px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    background: rgba(var(--accent-rgb), 0.12);
+    color: var(--teal);
+    border-bottom: 1px solid rgba(var(--accent-rgb), 0.25);
+    z-index: 1000;
+    letter-spacing: 0.2px;
+  }
+  body.shell-deck .deck-root { top: 34px; }
 }
 "#;
 

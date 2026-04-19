@@ -32,12 +32,49 @@ const RELOAD: &str = r#"
 
 const NAV: &str = r#"
 document.addEventListener('DOMContentLoaded', function () {
+  // Active-link highlight (both top nav and sidebar).
   var here = window.location.pathname.replace(/\/$/, '/index.html');
   document.querySelectorAll('.nav-link, .sidebar-link').forEach(function (a) {
     try {
       var target = new URL(a.href).pathname.replace(/\/$/, '/index.html');
       if (target === here) a.classList.add('nav-link-active');
     } catch (e) {}
+  });
+
+  // Mobile menu toggle. The button lives inside <nav> and flips `data-open`
+  // on that <nav>; CSS does the rest. Escape, outside-click, and link-click
+  // all close the panel.
+  var toggle = document.querySelector('.nav-menu-toggle');
+  if (!toggle) return;
+  var nav = toggle.closest('nav');
+  if (!nav) return;
+
+  function setOpen(open) {
+    if (open) nav.setAttribute('data-open', '');
+    else nav.removeAttribute('data-open');
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  toggle.addEventListener('click', function (e) {
+    e.stopPropagation();
+    setOpen(!nav.hasAttribute('data-open'));
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!nav.hasAttribute('data-open')) return;
+    // Closing on any in-panel link click lets navigation feel immediate.
+    if (e.target.closest('.site-nav-links a')) {
+      setOpen(false);
+      return;
+    }
+    if (!nav.contains(e.target)) setOpen(false);
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && nav.hasAttribute('data-open')) {
+      setOpen(false);
+      toggle.focus();
+    }
   });
 });
 "#;

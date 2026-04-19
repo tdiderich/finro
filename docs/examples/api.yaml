@@ -162,3 +162,15 @@ components:
     variant: info
     title: This page is ~130 lines of YAML
     body: "No OpenAPI runtime, no Scalar/Stoplight/Redoc dependency — just kazam components composed like any other page. Swap the endpoint, keep the shape."
+
+  - type: callout
+    variant: info
+    title: Next up
+    body: Other example pages — docs, KBs, decks, landing pages, meeting briefs, dashboards from live data.
+    links:
+      - label: See all use cases
+        href: ../about.html
+        variant: primary
+      - label: Components reference
+        href: ../components/index.html
+        variant: secondary

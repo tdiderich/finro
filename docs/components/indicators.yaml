@@ -189,3 +189,15 @@ components:
 
           - type: divider             # labeled
             label: Operational data
+
+  - type: callout
+    variant: info
+    title: Next up
+    body: Interactive components bring client-side behavior — sortable/filterable tables, tab groups, accordions. All vanilla JS, no framework.
+    links:
+      - label: Interactive
+        href: interactive.html
+        variant: primary
+      - label: All components
+        href: index.html
+        variant: secondary

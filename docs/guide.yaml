@@ -118,8 +118,8 @@ components:
               href: index.html
             - label: Guide
               href: guide.html
-            - label: Reference
-              href: reference/api.html
+            - label: API
+              href: api.html
 
   - type: section
     eyebrow: Theming
@@ -314,6 +314,6 @@ components:
       - label: Components reference
         href: components/index.html
         variant: primary
-      - label: Examples
-        href: index.html#use-cases
+      - label: See use cases
+        href: about.html
         variant: secondary
