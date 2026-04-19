@@ -2,11 +2,14 @@
 name = "kazam"
 version = "0.3.0"
 edition = "2021"
-description = "Beautiful sites from simple YAML"
+description = "Beautiful static sites from simple YAML. One Rust binary, no framework, no npm, no runtime JS."
 license = "MIT"
 repository = "https://github.com/tdiderich/kazam"
 homepage = "https://tdiderich.github.io/kazam/"
+documentation = "https://tdiderich.github.io/kazam/"
 readme = "README.md"
+keywords = ["static-site", "ssg", "yaml", "cli", "docs"]
+categories = ["command-line-utilities", "web-programming"]
 
 [[bin]]
 name = "kazam"
