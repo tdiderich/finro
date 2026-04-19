@@ -394,7 +394,10 @@ pub(super) fn parse_markdown(md: &str) -> String {
 pub(super) fn parse_markdown_inline(md: &str) -> String {
     let html = parse_markdown(md);
     let trimmed = html.trim_end_matches('\n');
-    if let Some(inner) = trimmed.strip_prefix("<p>").and_then(|s| s.strip_suffix("</p>")) {
+    if let Some(inner) = trimmed
+        .strip_prefix("<p>")
+        .and_then(|s| s.strip_suffix("</p>"))
+    {
         inner.to_string()
     } else {
         html
