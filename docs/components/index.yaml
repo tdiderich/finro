@@ -94,3 +94,15 @@ components:
             - type: markdown
               body: |
                 free-form prose
+
+  - type: callout
+    variant: info
+    title: Next up
+    body: Start with content primitives — headers, markdown, code blocks, callouts, images. The building blocks every page uses.
+    links:
+      - label: Content components
+        href: content.html
+        variant: primary
+      - label: See examples
+        href: ../about.html
+        variant: secondary

@@ -217,3 +217,15 @@ components:
           - type: blockquote
             body: The best product we've shipped in years.
             attribution: Sarah M., VP Engineering at Acme
+
+  - type: callout
+    variant: info
+    title: Next up
+    body: Grid components arrange your content — card grids, stat grids, before/after cards, definition lists.
+    links:
+      - label: Grids
+        href: grids.html
+        variant: primary
+      - label: All components
+        href: index.html
+        variant: secondary

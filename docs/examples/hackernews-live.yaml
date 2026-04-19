@@ -224,3 +224,15 @@ components:
             href: "https://blogs.lse.ac.uk/impactofsocialsciences/2026/04/13/the-missing-catalogue-why-finding-books-in-translation-is-still-so-hard/"
           - label: "HN →"
             href: "https://news.ycombinator.com/item?id=47764240"
+
+  - type: callout
+    variant: info
+    title: Next up
+    body: This page was generated from a script that fetched the HN API and emitted YAML. See the walkthrough, or browse other examples.
+    links:
+      - label: See the walkthrough
+        href: hackernews.html
+        variant: primary
+      - label: All use cases
+        href: ../about.html
+        variant: secondary

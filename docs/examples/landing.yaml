@@ -88,3 +88,15 @@ components:
       ship one alongside your docs, you can.
 
       Check the [source](landing.source.html) to see the whole thing.
+
+  - type: callout
+    variant: info
+    title: Next up
+    body: Other example pages — docs, KBs, decks, meeting briefs, API references, dashboards from live data.
+    links:
+      - label: See all use cases
+        href: ../about.html
+        variant: primary
+      - label: Components reference
+        href: ../components/index.html
+        variant: secondary

@@ -181,3 +181,15 @@ components:
                 components:
                   - type: markdown
                     body: Answer content.
+
+  - type: callout
+    variant: info
+    title: Next up
+    body: Layout components are the skeleton every page hangs on — sections, columns, dividers, timelines, steps.
+    links:
+      - label: Layout
+        href: layout.html
+        variant: primary
+      - label: All components
+        href: index.html
+        variant: secondary

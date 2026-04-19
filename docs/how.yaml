@@ -87,3 +87,15 @@ components:
         body: |
           Want reproducibility? Pin a specific commit:
           `cargo install --git https://github.com/tdiderich/kazam --rev <sha>`.
+
+  - type: callout
+    variant: info
+    title: Next up
+    body: You've seen the moving parts. Install the binary, scaffold a site, and watch the dev-reload loop.
+    links:
+      - label: Start the guide
+        href: guide.html
+        variant: primary
+      - label: Browse components
+        href: components/index.html
+        variant: secondary

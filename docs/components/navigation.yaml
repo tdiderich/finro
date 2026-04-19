@@ -89,3 +89,15 @@ components:
                 variant: secondary
                 external: true         # adds ↗ and target=_blank
                 icon: github           # any bundled lucide icon name
+
+  - type: callout
+    variant: info
+    title: Next up
+    body: That's the full component set. See them composed into real pages — docs, decks, briefs, dashboards, API references.
+    links:
+      - label: See examples
+        href: ../about.html
+        variant: primary
+      - label: Back to reference
+        href: index.html
+        variant: secondary
