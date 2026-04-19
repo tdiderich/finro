@@ -32,7 +32,7 @@
   <g transform="translate(80, 500)">
     <text font-family="ui-sans-serif, -apple-system, system-ui, sans-serif"
           font-size="15" font-weight="600" letter-spacing="1.2"
-          fill="#6E726C" text-transform="uppercase">1,722 → 210 LOC</text>
+          fill="#6E726C" text-transform="uppercase">STATIC HTML OUT</text>
     <text x="305" font-family="ui-sans-serif, -apple-system, system-ui, sans-serif"
           font-size="15" font-weight="600" letter-spacing="1.2"
           fill="#6E726C" text-transform="uppercase">0 NPM DEPS</text>

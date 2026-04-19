@@ -11,10 +11,10 @@ React App, Tailwind, React Router, `axios`, a `react-gravatar` dependency
 I'd long forgotten why I added, and two Firebase cloud functions
 patching over SPA quirks.
 
-It was **1,722 lines of source** I didn't really maintain.
+It was a lot of code for a thing that I edited twice a year.
 
-I rebuilt it in one conversation with Claude. The new version is
-**210 lines of YAML**, zero npm dependencies, and ships as plain HTML
+I rebuilt it in one conversation with Claude. The new version is a
+handful of YAML files, zero npm dependencies, and ships as plain HTML
 and CSS behind Firebase Hosting. No functions. No runtime JavaScript.
 No framework. One Rust binary that turns the YAML into the site.
 

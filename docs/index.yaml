@@ -101,7 +101,7 @@ components:
       - type: card_grid
         cards:
           - title: Is it a fit?
-            description: The 1,722 → 210 migration story, use cases, and the honest line on what kazam is not.
+            description: Use cases, the honest line on what kazam is not, and a real migration story.
             links:
               - label: See the fit →
                 href: about.html

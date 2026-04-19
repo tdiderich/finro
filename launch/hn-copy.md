@@ -22,15 +22,15 @@ I'd lead with #1. It's the story, not the pitch.
 ## Body
 
 ```
-Hi HN — I built kazam after watching my 1,722-line Create-React-App
-personal site turn into a maintenance chore for a thing that renders
-a dozen pages once a year.
+Hi HN — I built kazam after watching my Create-React-App personal site
+turn into a maintenance chore for a thing that renders a dozen pages
+once a year.
 
-The rebuild is 210 lines of YAML, zero npm dependencies, and ships
-as static HTML and CSS. One Rust binary turns the YAML into the site.
-No framework, no webpack, no runtime JS. `kazam dev` reloads on save;
-`kazam build --release` emits minified output you drop on any static
-host.
+The rebuild is a handful of YAML files, zero npm dependencies, and
+ships as static HTML and CSS. One Rust binary turns the YAML into the
+site. No framework, no webpack, no runtime JS. `kazam dev` reloads on
+save; `kazam build --release` emits minified output you drop on any
+static host.
 
 The interesting bit (for me at least): the YAML format is deliberately
 boring — typed components, narrow schemas, no prose rules to interpret.

@@ -24,6 +24,16 @@ Short-form copy for Twitter/X, Bluesky, LinkedIn. Pair with an OG unfurl or atta
 >
 > https://github.com/tdiderich/kazam
 
+### Option D — the weekend project
+
+> Spent a weekend rewriting my React personal site as YAML.
+>
+> 88% less code. Zero npm deps. One Rust binary that turns YAML into themed static HTML.
+>
+> Now my landing page updates in 10 seconds instead of 10 minutes.
+>
+> https://github.com/tdiderich/kazam
+
 ### Option C — the dev-y one
 
 > `cargo install --git https://github.com/tdiderich/kazam`
@@ -36,9 +46,9 @@ Short-form copy for Twitter/X, Bluesky, LinkedIn. Pair with an OG unfurl or atta
 
 ## LinkedIn (slightly longer, less dev-slang)
 
-> Spent the weekend rebuilding my personal site, which had grown to 1,722 lines of React code for what's ultimately a handful of pages describing who I am and what I've built.
+> Spent the weekend rebuilding my personal site, which had grown into a small React app for what's ultimately a handful of pages describing who I am and what I've built.
 >
-> The new version is 210 lines of YAML. Zero npm dependencies. Ships as plain HTML and CSS. A single Rust binary turns the YAML into the site.
+> The new version is a dozen files of YAML. Zero npm dependencies. Ships as plain HTML and CSS. A single Rust binary turns the YAML into the site.
 >
 > I wrote the binary — it's called kazam — because the static-site space has calcified around two bad options: plain Markdown (wastes what the web can do) or framework-backed tools like Next.js and Mintlify (drag in a thousand-package npm tree for sites that don't need one).
 >
@@ -55,7 +65,7 @@ If the first lands, follow with:
 
 > The receipts, since "I moved off React" is the most overused claim on this site:
 >
-> • Hand-authored LOC: 1,722 → 210
+> • Source LOC: −88%
 > • npm deps: ~1,000 transitive → 0
 > • Build tool: webpack → one Rust binary
 > • Deploy: Firebase Hosting + 2 cloud functions → Firebase Hosting static
