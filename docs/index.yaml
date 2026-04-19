@@ -11,21 +11,21 @@ components:
     eyebrow: Why
     heading: Markdown isn't enough. Next.js is too much.
     components:
-      - type: markdown
-        body: |
-          Markdown was designed for humans typing prose. It renders plain pages — grey text on
-          white, no cards, no badges, no interactive tables. That was fine when humans wrote
-          all the content.
-
-          Now LLMs write the content, and plain markdown wastes what's possible. The usual
-          response is to reach for Next.js or a framework-backed docs tool — and inherit a
-          thousand-package npm tree, a webpack build, a client runtime, and a supply chain
-          you'll never audit.
-
-          kazam is the middle path: **the format stays trivial to generate, but the output is
-          genuinely beautiful — and it ships as pure HTML and CSS.** Structured components,
-          LLM-friendly schema, themed, composable. No React. No framework. No runtime JS.
-          One Rust binary.
+      - type: columns
+        equal_heights: true
+        columns:
+          - - type: callout
+              variant: info
+              title: Markdown is too simple
+              body: Plain pages — grey text on white, no cards, no badges, no interactive tables. Fine for a blog post, wastes what the web can do.
+          - - type: callout
+              variant: info
+              title: Next.js is too heavy
+              body: A thousand-package npm tree, a webpack build, a client runtime, and a supply chain you'll never audit — for a site that renders static content.
+          - - type: callout
+              variant: info
+              title: kazam is the middle path
+              body: Typed YAML components, LLM-friendly schema, themed output. Ships as pure HTML and CSS. One Rust binary.
 
   - type: section
     eyebrow: Beyond docs
