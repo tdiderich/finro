@@ -7,21 +7,25 @@ components:
     eyebrow: YAML → beautiful sites
     subtitle: One Rust binary. No framework, no npm, no runtime JS. Designed so AI agents can author your site end-to-end.
 
-  - type: stat_grid
-    columns: 3
-    stats:
-      - label: Hand-authored LOC
-        value: "−88%"
-        detail: 1,722 → 210 on a real CRA migration
-        color: green
-      - label: npm dependencies
-        value: "0"
-        detail: was react, tailwind, axios, +1000s transitive
-        color: green
-      - label: Migration
-        value: 1 conversation
-        detail: one-shot rebuild with an agent
-        color: default
+  - type: section
+    eyebrow: Why
+    heading: Markdown isn't enough. Next.js is too much.
+    components:
+      - type: markdown
+        body: |
+          Markdown was designed for humans typing prose. It renders plain pages — grey text on
+          white, no cards, no badges, no interactive tables. That was fine when humans wrote
+          all the content.
+
+          Now LLMs write the content, and plain markdown wastes what's possible. The usual
+          response is to reach for Next.js or a framework-backed docs tool — and inherit a
+          thousand-package npm tree, a webpack build, a client runtime, and a supply chain
+          you'll never audit.
+
+          kazam is the middle path: **the format stays trivial to generate, but the output is
+          genuinely beautiful — and it ships as pure HTML and CSS.** Structured components,
+          LLM-friendly schema, themed, composable. No React. No framework. No runtime JS.
+          One Rust binary.
 
   - type: section
     eyebrow: 30 seconds
