@@ -4,6 +4,9 @@ favicon: assets/favicon.svg
 view_source: true
 texture: dots
 glow: accent
+description: Beautiful static sites from simple YAML. One Rust binary. No framework, no npm, no runtime JS. Designed so AI agents can author your site end-to-end.
+url: https://tdiderich.github.io/kazam
+og_image: assets/og.svg
 nav:
   - label: Home
     href: index.html

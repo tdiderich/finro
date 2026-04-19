@@ -84,7 +84,15 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
                 String::new()
             };
 
-            let mut html = render::render_page(&page, &config, &base, &source_view_href);
+            // URL-shaped relative path for canonical / og:url meta. Always
+            // forward-slash separated, `.html` extension.
+            let html_rel = rel
+                .with_extension("html")
+                .to_string_lossy()
+                .replace('\\', "/");
+            let source_rel = format!("{}.source.html", source_stem);
+
+            let mut html = render::render_page(&page, &config, &base, &source_view_href, &html_rel);
             if release {
                 html = minify::minify_html(&html);
             }
@@ -96,8 +104,14 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
             fs::write(&out_path, html)?;
 
             if config.view_source {
-                let mut source_view =
-                    render::render_source_view(&page, &config, &content, &base, &source_filename);
+                let mut source_view = render::render_source_view(
+                    &page,
+                    &config,
+                    &content,
+                    &base,
+                    &source_filename,
+                    &source_rel,
+                );
                 if release {
                     source_view = minify::minify_html(&source_view);
                 }
@@ -141,6 +155,13 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
         llms::write(out, &config, &entries)?;
     }
 
+    // Emit sitemap.xml + robots.txt when a canonical URL is configured.
+    // Without a URL they'd emit bogus/relative paths, so skip silently.
+    if let Some(site_url) = config.url.as_deref() {
+        write_sitemap(out, site_url, &entries)?;
+        write_robots(out, site_url)?;
+    }
+
     if assets > 0 {
         println!(
             "\n✓ {} page(s), {} asset(s) → {}{}",
@@ -158,6 +179,39 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
         );
     }
     Ok(())
+}
+
+fn write_sitemap(out: &Path, site_url: &str, entries: &[PageEntry]) -> Result<()> {
+    let base = site_url.trim_end_matches('/');
+    let mut xml = String::from(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
+         <urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n",
+    );
+    for e in entries {
+        // html_path is forward-slash separated, `.html` extension — ready to
+        // concatenate with the site base.
+        xml.push_str(&format!(
+            "  <url><loc>{}/{}</loc></url>\n",
+            base,
+            xml_escape(&e.html_path)
+        ));
+    }
+    xml.push_str("</urlset>\n");
+    fs::write(out.join("sitemap.xml"), xml)?;
+    Ok(())
+}
+
+fn write_robots(out: &Path, site_url: &str) -> Result<()> {
+    let base = site_url.trim_end_matches('/');
+    let body = format!("User-agent: *\nAllow: /\nSitemap: {}/sitemap.xml\n", base);
+    fs::write(out.join("robots.txt"), body)?;
+    Ok(())
+}
+
+fn xml_escape(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
 }
 
 fn base_path_for(rel: &Path) -> String {

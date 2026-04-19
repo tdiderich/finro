@@ -118,8 +118,8 @@ components:
               href: index.html
             - label: Guide
               href: guide.html
-            - label: Reference
-              href: reference/api.html
+            - label: API
+              href: api.html
 
   - type: section
     eyebrow: Theming

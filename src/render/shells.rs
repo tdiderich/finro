@@ -2,7 +2,7 @@ use super::{collect_scripts, components, esc, resolve_href, Rendered};
 use crate::theme;
 use crate::types::{Page, Shell, SiteConfig, Slide};
 
-fn head(page: &Page, config: &SiteConfig, base: &str) -> String {
+fn head(page: &Page, config: &SiteConfig, base: &str, rel_path: &str) -> String {
     let theme = config.resolved_theme();
     let favicon = match config.favicon.as_ref() {
         Some(f) => f.render(base),
@@ -12,19 +12,144 @@ fn head(page: &Page, config: &SiteConfig, base: &str) -> String {
     // explicit `none` at the page level turns the effect off on that page.
     let texture = page.texture.unwrap_or(config.texture);
     let glow = page.glow.unwrap_or(config.glow);
+    let social = social_meta(page, config, base, rel_path);
     format!(
         r#"<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{title} — {site}</title>
-{favicon}
+{social}{favicon}
 <style>{css}</style>
 </head>"#,
         title = esc(&page.title),
         site = esc(&config.name),
+        social = social,
         favicon = favicon,
         css = theme::render_css(&theme, texture, glow),
     )
+}
+
+/// Render the SEO + Open Graph + Twitter card meta block. Uses the page's
+/// subtitle as the description when present, falling back to the site-wide
+/// `description:`. Canonical + og:url are only emitted when `url:` is set on
+/// the site config. Social images are emitted when `og_image:` is set.
+///
+/// Unlisted pages (source views, drafts) get `robots: noindex` so we don't
+/// leak internal working pages into search results.
+fn social_meta(page: &Page, config: &SiteConfig, base: &str, rel_path: &str) -> String {
+    let mut out = String::new();
+    // Social titles use the page title on its own — og:site_name already
+    // conveys the site, so duplicating it here produces ugly "Foo — Site — Site"
+    // strings in unfurls.
+    let title = page.title.as_str();
+    let description = page
+        .subtitle
+        .as_deref()
+        .filter(|s| !s.is_empty())
+        .or(config.description.as_deref())
+        .unwrap_or("");
+
+    if !description.is_empty() {
+        out.push_str(&format!(
+            r#"<meta name="description" content="{}">
+"#,
+            esc(description)
+        ));
+    }
+    if page.unlisted {
+        out.push_str(
+            r#"<meta name="robots" content="noindex,nofollow">
+"#,
+        );
+    }
+
+    // Canonical + og:url require a site url. Without one, skip the URL-shaped
+    // tags; the rest still unfurl reasonably.
+    let canonical = config
+        .url
+        .as_deref()
+        .map(|u| format!("{}/{}", u.trim_end_matches('/'), rel_path));
+
+    if let Some(c) = &canonical {
+        out.push_str(&format!(
+            r#"<link rel="canonical" href="{}">
+"#,
+            esc(c)
+        ));
+    }
+
+    // Open Graph
+    out.push_str(&format!(
+        r#"<meta property="og:type" content="website">
+<meta property="og:site_name" content="{}">
+<meta property="og:title" content="{}">
+"#,
+        esc(&config.name),
+        esc(title),
+    ));
+    if !description.is_empty() {
+        out.push_str(&format!(
+            r#"<meta property="og:description" content="{}">
+"#,
+            esc(description)
+        ));
+    }
+    if let Some(c) = &canonical {
+        out.push_str(&format!(
+            r#"<meta property="og:url" content="{}">
+"#,
+            esc(c)
+        ));
+    }
+    if let Some(img) = config.og_image.as_deref() {
+        let img_url = if img.starts_with("http://") || img.starts_with("https://") {
+            img.to_string()
+        } else if let Some(u) = config.url.as_deref() {
+            format!(
+                "{}/{}",
+                u.trim_end_matches('/'),
+                img.trim_start_matches('/')
+            )
+        } else {
+            // Fall back to the base-relative path so the asset at least
+            // resolves when the page is opened in a browser.
+            resolve_href(img, base)
+        };
+        out.push_str(&format!(
+            r#"<meta property="og:image" content="{}">
+"#,
+            esc(&img_url)
+        ));
+        // Twitter card uses summary_large_image when an image is present,
+        // otherwise falls back to the basic summary card.
+        out.push_str(
+            r#"<meta name="twitter:card" content="summary_large_image">
+"#,
+        );
+        out.push_str(&format!(
+            r#"<meta name="twitter:image" content="{}">
+"#,
+            esc(&img_url)
+        ));
+    } else {
+        out.push_str(
+            r#"<meta name="twitter:card" content="summary">
+"#,
+        );
+    }
+    out.push_str(&format!(
+        r#"<meta name="twitter:title" content="{}">
+"#,
+        esc(title)
+    ));
+    if !description.is_empty() {
+        out.push_str(&format!(
+            r#"<meta name="twitter:description" content="{}">
+"#,
+            esc(description)
+        ));
+    }
+    out
 }
 
 /// When a site doesn't declare a `favicon:`, synthesize one from theme colors.
@@ -198,6 +323,7 @@ pub mod standard {
         body: Rendered,
         base: &str,
         source_href: &str,
+        rel_path: &str,
     ) -> String {
         let is_sidebar = matches!(config.nav_layout, crate::types::NavLayout::Sidebar);
         // Sidebar layout moves the full nav (including nested children) into
@@ -246,7 +372,7 @@ pub mod standard {
 {scripts}
 </body>
 </html>"#,
-            head = head(page, config, base),
+            head = head(page, config, base, rel_path),
             cls = body_class,
             bar = bar,
             sidebar = sidebar,
@@ -268,6 +394,7 @@ pub mod document {
         body: Rendered,
         base: &str,
         source_href: &str,
+        rel_path: &str,
     ) -> String {
         let bar = site_bar(page, config, base, &subtitle_span(page));
 
@@ -292,7 +419,7 @@ pub mod document {
 {scripts}
 </body>
 </html>"#,
-            head = head(page, config, base),
+            head = head(page, config, base, rel_path),
             cls = Shell::Document.class(),
             bar = bar,
             body = body.html,
@@ -340,6 +467,7 @@ pub mod deck {
         body: Rendered,
         base: &str,
         _source_href: &str,
+        rel_path: &str,
     ) -> String {
         let mut right = subtitle_span(page);
         right.push_str(
@@ -370,7 +498,7 @@ pub mod deck {
 {scripts}
 </body>
 </html>"#,
-            head = head(page, config, base),
+            head = head(page, config, base, rel_path),
             cls = Shell::Deck.class(),
             bar = bar,
             body = body.html,

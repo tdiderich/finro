@@ -10,6 +10,7 @@ pub fn render_source_view(
     yaml_content: &str,
     base: &str,
     source_filename: &str,
+    rel_path: &str,
 ) -> String {
     let html_href = source_filename
         .strip_suffix(".yaml")
@@ -36,10 +37,16 @@ pub fn render_source_view(
         glow: None,
     };
 
-    render_page(&synthetic, config, base, "")
+    render_page(&synthetic, config, base, "", rel_path)
 }
 
-pub fn render_page(page: &Page, config: &SiteConfig, base: &str, source_href: &str) -> String {
+pub fn render_page(
+    page: &Page,
+    config: &SiteConfig,
+    base: &str,
+    source_href: &str,
+    rel_path: &str,
+) -> String {
     let mut rendered = Rendered::default();
 
     match page.shell {
@@ -58,9 +65,13 @@ pub fn render_page(page: &Page, config: &SiteConfig, base: &str, source_href: &s
     }
 
     match page.shell {
-        Shell::Standard => shells::standard::wrap(page, config, rendered, base, source_href),
-        Shell::Document => shells::document::wrap(page, config, rendered, base, source_href),
-        Shell::Deck => shells::deck::wrap(page, config, rendered, base, source_href),
+        Shell::Standard => {
+            shells::standard::wrap(page, config, rendered, base, source_href, rel_path)
+        }
+        Shell::Document => {
+            shells::document::wrap(page, config, rendered, base, source_href, rel_path)
+        }
+        Shell::Deck => shells::deck::wrap(page, config, rendered, base, source_href, rel_path),
     }
 }
 

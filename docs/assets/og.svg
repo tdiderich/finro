@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <pattern id="dots" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.25" fill="#F7F7F2" fill-opacity="0.08"/>
+    </pattern>
+    <radialGradient id="glow" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#899878" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#899878" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="#121113"/>
+  <rect width="1200" height="630" fill="url(#dots)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- Eyebrow -->
+  <text x="80" y="215" font-family="ui-sans-serif, -apple-system, system-ui, sans-serif"
+        font-size="20" font-weight="700" letter-spacing="2"
+        fill="#899878" text-transform="uppercase">YAML → BEAUTIFUL SITES</text>
+
+  <!-- Title -->
+  <text x="80" y="310" font-family="ui-sans-serif, -apple-system, system-ui, sans-serif"
+        font-size="112" font-weight="700" fill="#F7F7F2" letter-spacing="-3">kazam</text>
+
+  <!-- Subtitle -->
+  <text x="80" y="385" font-family="ui-sans-serif, -apple-system, system-ui, sans-serif"
+        font-size="32" font-weight="400" fill="#B0B3AD">One Rust binary. No framework,</text>
+  <text x="80" y="428" font-family="ui-sans-serif, -apple-system, system-ui, sans-serif"
+        font-size="32" font-weight="400" fill="#B0B3AD">no npm, no runtime JS.</text>
+
+  <!-- Stat row -->
+  <g transform="translate(80, 500)">
+    <text font-family="ui-sans-serif, -apple-system, system-ui, sans-serif"
+          font-size="15" font-weight="600" letter-spacing="1.2"
+          fill="#6E726C" text-transform="uppercase">1,722 → 210 LOC</text>
+    <text x="305" font-family="ui-sans-serif, -apple-system, system-ui, sans-serif"
+          font-size="15" font-weight="600" letter-spacing="1.2"
+          fill="#6E726C" text-transform="uppercase">0 NPM DEPS</text>
+    <text x="500" font-family="ui-sans-serif, -apple-system, system-ui, sans-serif"
+          font-size="15" font-weight="600" letter-spacing="1.2"
+          fill="#6E726C" text-transform="uppercase">1 BINARY</text>
+  </g>
+
+  <!-- Accent underline -->
+  <rect x="80" y="540" width="120" height="3" fill="#899878"/>
+
+  <!-- URL -->
+  <text x="1120" y="595" font-family="ui-monospace, 'SF Mono', Monaco, monospace"
+        font-size="18" fill="#6E726C" text-anchor="end">tdiderich.github.io/kazam</text>
+</svg>
