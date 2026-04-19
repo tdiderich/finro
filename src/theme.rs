@@ -1518,6 +1518,105 @@ body.shell-deck { page: deck-page; }
   body.shell-deck .deck-inner { min-height: 0 !important; padding: 0.4in 0.5in !important; }
   body.shell-deck .deck-nav { display: none !important; }
 }
+
+/* ──────────────────── Mobile responsiveness ──────────────────── */
+
+/* Tablet-ish (≤768px): stack multi-column components, tighten chrome. */
+@media (max-width: 768px) {
+  .container { padding: 0 20px; }
+  .site-bar { padding: 0 20px; gap: 12px; }
+  /* Allow nav to scroll horizontally rather than wrap or overflow.
+     Keeps a single-line bar that feels native on touch. */
+  .site-bar nav { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; }
+  .site-bar nav::-webkit-scrollbar { display: none; }
+  .site-bar nav .nav-link, .site-bar nav .nav-link-parent { flex-shrink: 0; }
+  .site-bar-subtitle { display: none; }
+
+  /* Stack any inline-style multi-column grids: c-columns and c-stat-grid
+     both set grid-template-columns inline, so the override needs !important. */
+  .c-columns[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+
+  /* Card-grid with arrows: stack vertically, rotate arrows to point down. */
+  .c-card-grid-arrow { flex-direction: column; }
+  .c-card-arrow { transform: rotate(90deg); padding: 4px 0; }
+
+  /* Before/after cards: tighter padding so they don't feel oversized. */
+  .c-ba-card { padding: 24px; }
+
+  /* Section + card padding step-down. */
+  .c-card { padding: 20px; }
+
+  /* Deck shell: reduce interior padding so content isn't crushed. */
+  body.shell-deck .deck-inner { padding: 32px 24px 56px; }
+  body.shell-deck .deck-slide-cover .c-header-title { font-size: 30px; }
+}
+
+/* Phone (≤640px): collapse remaining grids, step down type, let tables scroll. */
+@media (max-width: 640px) {
+  /* Stat grid stacks to 1 column. The inline style needs !important. */
+  .c-stat-grid[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+  .c-stat { padding: 16px 18px; }
+  .c-stat-value { font-size: 24px; }
+
+  /* Header type step-down. */
+  .c-header-title { font-size: 26px; }
+  .c-header-subtitle { font-size: 15px; }
+  body.shell-deck .deck-slide-cover .c-header-title { font-size: 26px; }
+
+  /* Section heading tighter. */
+  .c-section-header { margin-bottom: 16px; }
+
+  /* Before/after final step. */
+  .c-ba-card { padding: 20px; }
+  .c-ba-title { font-size: 18px; }
+  .c-ba-before, .c-ba-after { font-size: 15px; }
+
+  /* Tables: preserve shape, scroll horizontally. */
+  .c-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .c-table { min-width: 480px; }
+  .c-table th, .c-table td { padding: 10px 12px; font-size: 13px; }
+
+  /* Tab buttons: scroll horizontally instead of wrapping. */
+  .c-tab-buttons {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+  }
+  .c-tab-buttons::-webkit-scrollbar { display: none; }
+  .tab-btn { flex-shrink: 0; }
+
+  /* Accordion tightens. */
+  .c-accordion-item { padding: 0; }
+
+  /* Code blocks: slightly smaller type on phone. */
+  .c-code { font-size: 12px; padding: 16px; }
+  .c-markdown pre { padding: 16px; }
+
+  /* Document shell: less generous padding on narrow screens. */
+  body.shell-document .doc-root { padding: 24px 12px 60px; }
+  body.shell-document .doc-card { padding: 24px 20px; }
+}
+
+/* Deck shell on narrow phones in portrait: nudge the viewer to rotate. The
+   deck is designed for landscape, but we respect pinch-zoom and swipe so
+   this is a soft hint, not a wall. */
+@media (max-width: 640px) and (orientation: portrait) {
+  body.shell-deck::before {
+    content: "↻ Tip: rotate your phone to landscape for the full deck view.";
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    padding: 8px 12px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    background: rgba(var(--accent-rgb), 0.12);
+    color: var(--teal);
+    border-bottom: 1px solid rgba(var(--accent-rgb), 0.25);
+    z-index: 1000;
+    letter-spacing: 0.2px;
+  }
+  body.shell-deck .deck-root { top: 34px; }
+}
 "#;
 
 #[cfg(test)]
