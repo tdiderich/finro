@@ -5,85 +5,23 @@ components:
   - type: header
     title: kazam
     eyebrow: YAML → beautiful sites
-    subtitle: An agent first approach to building static docs, knowledge bases, slides, and more.
+    subtitle: One Rust binary. No framework, no npm, no runtime JS. Designed so AI agents can author your site end-to-end.
 
-  - type: section
-    eyebrow: Use cases
-    heading: What to build with it
-    components:
-      - type: card_grid
-        cards:
-          - title: Documentation sites
-            badge:
-              label: standard
-              color: default
-            description: API refs, guides, onboarding docs. Tabs for code samples, sortable tables for references.
-            links:
-              - label: See example →
-                href: examples/doc.html
-
-          - title: Internal KBs & wikis
-            badge:
-              label: standard
-              color: default
-            description: Handbooks, runbooks, service catalogs. Card grids for navigation, tables for operational data.
-            links:
-              - label: See example →
-                href: examples/kb.html
-
-          - title: Meeting agendas & briefs
-            badge:
-              label: document
-              color: default
-            description: One-pagers and pre-reads. Centered card layout, print-optimized, exports clean to PDF.
-            links:
-              - label: See example →
-                href: examples/agenda.html
-
-          - title: Decks & presentations
-            badge:
-              label: deck
-              color: default
-            description: QBRs, strategy reviews, pitch decks. Full-viewport slides with keyboard nav and PDF export.
-            links:
-              - label: See example →
-                href: examples/deck.html
-
-          - title: Dashboards from APIs
-            badge:
-              label: pattern
-              color: teal
-            description: Scripts emit YAML, kazam renders. Live data from HN, GitHub, Linear, Sheets, or any JSON endpoint.
-            links:
-              - label: See walkthrough →
-                href: examples/hackernews.html
-              - label: Live HN top 30 →
-                href: examples/hackernews-live.html
-
-          - title: Landing pages
-            badge:
-              label: standard
-              color: default
-            description: Hero, features, stats, testimonial, CTA. Not what kazam was built for — but if you need to ship one alongside your docs, it's a few components away.
-            links:
-              - label: See example →
-                href: examples/landing.html
-
-  - type: section
-    eyebrow: Why
-    heading: Markdown isn't enough anymore
-    components:
-      - type: markdown
-        body: |
-          Markdown was designed for humans typing prose. It renders plain pages. That was fine
-          when humans wrote all the content.
-
-          Now LLMs write the content. And a plain markdown render — grey text on white, no
-          cards, no badges, no interactive tables — feels like a waste of what's possible.
-
-          kazam is markdown's inverse: **the format is still trivial to generate, but the
-          output is genuinely beautiful**. Components are structured (LLM-friendly), themed,
-          and composable. No React. No framework. Single binary, zero runtime.
+  - type: stat_grid
+    columns: 3
+    stats:
+      - label: Hand-authored LOC
+        value: "−88%"
+        detail: 1,722 → 210 on a real CRA migration
+        color: green
+      - label: npm dependencies
+        value: "0"
+        detail: was react, tailwind, axios, +1000s transitive
+        color: green
+      - label: Migration
+        value: 1 conversation
+        detail: one-shot rebuild with an agent
+        color: default
 
   - type: section
     eyebrow: 30 seconds
@@ -134,21 +72,25 @@ components:
             color: yellow
 
   - type: section
-    eyebrow: Design
-    heading: Three axes, orthogonal
+    eyebrow: Read more
+    heading: Three ways in
     components:
-      - type: columns
-        equal_heights: true
-        columns:
-          - - type: callout
-              variant: info
-              title: Shell
-              body: "**How** the page is chromed. Every shell shares a built-in nav bar (site name, eyebrow crumb, subtitle). `standard` adds nav links and flowing content, `document` adds a centered card optimized for print, `deck` adds full-viewport slides with keyboard nav and PDF export."
-          - - type: callout
-              variant: info
-              title: Page
-              body: "**What** the page is — just a title and an ordered list of components. Or for deck shell, a list of slides."
-          - - type: callout
-              variant: info
-              title: Components
-              body: "**Which** primitives compose the page. 17 typed components. Nesting for `section`, `tabs`, `columns`, `accordion`."
+      - type: card_grid
+        cards:
+          - title: Is it a fit?
+            description: The 1,722 → 210 migration story, use cases, and the honest line on what kazam is not.
+            links:
+              - label: See the fit →
+                href: about.html
+
+          - title: How does it work?
+            description: The three orthogonal axes, the agent-first authoring model, and why static output has no JS supply chain.
+            links:
+              - label: Under the hood →
+                href: how.html
+
+          - title: Install it
+            description: "`cargo install`, `kazam init`, `kazam dev`. You're live on localhost in 60 seconds."
+            links:
+              - label: Start the guide →
+                href: guide.html

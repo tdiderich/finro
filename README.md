@@ -1,43 +1,55 @@
 # kazam
 
-YAML in, themed static HTML out. One Rust binary, no frontend build system.
+**Write YAML. Ship a themed static site. Skip the 1,500-line Node.js tax.**
+
+One Rust binary. No framework, no npm, no runtime JS. Built so AI agents can author your site end-to-end.
 
 **Full docs + live examples:** https://tdiderich.github.io/kazam/
 
-## Quickstart
+---
+
+## Why it matters
+
+- **88% less source than React.** A real personal site migrated from Create-React-App: **1,722 → 210** hand-authored lines, **0 npm deps**. Full numbers in [`STATS.md`](STATS.md).
+- **Agents are first-class authors.** `AGENTS.md` ships bundled in the binary. Point Claude / GPT / Codex at it and the YAML writes itself — no prose rules to interpret, just a typed schema that validates or doesn't.
+- **No JavaScript supply chain.** The output is HTML and CSS. No webpack, no thousand-package transitive tree, no hydration, no `_next/`. Your attack surface is whatever your CDN serves.
+- **Boring is the feature.** One binary, one format, one build step. `kazam dev` reloads on save; `kazam build --release` emits minified static HTML. That's the toolchain.
+
+## Before → After
+
+A real migration — not a pitch deck.
+
+| | Before: Create-React-App | After: kazam |
+|---|---|---|
+| Hand-authored LOC | 1,722 | 210 |
+| npm dependencies | react, react-router, axios, tailwind, react-gravatar, react-toggle + ~1000s transitive | **0** |
+| Build tool | webpack | single Rust binary |
+| Deploy | Firebase Hosting + 2 cloud functions | Firebase Hosting (static only) |
+| Migration effort | — | one conversation |
+
+Full breakdown: [`STATS.md`](STATS.md).
+
+## 60-second quickstart
 
 Install Rust via [rustup](https://rustup.rs), then:
 
 ```bash
 cargo install --git https://github.com/tdiderich/kazam
-kazam --version         # kazam 0.3.0
-```
-
-Scaffold a new site:
-
-```bash
-kazam init my-site
-cd my-site
-```
-
-This drops a `kazam.yaml` (site config) + `index.yaml` (landing page) into `my-site/`.
-
-## Dev loop
-
-```bash
+kazam init my-site && cd my-site
 kazam dev . --port 3000
 ```
 
-Watches the directory, rebuilds on every `.yaml` save, serves at `localhost:3000` with live reload. Edit a file, switch tabs, see it.
+Edit `index.yaml`. Save. The browser reloads. That's the loop.
 
-## Build
+## Dev & build
 
 ```bash
-kazam build . --out dist                 # one-shot build
-kazam build . --out dist --release       # minified production build
+kazam dev   . --port 3000            # watch + live reload
+kazam build . --out dist             # one-shot build
+kazam build . --out dist --release   # minified production build
 ```
 
-Output is plain static HTML/CSS — drop it on S3, Pages, Vercel, or any static host. Recipes: https://tdiderich.github.io/kazam/deploy.html
+Output is plain static HTML/CSS — drop it on S3, Pages, Cloudflare, Firebase, Vercel, or any static host. Recipes: https://tdiderich.github.io/kazam/deploy.html
 
 ## Samples
 
@@ -100,24 +112,32 @@ nav:
 
 Live versions of each of these (and ~30 more components) are at https://tdiderich.github.io/kazam/ — the docs site is itself built with kazam.
 
-## For LLMs
+## Built for AI agents
 
-`AGENTS.md` is the authoring guide — point Claude/GPT/Codex at it when generating kazam YAML. Or have the agent run:
+kazam's primary audience isn't humans typing YAML — it's Claude, GPT, and Codex generating it. Every page on the docs site was written that way.
 
-```bash
-kazam agents
-```
+- `AGENTS.md` is the authoring guide. It ships inside the binary: run `kazam agents` and it prints the exact syntax for the installed version. No drift between the docs an agent reads and the parser it's feeding.
+- `kazam init` scaffolds `AGENTS.md` and `llms.txt` into new sites so any agent opening the repo finds them without being told.
+- Components are deliberately typed, narrow, and composable — the shape LLMs produce correctly on the first try. Validation is structural: the YAML parses or it doesn't.
 
-which prints the guide bundled with the installed binary (so it always matches the version in use) with a preamble linking to the hosted component catalog. `kazam init` also scaffolds an `AGENTS.md` + `llms.txt` into new sites so agents find them without being told.
-
-## Contributing
-
-PRs welcome — see `CONTRIBUTING.md` for the fork/PR flow, local dev checks, and guidance on agent-assisted contributions.
+Going forward, agents are expected to be the #1 contributors — both to sites built with kazam and to kazam itself. The project is structured around that assumption: short schemas, strict validation, machine-readable guides, one binary per version.
 
 ## Security
 
-Report vulnerabilities privately via the GitHub advisory form — **do not** open a public issue. Scope and supply-chain protections: `SECURITY.md`.
+Static sites shouldn't carry a Next.js-sized supply chain. kazam's doesn't.
+
+- **Zero runtime JS on the output.** No hydration, no client router, no bundled framework. The attacker's surface is whatever bytes your CDN serves.
+- **~10 direct Rust crates.** `Cargo.lock` committed, `cargo-audit` runs in CI, new dependencies require justification in the PR.
+- **No network at build time.** Build scripts that reach the network are rejected. No post-install scripts, no npm-style drive-by compromise.
+- **Protected main.** Branch protection, required CODEOWNER review, required CI (`cargo test` / `fmt` / `clippy -D warnings` / `cargo-audit`), no force-pushes. Release tags are signed.
+- **Pin a specific commit** if you want reproducibility: `cargo install --git https://github.com/tdiderich/kazam --rev <sha>`.
+
+Report vulnerabilities privately via the [GitHub advisory form](https://github.com/tdiderich/kazam/security/advisories/new) — **do not** open a public issue. Full scope and supply-chain protections: [`SECURITY.md`](SECURITY.md).
+
+## Contributing
+
+PRs welcome — agent-assisted contributions explicitly encouraged. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the fork/PR flow, local dev checks, and guidance on authoring changes with an agent.
 
 ## License
 
-MIT — see `LICENSE`.
+MIT — see [`LICENSE`](LICENSE).

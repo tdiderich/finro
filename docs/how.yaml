@@ -1,0 +1,89 @@
+title: How kazam works
+shell: standard
+
+components:
+  - type: header
+    title: How it works
+    eyebrow: Under the hood
+    subtitle: The three orthogonal axes, the agent-first authoring model, and why static output has no JS supply chain.
+
+  - type: section
+    eyebrow: Design
+    heading: Three axes, orthogonal
+    components:
+      - type: markdown
+        body: |
+          Every kazam site is the product of three independent decisions. You pick a **shell**,
+          write a **page**, and compose it from **components**. No framework, no routing layer,
+          no build config — just these three.
+
+      - type: columns
+        equal_heights: true
+        columns:
+          - - type: callout
+              variant: info
+              title: Shell
+              body: "**How** the page is chromed. Every shell shares a built-in nav bar (site name, eyebrow crumb, subtitle). `standard` adds nav links and flowing content, `document` adds a centered card optimized for print, `deck` adds full-viewport slides with keyboard nav and PDF export."
+          - - type: callout
+              variant: info
+              title: Page
+              body: "**What** the page is — just a title and an ordered list of components. Or for deck shell, a list of slides."
+          - - type: callout
+              variant: info
+              title: Components
+              body: "**Which** primitives compose the page. 17 typed components. Nesting for `section`, `tabs`, `columns`, `accordion`."
+
+  - type: section
+    eyebrow: Agents
+    heading: Built to be authored by AI
+    components:
+      - type: markdown
+        body: |
+          kazam's #1 audience isn't humans typing YAML — it's Claude, GPT, and Codex generating
+          it. Every page on this site was written that way. Going forward, agents are expected
+          to be the primary contributors — both to sites built with kazam and to kazam itself.
+
+      - type: columns
+        equal_heights: true
+        columns:
+          - - type: callout
+              variant: info
+              title: Bundled authoring guide
+              body: "`AGENTS.md` ships inside the binary. Run `kazam agents` and it prints the exact syntax for the version installed — no drift between the docs an agent reads and the parser it's feeding."
+          - - type: callout
+              variant: info
+              title: Discoverable by default
+              body: "`kazam init` scaffolds `AGENTS.md` and `llms.txt` into new sites. Any agent opening the repo finds them without being told."
+          - - type: callout
+              variant: info
+              title: Typed schema, not prose rules
+              body: "Components are narrow and composable — the shape LLMs produce correctly on the first try. Validation is structural: the YAML parses or it doesn't."
+
+  - type: section
+    eyebrow: Security
+    heading: No JavaScript supply chain
+    components:
+      - type: markdown
+        body: |
+          Static sites shouldn't carry a framework-sized attack surface. kazam's doesn't.
+
+      - type: columns
+        equal_heights: true
+        columns:
+          - - type: callout
+              variant: success
+              title: Zero runtime JS
+              body: Output is HTML and CSS. No hydration, no client router, no bundled framework. Your attack surface is whatever bytes your CDN serves.
+          - - type: callout
+              variant: success
+              title: ~10 direct Rust crates
+              body: "`Cargo.lock` committed, `cargo-audit` runs in CI, new dependencies require justification. No post-install scripts, no npm-style drive-by compromise."
+          - - type: callout
+              variant: success
+              title: Protected main
+              body: Branch protection, required CODEOWNER review, required CI checks, no force-pushes, signed release tags. Full scope in the repo's `SECURITY.md`.
+
+      - type: markdown
+        body: |
+          Want reproducibility? Pin a specific commit:
+          `cargo install --git https://github.com/tdiderich/kazam --rev <sha>`.
