@@ -180,11 +180,19 @@ fn nav_html(config: &SiteConfig, base: &str) -> (String, bool) {
     if links.is_empty() {
         return (String::new(), false);
     }
-    let mut out = String::from("<nav>");
+    // Toggle button is hidden on desktop via CSS, visible on mobile. Clicking
+    // flips `data-open` on the wrapping <nav>, which the stylesheet uses to
+    // slide the link panel in. The toggle itself must live inside <nav> so
+    // the closest('nav') lookup in the JS handler resolves.
+    let mut out = String::from(r#"<nav aria-label="Main">"#);
+    out.push_str(
+        r#"<button type="button" class="nav-menu-toggle" aria-label="Menu" aria-expanded="false" aria-controls="site-nav-links"><span class="nav-menu-icon" aria-hidden="true"></span></button>"#,
+    );
+    out.push_str(r#"<div class="site-nav-links" id="site-nav-links">"#);
     for link in links {
         out.push_str(&render_nav_entry(link, base));
     }
-    out.push_str("</nav>");
+    out.push_str("</div></nav>");
     (out, true)
 }
 

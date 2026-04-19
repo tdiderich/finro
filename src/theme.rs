@@ -366,6 +366,7 @@ h1, h2, h3 { font-weight: 600; color: var(--snow); }
   flex-shrink: 0;
   border-bottom: 1.5px solid var(--teal);
   background: var(--bg);
+  position: relative; /* Anchors the mobile nav panel below the bar. */
 }
 .site-bar-name {
   font-size: 14px; font-weight: 500;
@@ -396,6 +397,46 @@ a.site-bar-name:hover { opacity: 1; color: var(--teal); }
 .site-bar-print-btn:hover { background: rgba(var(--accent-rgb), 0.08); border-color: rgba(var(--accent-rgb), 0.6); }
 
 .site-bar nav { display: flex; align-items: center; gap: 4px; }
+.site-bar .site-nav-links { display: flex; align-items: center; gap: 4px; }
+.site-bar .nav-menu-toggle {
+  display: none; /* desktop: hidden. Mobile rule below shows it. */
+  font: inherit;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+  color: rgba(var(--text-rgb), 0.7);
+  width: 36px; height: 36px;
+  align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.site-bar .nav-menu-toggle:hover {
+  color: var(--snow);
+  background: rgba(var(--text-rgb), 0.08);
+}
+.site-bar .nav-menu-icon {
+  display: inline-block;
+  width: 18px; height: 2px;
+  background: currentColor;
+  position: relative;
+  transition: background 0.15s;
+}
+.site-bar .nav-menu-icon::before,
+.site-bar .nav-menu-icon::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: currentColor;
+  transition: transform 0.2s;
+}
+.site-bar .nav-menu-icon::before { top: -6px; }
+.site-bar .nav-menu-icon::after  { top:  6px; }
+/* Open state: collapse the three bars into an × */
+.site-bar nav[data-open] .nav-menu-icon { background: transparent; }
+.site-bar nav[data-open] .nav-menu-icon::before { transform: translateY(6px) rotate(45deg); }
+.site-bar nav[data-open] .nav-menu-icon::after  { transform: translateY(-6px) rotate(-45deg); }
 .site-bar .nav-link {
   font-size: 13px; font-weight: 500;
   padding: 6px 12px;
@@ -1521,16 +1562,82 @@ body.shell-deck { page: deck-page; }
 
 /* ──────────────────── Mobile responsiveness ──────────────────── */
 
-/* Tablet-ish (≤768px): stack multi-column components, tighten chrome. */
+/* Tablet-ish (≤768px): stack multi-column components, tighten chrome,
+   collapse the top-bar nav into a hamburger menu. The sidebar layout has
+   its own responsive rules above and is exempt. */
 @media (max-width: 768px) {
   .container { padding: 0 20px; }
   .site-bar { padding: 0 20px; gap: 12px; }
-  /* Allow nav to scroll horizontally rather than wrap or overflow.
-     Keeps a single-line bar that feels native on touch. */
-  .site-bar nav { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; }
-  .site-bar nav::-webkit-scrollbar { display: none; }
-  .site-bar nav .nav-link, .site-bar nav .nav-link-parent { flex-shrink: 0; }
   .site-bar-subtitle { display: none; }
+
+  /* Top-bar nav → hamburger. Hide the inline link row; show the toggle. */
+  body:not(.nav-layout-sidebar) .site-bar .nav-menu-toggle {
+    display: inline-flex;
+  }
+  body:not(.nav-layout-sidebar) .site-bar .site-nav-links {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--card-border);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 8px 12px 16px;
+    max-height: calc(100vh - 56px);
+    overflow-y: auto;
+    /* Hidden by default; revealed via [data-open] below. */
+    display: none;
+    z-index: 20;
+  }
+  body:not(.nav-layout-sidebar) .site-bar nav[data-open] .site-nav-links {
+    display: flex;
+  }
+  /* Mobile panel link styling: full-width rows, no pill hover. */
+  body:not(.nav-layout-sidebar) .site-bar .site-nav-links .nav-link,
+  body:not(.nav-layout-sidebar) .site-bar .site-nav-links .nav-link-parent {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 12px 10px;
+    font-size: 15px;
+    border-radius: 0;
+    border-bottom: 1px solid rgba(var(--text-rgb), 0.06);
+  }
+  body:not(.nav-layout-sidebar) .site-bar .site-nav-links .nav-link:last-child,
+  body:not(.nav-layout-sidebar) .site-bar .site-nav-links .nav-link-group:last-child .nav-link-parent {
+    border-bottom: none;
+  }
+  /* Dropdown groups: show children inline (no hover), indented. */
+  body:not(.nav-layout-sidebar) .site-bar .site-nav-links .nav-link-group {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  body:not(.nav-layout-sidebar) .site-bar .site-nav-links .nav-chevron {
+    display: none;
+  }
+  body:not(.nav-layout-sidebar) .site-bar .site-nav-links .nav-dropdown {
+    position: static;
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+    box-shadow: none;
+    background: transparent;
+    border: none;
+    padding: 0 0 8px 16px;
+    min-width: 0;
+  }
+  body:not(.nav-layout-sidebar) .site-bar .site-nav-links .nav-dropdown::before {
+    display: none;
+  }
+  body:not(.nav-layout-sidebar) .site-bar .site-nav-links .nav-dropdown .nav-link {
+    padding: 8px 10px;
+    font-size: 14px;
+    color: rgba(var(--text-rgb), 0.6);
+    border-bottom: none;
+  }
 
   /* Stack any inline-style multi-column grids: c-columns and c-stat-grid
      both set grid-template-columns inline, so the override needs !important. */
