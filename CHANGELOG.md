@@ -6,6 +6,38 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- `AGENTS.md` bug-filing + feature-request protocols. When an agent
+  reproduces a bug or has a kazam-shaped feature idea, the guide now
+  tells it to check `gh auth`, dedup against existing issues/PRs
+  (including closed ones — a closed bug may mean the fix shipped in a
+  newer version), then file with a consistent template. Feature
+  requests also include a scope-check step ("does this fit kazam?")
+  before filing, so wontfix noise stays down.
+
+### Fixed
+- Every component that emits an `href` now routes through the canonical
+  `resolve_href` helper, honoring the verbatim-prefix rule documented
+  in `AGENTS.md` (`/`, `http://`, `https://`, `#`, `mailto:`, `tel:`
+  pass through untouched). Previously only the site nav followed this;
+  `button_group`, `card_grid` (card href + links), `breadcrumb`,
+  `empty_state`, `callout` links, and markdown link destinations all
+  stripped leading `/` and emitted relative paths that 404'd from
+  pages at depth ≥ 1.
+- `kazam dev` now walks forward to the next free port when the
+  requested one is in use (matches Vite / Next.js / Parcel UX) instead
+  of failing to bind. Prints a one-line warning when it falls back:
+  `⚠ port 3000 is in use — serving on 3001 instead`.
+- `kazam dev` no longer rebuilds itself in an infinite loop when `out`
+  is relative. The watcher canonicalizes `out` up front and also
+  ignores any nested `_site` in the watched tree.
+- `kazam build` skips nested `_site` directories. Running from a
+  parent dir that contains previously-built sub-sites no longer
+  recursively ingests those outputs as source.
+- `kazam wish` auto-creates a minimal `kazam.yaml` in the current
+  directory if one is missing, so the flow works in any fresh empty
+  directory without forcing the user to hand-write site config first.
+
 ## [0.4.0] — 2026-04-20
 
 ### Added
