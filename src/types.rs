@@ -215,6 +215,30 @@ pub enum Component {
         #[serde(default)]
         color: SemColor,
     },
+    Chart {
+        kind: ChartKind,
+        title: Option<String>,
+        /// Pixel height of the chart area. Width is fluid (SVG scales to the
+        /// container). Defaults depend on `kind` — see the renderer.
+        #[serde(default)]
+        height: Option<u32>,
+        /// Axis labels. Ignored by `pie`.
+        #[serde(default)]
+        x_label: Option<String>,
+        #[serde(default)]
+        y_label: Option<String>,
+        /// Bar charts only: lay bars horizontally instead of vertically.
+        #[serde(default)]
+        orientation: ChartOrientation,
+        /// Single-series data. Use for pie slices, or for bar/timeseries
+        /// without a second dimension. Mutually exclusive with `series`.
+        #[serde(default)]
+        data: Option<Vec<ChartPoint>>,
+        /// Multi-series data (one extra dimension). For bar → stacked bars.
+        /// For timeseries → multi-line. Ignored by pie.
+        #[serde(default)]
+        series: Option<Vec<ChartSeries>>,
+    },
 }
 
 // ── Supporting types ─────────────────────────────────
@@ -499,6 +523,43 @@ impl AvatarSize {
 pub struct EmptyStateAction {
     pub label: String,
     pub href: String,
+}
+
+// ── Chart supporting types ───────────────────────────
+
+#[derive(Deserialize, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum ChartKind {
+    Pie,
+    Bar,
+    Timeseries,
+}
+
+#[derive(Deserialize, Default, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ChartOrientation {
+    #[default]
+    Vertical,
+    Horizontal,
+}
+
+#[derive(Deserialize)]
+pub struct ChartPoint {
+    pub label: String,
+    pub value: f64,
+    /// Optional slice/bar tint. Only meaningful for single-series charts —
+    /// multi-series charts color by series instead.
+    #[serde(default)]
+    pub color: Option<SemColor>,
+}
+
+#[derive(Deserialize)]
+pub struct ChartSeries {
+    pub label: String,
+    /// Series tint. Defaults cycle through teal → green → yellow → red.
+    #[serde(default)]
+    pub color: Option<SemColor>,
+    pub points: Vec<ChartPoint>,
 }
 
 // ── Site config ──────────────────────────────────────
