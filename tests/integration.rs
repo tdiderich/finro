@@ -316,6 +316,115 @@ fn build_skips_hidden_entries_and_is_idempotent() {
 }
 
 #[test]
+fn chart_component_renders_svg_for_every_kind() {
+    // One page exercises pie, vertical bar, stacked bar, horizontal bar,
+    // single-series timeseries, and multi-series timeseries. Each kind must
+    // produce SVG, and the multi-series variants must render a legend.
+    let dir = tmp_dir("charts");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Charts\ntheme: dark\n").unwrap();
+    let page = r#"
+title: Charts
+shell: standard
+components:
+  - type: chart
+    kind: pie
+    title: Pie
+    data:
+      - { label: A, value: 60 }
+      - { label: B, value: 40, color: green }
+  - type: chart
+    kind: bar
+    title: VBar
+    data:
+      - { label: Jan, value: 100 }
+      - { label: Feb, value: 200 }
+  - type: chart
+    kind: bar
+    title: StackedBar
+    series:
+      - label: Organic
+        points:
+          - { label: Jan, value: 80 }
+          - { label: Feb, value: 110 }
+      - label: Paid
+        color: green
+        points:
+          - { label: Jan, value: 30 }
+          - { label: Feb, value: 50 }
+  - type: chart
+    kind: bar
+    orientation: horizontal
+    title: HBar
+    data:
+      - { label: Docs, value: 2840 }
+      - { label: Pricing, value: 1720 }
+  - type: chart
+    kind: timeseries
+    title: Line
+    data:
+      - { label: W1, value: 10 }
+      - { label: W2, value: 20 }
+      - { label: W3, value: 15 }
+  - type: chart
+    kind: timeseries
+    title: MultiLine
+    series:
+      - label: A
+        points:
+          - { label: W1, value: 10 }
+          - { label: W2, value: 20 }
+      - label: B
+        color: green
+        points:
+          - { label: W1, value: 5 }
+          - { label: W2, value: 9 }
+"#;
+    std::fs::write(dir.join("index.yaml"), page).unwrap();
+
+    let out = tmp_dir("charts-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+
+    let html = read(&out.join("index.html"));
+
+    // Wrappers for each kind present
+    assert_contains(&html, r#"class="c-chart c-chart-pie""#);
+    assert_contains(&html, r#"class="c-chart c-chart-bar""#);
+    assert_contains(&html, r#"class="c-chart c-chart-timeseries""#);
+
+    // Pie rendered as SVG paths with titles (accessible tooltips)
+    assert_contains(&html, r#"class="c-chart-slice""#);
+
+    // Bar rendered as SVG rects
+    assert_contains(&html, r#"class="c-chart-bar""#);
+
+    // Timeseries rendered as a polyline
+    assert_contains(&html, r#"class="c-chart-line""#);
+
+    // Multi-series charts render a legend; single-series bar/timeseries don't
+    assert_contains(&html, r#"class="c-chart-legend""#);
+
+    // SemColor threading through: green was requested explicitly somewhere.
+    // Charts use the canonical hex palette (not theme CSS vars) so stacks
+    // stay distinguishable on themes that remap --green.
+    assert_contains(&html, "#34D399");
+
+    // Titles rendered as figcaptions
+    assert_contains(&html, r#"class="c-chart-title">Pie</figcaption>"#);
+    assert_contains(&html, r#"class="c-chart-title">StackedBar</figcaption>"#);
+
+    // ARIA role + label on the figure
+    assert_contains(&html, r#"role="img""#);
+}
+
+#[test]
 fn wish_list_succeeds() {
     let output = Command::new(bin())
         .args(["wish", "list"])

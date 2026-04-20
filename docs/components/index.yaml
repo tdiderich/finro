@@ -33,6 +33,15 @@ components:
           - label: Open →
             href: grids.html
 
+      - title: Charts
+        badge:
+          label: new
+          color: teal
+        description: "pie, bar (vertical/horizontal), timeseries — inline SVG, themed, stackable"
+        links:
+          - label: Open →
+            href: charts.html
+
       - title: Interactive
         badge:
           label: "3"

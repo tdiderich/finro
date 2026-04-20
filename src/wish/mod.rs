@@ -172,10 +172,7 @@ fn scaffold(wish: &Wish, workspace: &Path) -> Result<()> {
     }
 
     println!();
-    println!(
-        "  ✨ Making your {} wish — {}",
-        wish.name, wish.description
-    );
+    println!("  ✨ Making your {} wish — {}", wish.name, wish.description);
     println!();
     println!("  Created workspace: {}/", workspace.display());
     println!("    questions.md       structured prompts — fill in what you know");

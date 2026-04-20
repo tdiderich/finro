@@ -1,3 +1,4 @@
+mod charts;
 mod components;
 mod scripts;
 mod shells;

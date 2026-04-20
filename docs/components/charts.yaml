@@ -1,0 +1,308 @@
+title: Charts
+shell: standard
+
+components:
+  - type: breadcrumb
+    items:
+      - label: Home
+        href: ../index.html
+      - label: Components
+        href: index.html
+      - label: Charts
+
+  - type: header
+    title: Charts
+    eyebrow: Reference
+    subtitle: Three kinds — pie, bar, timeseries — rendered as inline SVG at build time. No JS, no runtime. Add a second dimension by passing `series:` instead of `data:`.
+
+  # ── pie ────────────────────────────────────
+  - type: section
+    eyebrow: chart · pie
+    heading: Slice of total
+    components:
+      - type: markdown
+        body: "Single-series only. Each slice takes a `label`, `value`, and optional `color`. Percentages are computed from the values you give — no need to pre-normalize to 100."
+
+      - type: chart
+        kind: pie
+        title: Headcount by team
+        data:
+          - label: Engineering
+            value: 42
+          - label: Product
+            value: 18
+            color: green
+          - label: Design
+            value: 9
+            color: yellow
+          - label: GTM
+            value: 23
+            color: red
+
+      - type: code
+        language: yaml
+        code: |
+          - type: chart
+            kind: pie
+            title: Headcount by team
+            data:
+              - label: Engineering
+                value: 42
+              - label: Product
+                value: 18
+                color: green          # default | green | yellow | red | teal
+              - label: Design
+                value: 9
+                color: yellow
+              - label: GTM
+                value: 23
+                color: red
+
+  # ── vertical bar ───────────────────────────
+  - type: section
+    eyebrow: chart · bar
+    heading: Vertical bar
+    components:
+      - type: markdown
+        body: "Default orientation. The y-axis auto-scales to a round max; the x-axis labels every bucket."
+
+      - type: chart
+        kind: bar
+        title: Signups by month
+        data:
+          - label: Jan
+            value: 120
+          - label: Feb
+            value: 180
+          - label: Mar
+            value: 150
+          - label: Apr
+            value: 240
+          - label: May
+            value: 310
+          - label: Jun
+            value: 280
+
+      - type: code
+        language: yaml
+        code: |
+          - type: chart
+            kind: bar
+            title: Signups by month
+            data:
+              - { label: Jan, value: 120 }
+              - { label: Feb, value: 180 }
+              - { label: Mar, value: 150 }
+
+  # ── stacked bar ────────────────────────────
+  - type: section
+    eyebrow: chart · bar · series
+    heading: Stacked bar (second dimension)
+    components:
+      - type: markdown
+        body: "Replace `data:` with `series:` to stack bars by a second dimension. Series color cycles through teal → green → yellow → red unless you set `color:` explicitly."
+
+      - type: chart
+        kind: bar
+        title: Signups by month, by channel
+        series:
+          - label: Organic
+            points:
+              - { label: Jan, value: 80 }
+              - { label: Feb, value: 110 }
+              - { label: Mar, value: 100 }
+              - { label: Apr, value: 150 }
+              - { label: May, value: 180 }
+              - { label: Jun, value: 160 }
+          - label: Paid
+            color: green
+            points:
+              - { label: Jan, value: 30 }
+              - { label: Feb, value: 50 }
+              - { label: Mar, value: 40 }
+              - { label: Apr, value: 70 }
+              - { label: May, value: 90 }
+              - { label: Jun, value: 80 }
+          - label: Referral
+            color: yellow
+            points:
+              - { label: Jan, value: 10 }
+              - { label: Feb, value: 20 }
+              - { label: Mar, value: 10 }
+              - { label: Apr, value: 20 }
+              - { label: May, value: 40 }
+              - { label: Jun, value: 40 }
+
+      - type: code
+        language: yaml
+        code: |
+          - type: chart
+            kind: bar
+            title: Signups by month, by channel
+            series:
+              - label: Organic
+                points:
+                  - { label: Jan, value: 80 }
+                  - { label: Feb, value: 110 }
+              - label: Paid
+                color: green
+                points:
+                  - { label: Jan, value: 30 }
+                  - { label: Feb, value: 50 }
+
+  # ── horizontal bar ─────────────────────────
+  - type: section
+    eyebrow: chart · bar · orientation
+    heading: Horizontal bar
+    components:
+      - type: markdown
+        body: "Set `orientation: horizontal` when category labels are long, or when you want a ranked readout. Stacking works the same way."
+
+      - type: chart
+        kind: bar
+        orientation: horizontal
+        title: Top pages by pageviews
+        data:
+          - label: /pricing
+            value: 2840
+          - label: /docs/getting-started
+            value: 2210
+          - label: /blog/launch-post
+            value: 1780
+          - label: /integrations/slack
+            value: 1420
+          - label: /changelog
+            value: 980
+
+      - type: code
+        language: yaml
+        code: |
+          - type: chart
+            kind: bar
+            orientation: horizontal   # vertical (default) | horizontal
+            data:
+              - { label: /pricing, value: 2840 }
+              - { label: /docs/getting-started, value: 2210 }
+
+  # ── timeseries ─────────────────────────────
+  - type: section
+    eyebrow: chart · timeseries
+    heading: Time series
+    components:
+      - type: markdown
+        body: "A line per series. X-axis is treated as ordered buckets — pass your dates (or weeks, or sprints) as `label:` and they render in the order you list them. When there are many buckets, kazam thins the tick labels automatically."
+
+      - type: chart
+        kind: timeseries
+        title: Weekly active users
+        data:
+          - { label: W1, value: 1240 }
+          - { label: W2, value: 1380 }
+          - { label: W3, value: 1310 }
+          - { label: W4, value: 1520 }
+          - { label: W5, value: 1680 }
+          - { label: W6, value: 1610 }
+          - { label: W7, value: 1870 }
+          - { label: W8, value: 2050 }
+
+      - type: code
+        language: yaml
+        code: |
+          - type: chart
+            kind: timeseries
+            title: Weekly active users
+            data:
+              - { label: W1, value: 1240 }
+              - { label: W2, value: 1380 }
+
+  # ── multi-line timeseries ──────────────────
+  - type: section
+    eyebrow: chart · timeseries · series
+    heading: Multi-line timeseries
+    components:
+      - type: markdown
+        body: "Multiple series render as overlaid lines — one per segment. Each point gets a hover tooltip with the exact value."
+
+      - type: chart
+        kind: timeseries
+        title: API latency p95 by region (ms)
+        series:
+          - label: us-east
+            points:
+              - { label: Mon, value: 82 }
+              - { label: Tue, value: 88 }
+              - { label: Wed, value: 79 }
+              - { label: Thu, value: 91 }
+              - { label: Fri, value: 85 }
+          - label: eu-west
+            color: green
+            points:
+              - { label: Mon, value: 120 }
+              - { label: Tue, value: 118 }
+              - { label: Wed, value: 125 }
+              - { label: Thu, value: 130 }
+              - { label: Fri, value: 122 }
+          - label: ap-south
+            color: yellow
+            points:
+              - { label: Mon, value: 165 }
+              - { label: Tue, value: 172 }
+              - { label: Wed, value: 180 }
+              - { label: Thu, value: 178 }
+              - { label: Fri, value: 170 }
+
+      - type: code
+        language: yaml
+        code: |
+          - type: chart
+            kind: timeseries
+            title: API latency p95 by region (ms)
+            series:
+              - label: us-east
+                points:
+                  - { label: Mon, value: 82 }
+                  - { label: Tue, value: 88 }
+              - label: eu-west
+                color: green
+                points:
+                  - { label: Mon, value: 120 }
+                  - { label: Tue, value: 118 }
+
+  # ── all options ────────────────────────────
+  - type: section
+    eyebrow: reference
+    heading: All options
+    components:
+      - type: code
+        language: yaml
+        code: |
+          - type: chart
+            kind: pie | bar | timeseries    # required
+            title: optional string           # rendered as <figcaption>
+            height: 300                      # pixels, default varies by kind
+            orientation: vertical | horizontal   # bar only (default vertical)
+            x_label: optional                # axis labels (bar/timeseries)
+            y_label: optional
+            # EITHER data: (single-series) …
+            data:
+              - label: string
+                value: number
+                color: default | green | yellow | red | teal   # pie only
+            # … OR series: (multi-series, one extra dimension)
+            series:
+              - label: string
+                color: default | green | yellow | red | teal
+                points:
+                  - { label: string, value: number }
+
+  - type: callout
+    variant: info
+    title: Next up
+    body: Charts pair well with `stat_grid` for headline numbers above the trend. For long lists of rows and per-row metrics, reach for `table`.
+    links:
+      - label: Grid components
+        href: grids.html
+        variant: primary
+      - label: Interactive components
+        href: interactive.html
+        variant: secondary
