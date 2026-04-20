@@ -44,12 +44,29 @@ cargo install --git https://github.com/tdiderich/kazam
 
 ## 60-second quickstart
 
+Two paths — pick one.
+
+**Bare:** scaffold a site, edit a YAML file, see it render.
+
 ```bash
 kazam init my-site && cd my-site
 kazam dev . --port 3000
+# → http://localhost:3000
 ```
 
 Edit `index.yaml`. Save. The browser reloads. That's the loop.
+
+**With an agent:** let Claude / Gemini / Codex / OpenCode write a whole deck from a topic. (Requires one of those CLIs on your `$PATH`.)
+
+```bash
+mkdir yolo-deck && cd yolo-deck
+printf 'name: Yolo\ntheme: dark\n' > kazam.yaml
+kazam wish deck --yolo "the history of static site generators"
+kazam dev .
+# → http://localhost:3000/deck.html
+```
+
+Or drop real context into `wish-deck/` and run `kazam wish deck` without `--yolo` — the agent reads your files (notes, transcripts, prior decks, PDFs) and writes a populated deck from them. Full walk-through: https://tdiderich.github.io/kazam/wishes.html
 
 ## Dev & build
 
