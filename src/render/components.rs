@@ -1,10 +1,10 @@
-use pulldown_cmark::{html as md_html, Options, Parser as MdParser};
+use pulldown_cmark::{html as md_html, Event, Options, Parser as MdParser, Tag};
 
-use super::{charts, esc, Rendered};
+use super::{charts, esc, resolve_href, Rendered};
 use crate::icons;
 use crate::types::*;
 
-pub fn render(c: &Component) -> Rendered {
+pub fn render(c: &Component, base: &str) -> Rendered {
     match c {
         Component::Header {
             title,
@@ -17,17 +17,17 @@ pub fn render(c: &Component) -> Rendered {
             cards,
             min_width,
             connector,
-        } => card_grid(cards, *min_width, *connector),
+        } => card_grid(cards, *min_width, *connector, base),
         Component::SelectableGrid {
             cards,
             interaction,
             connector,
-        } => selectable_grid(cards, *interaction, *connector),
+        } => selectable_grid(cards, *interaction, *connector, base),
         Component::Timeline { items } => timeline(items),
         Component::StatGrid { stats, columns } => stat_grid(stats, *columns),
         Component::BeforeAfter { items } => before_after(items),
         Component::Steps { items, numbered } => steps(items, *numbered),
-        Component::Markdown { body } => markdown(body),
+        Component::Markdown { body } => markdown(body, base),
         Component::Table {
             columns,
             rows,
@@ -38,20 +38,20 @@ pub fn render(c: &Component) -> Rendered {
             title,
             body,
             links,
-        } => callout(*variant, title, body, links.as_deref()),
+        } => callout(*variant, title, body, links.as_deref(), base),
         Component::Code { language, code } => code_block(language, code),
-        Component::Tabs { tabs } => tabs_component(tabs),
+        Component::Tabs { tabs } => tabs_component(tabs, base),
         Component::Section {
             heading,
             eyebrow,
             components,
             align,
-        } => section(heading, eyebrow, components, *align),
+        } => section(heading, eyebrow, components, *align, base),
         Component::Columns {
             columns,
             equal_heights,
-        } => columns_component(columns, *equal_heights),
-        Component::Accordion { items } => accordion(items),
+        } => columns_component(columns, *equal_heights, base),
+        Component::Accordion { items } => accordion(items, base),
         Component::Image {
             src,
             alt,
@@ -65,8 +65,8 @@ pub fn render(c: &Component) -> Rendered {
         Component::Divider { label } => divider(label),
         Component::Kbd { keys } => kbd(keys),
         Component::Status { label, color } => status(label, *color),
-        Component::Breadcrumb { items } => breadcrumb(items),
-        Component::ButtonGroup { buttons } => button_group(buttons),
+        Component::Breadcrumb { items } => breadcrumb(items, base),
+        Component::ButtonGroup { buttons } => button_group(buttons, base),
         Component::DefinitionList { items } => definition_list(items),
         Component::Blockquote { body, attribution } => blockquote(body, attribution),
         Component::Avatar {
@@ -87,7 +87,7 @@ pub fn render(c: &Component) -> Rendered {
             body,
             action,
             icon,
-        } => empty_state(title, body, action, icon),
+        } => empty_state(title, body, action, icon, base),
         Component::Icon { name, size, color } => icon_component(name, *size, *color),
         Component::Chart {
             kind,
@@ -157,7 +157,7 @@ fn meta(fields: &[MetaField]) -> Rendered {
 
 // ── Card Grid ─────────────────────────────────────
 
-fn card_grid(cards: &[Card], min_width: Option<u32>, connector: Connector) -> Rendered {
+fn card_grid(cards: &[Card], min_width: Option<u32>, connector: Connector, base: &str) -> Rendered {
     let mw = min_width.unwrap_or(320);
     let is_arrow = matches!(connector, Connector::Arrow);
     let mut h = if is_arrow {
@@ -175,7 +175,7 @@ fn card_grid(cards: &[Card], min_width: Option<u32>, connector: Connector) -> Re
         let href_attr = card
             .href
             .as_ref()
-            .map(|h| format!(r#" href="{}""#, esc(h)))
+            .map(|h| format!(r#" href="{}""#, esc(&resolve_href(h, base))))
             .unwrap_or_default();
         h.push_str(&format!(
             r#"<{tag} class="c-card c-card-{color}"{href_attr}>"#,
@@ -202,7 +202,7 @@ fn card_grid(cards: &[Card], min_width: Option<u32>, connector: Connector) -> Re
             for l in links {
                 h.push_str(&format!(
                     r#"<a href="{}" class="c-card-link">{}</a>"#,
-                    esc(&l.href),
+                    esc(&resolve_href(&l.href, base)),
                     esc(&l.label)
                 ));
             }
@@ -220,6 +220,7 @@ fn selectable_grid(
     cards: &[SelectableCard],
     interaction: Interaction,
     connector: Connector,
+    base: &str,
 ) -> Rendered {
     let interaction_attr = match interaction {
         Interaction::SingleSelect => "single_select",
@@ -286,7 +287,7 @@ fn selectable_grid(
         if let Some(body) = &card.body {
             h.push_str(&format!(
                 r#"<div class="c-sel-body">{}</div>"#,
-                parse_markdown(body)
+                parse_markdown(body, base)
             ));
         }
         h.push_str("</button>");
@@ -390,20 +391,39 @@ fn steps(items: &[Step], numbered: bool) -> Rendered {
 
 // ── Markdown ──────────────────────────────────────
 
-fn markdown(body: &str) -> Rendered {
+fn markdown(body: &str, base: &str) -> Rendered {
     Rendered::new(format!(
         r#"<div class="c-markdown">{}</div>"#,
-        parse_markdown(body)
+        parse_markdown(body, base)
     ))
 }
 
-pub(super) fn parse_markdown(md: &str) -> String {
+pub(super) fn parse_markdown(md: &str, base: &str) -> String {
     let mut opts = Options::empty();
     opts.insert(Options::ENABLE_TABLES);
     opts.insert(Options::ENABLE_STRIKETHROUGH);
     let parser = MdParser::new_ext(md, opts);
+    // Rewrite link destinations through resolve_href so relative links get
+    // the depth-aware base prefix and absolute/protocol hrefs pass through.
+    let events = parser.map(|event| match event {
+        Event::Start(Tag::Link {
+            link_type,
+            dest_url,
+            title,
+            id,
+        }) => {
+            let resolved = resolve_href(&dest_url, base);
+            Event::Start(Tag::Link {
+                link_type,
+                dest_url: resolved.into(),
+                title,
+                id,
+            })
+        }
+        other => other,
+    });
     let mut html = String::new();
-    md_html::push_html(&mut html, parser);
+    md_html::push_html(&mut html, events);
     html
 }
 
@@ -411,7 +431,7 @@ pub(super) fn parse_markdown(md: &str) -> String {
 /// so the result can be embedded inline inside another element. Falls back to
 /// the full HTML if the input spans multiple blocks.
 pub(super) fn parse_markdown_inline(md: &str) -> String {
-    let html = parse_markdown(md);
+    let html = parse_markdown(md, "");
     let trimmed = html.trim_end_matches('\n');
     if let Some(inner) = trimmed
         .strip_prefix("<p>")
@@ -470,6 +490,7 @@ fn callout(
     title: &Option<String>,
     body: &str,
     links: Option<&[ButtonConfig]>,
+    base: &str,
 ) -> Rendered {
     let mut h = format!(r#"<div class="c-callout {}">"#, variant.class());
     if let Some(t) = title {
@@ -477,12 +498,12 @@ fn callout(
     }
     h.push_str(&format!(
         r#"<div class="c-callout-body">{}</div>"#,
-        parse_markdown(body)
+        parse_markdown(body, base)
     ));
     if let Some(ls) = links {
         if !ls.is_empty() {
             h.push_str(r#"<div class="c-callout-links">"#);
-            h.push_str(&button_group(ls).html);
+            h.push_str(&button_group(ls, base).html);
             h.push_str("</div>");
         }
     }
@@ -507,7 +528,7 @@ fn code_block(language: &Option<String>, code: &str) -> Rendered {
 
 // ── Tabs ──────────────────────────────────────────
 
-fn tabs_component(tabs: &[Tab]) -> Rendered {
+fn tabs_component(tabs: &[Tab], base: &str) -> Rendered {
     let mut body_html = String::from(r#"<div class="c-tabs" data-tabs>"#);
     body_html.push_str(r#"<div class="c-tab-buttons">"#);
     for tab in tabs {
@@ -522,7 +543,7 @@ fn tabs_component(tabs: &[Tab]) -> Rendered {
     for tab in tabs {
         body_html.push_str(r#"<div class="tab-panel">"#);
         for c in &tab.components {
-            let r = render(c);
+            let r = render(c, base);
             body_html.push_str(&r.html);
             scripts.extend(r.scripts);
         }
@@ -541,6 +562,7 @@ fn section(
     eyebrow: &Option<String>,
     comps: &[Component],
     align: Align,
+    base: &str,
 ) -> Rendered {
     let mut r = Rendered::default();
     r.html
@@ -560,7 +582,7 @@ fn section(
         r.html.push_str("</div>");
     }
     for c in comps {
-        r.extend(render(c));
+        r.extend(render(c, base));
     }
     r.html.push_str("</section>");
     r
@@ -568,7 +590,7 @@ fn section(
 
 // ── Columns ───────────────────────────────────────
 
-fn columns_component(cols: &[Vec<Component>], equal_heights: bool) -> Rendered {
+fn columns_component(cols: &[Vec<Component>], equal_heights: bool, base: &str) -> Rendered {
     let mut r = Rendered::default();
     let class = if equal_heights {
         "c-columns c-columns-stretch"
@@ -582,7 +604,7 @@ fn columns_component(cols: &[Vec<Component>], equal_heights: bool) -> Rendered {
     for col in cols {
         r.html.push_str(r#"<div class="c-column">"#);
         for c in col {
-            r.extend(render(c));
+            r.extend(render(c, base));
         }
         r.html.push_str("</div>");
     }
@@ -592,7 +614,7 @@ fn columns_component(cols: &[Vec<Component>], equal_heights: bool) -> Rendered {
 
 // ── Accordion ─────────────────────────────────────
 
-fn accordion(items: &[AccordionItem]) -> Rendered {
+fn accordion(items: &[AccordionItem], base: &str) -> Rendered {
     let mut r = Rendered::default();
     r.html.push_str(r#"<div class="c-accordion">"#);
     for item in items {
@@ -604,7 +626,7 @@ fn accordion(items: &[AccordionItem]) -> Rendered {
         ));
         r.html.push_str(r#"<div class="accordion-body">"#);
         for c in &item.components {
-            r.extend(render(c));
+            r.extend(render(c, base));
         }
         r.html.push_str("</div></div>");
     }
@@ -702,7 +724,7 @@ fn status(label: &str, color: SemColor) -> Rendered {
 
 // ── Breadcrumb ───────────────────────────────────
 
-fn breadcrumb(items: &[BreadcrumbItem]) -> Rendered {
+fn breadcrumb(items: &[BreadcrumbItem], base: &str) -> Rendered {
     let mut h = String::from(r#"<nav class="c-breadcrumb" aria-label="Breadcrumb"><ol>"#);
     for (i, item) in items.iter().enumerate() {
         if i > 0 {
@@ -713,7 +735,7 @@ fn breadcrumb(items: &[BreadcrumbItem]) -> Rendered {
             Some(href) => {
                 h.push_str(&format!(
                     r#"<a href="{}">{}</a>"#,
-                    esc(href),
+                    esc(&resolve_href(href, base)),
                     esc(&item.label)
                 ));
             }
@@ -732,7 +754,7 @@ fn breadcrumb(items: &[BreadcrumbItem]) -> Rendered {
 
 // ── Button Group ─────────────────────────────────
 
-fn button_group(buttons: &[ButtonConfig]) -> Rendered {
+fn button_group(buttons: &[ButtonConfig], base: &str) -> Rendered {
     let mut h = String::from(r#"<div class="c-button-group">"#);
     for b in buttons {
         let variant_class = match b.variant {
@@ -747,7 +769,7 @@ fn button_group(buttons: &[ButtonConfig]) -> Rendered {
         };
         h.push_str(&format!(
             r#"<a href="{href}" class="c-button {variant}"{target}>"#,
-            href = esc(&b.href),
+            href = esc(&resolve_href(&b.href, base)),
             variant = variant_class,
             target = target
         ));
@@ -926,6 +948,7 @@ fn empty_state(
     body: &Option<String>,
     action: &Option<EmptyStateAction>,
     icon: &Option<String>,
+    base: &str,
 ) -> Rendered {
     let mut h = String::from(r#"<div class="c-empty-state">"#);
     let icon_name = icon.as_deref().unwrap_or("inbox");
@@ -943,7 +966,7 @@ fn empty_state(
     if let Some(a) = action {
         h.push_str(&format!(
             r#"<a href="{href}" class="c-button c-button-primary">{label}</a>"#,
-            href = esc(&a.href),
+            href = esc(&resolve_href(&a.href, base)),
             label = esc(&a.label)
         ));
     }

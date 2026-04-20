@@ -54,13 +54,13 @@ pub fn render_page(
     match page.shell {
         Shell::Deck => {
             if let Some(slides) = &page.slides {
-                shells::deck::render(page, config, slides, &mut rendered);
+                shells::deck::render(page, config, slides, base, &mut rendered);
             }
         }
         _ => {
             if let Some(comps) = &page.components {
                 for c in comps {
-                    rendered.extend(components::render(c));
+                    rendered.extend(components::render(c, base));
                 }
             }
         }
@@ -84,6 +84,8 @@ pub(super) fn resolve_href(href: &str, base: &str) -> String {
         || href.starts_with('#')
         || href.starts_with("mailto:")
         || href.starts_with("tel:")
+        || href.starts_with("../")
+        || href.starts_with("./")
     {
         return href.to_string();
     }
@@ -170,6 +172,15 @@ mod tests {
             "mailto:hi@example.com"
         );
         assert_eq!(resolve_href("tel:+15551234", "../"), "tel:+15551234");
+    }
+
+    #[test]
+    fn resolve_href_passes_through_dot_relative_hrefs() {
+        assert_eq!(
+            resolve_href("../customers/demo.html", "../"),
+            "../customers/demo.html"
+        );
+        assert_eq!(resolve_href("./sibling.html", "../"), "./sibling.html");
     }
 
     #[test]

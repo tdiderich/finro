@@ -749,6 +749,83 @@ fn wish_unknown_name_errors() {
 }
 
 #[test]
+fn hrefs_honor_verbatim_prefix_rule() {
+    // Page at tsp/demo.yaml is depth-1 so base = "../".
+    // Absolute-slash, hash, mailto, https, and ../‑prefixed hrefs must all
+    // pass through verbatim. A plain relative href in markdown gets the
+    // depth-1 base prefix prepended.
+    let dir = tmp_dir("href-verbatim");
+    std::fs::create_dir_all(dir.join("tsp")).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: HrefTest\ntheme: dark\n").unwrap();
+
+    let page = r##"title: Demo
+shell: standard
+components:
+  - type: button_group
+    buttons:
+      - label: Abs Slash
+        href: /customers/demo.html
+      - label: Already Canonical
+        href: ../customers/demo.html
+      - label: Hash
+        href: "#section"
+      - label: Mail
+        href: mailto:hi@example.com
+      - label: External
+        href: https://example.com
+  - type: card_grid
+    cards:
+      - title: Card
+        href: /abs-card.html
+        links:
+          - label: Link
+            href: /abs-link.html
+  - type: breadcrumb
+    items:
+      - label: Home
+        href: /abs-crumb.html
+      - label: Current
+  - type: empty_state
+    title: Nothing here
+    action:
+      label: Go
+      href: /abs-action.html
+  - type: markdown
+    body: "[click](/abs-md.html) and [rel](relative.html)"
+"##;
+    std::fs::write(dir.join("tsp/demo.yaml"), page).unwrap();
+
+    let out = tmp_dir("href-verbatim-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success(), "build failed");
+
+    let html = read(&out.join("tsp/demo.html"));
+
+    // Absolute-slash hrefs pass through verbatim.
+    assert_contains(&html, r#"href="/customers/demo.html""#);
+    // Already-canonical ../‑relative href passes through verbatim.
+    assert_contains(&html, r#"href="../customers/demo.html""#);
+    // Hash, mailto, https pass through verbatim.
+    assert_contains(&html, "href=\"#section\"");
+    assert_contains(&html, r#"href="mailto:hi@example.com""#);
+    assert_contains(&html, r#"href="https://example.com""#);
+    // Absolute-slash hrefs in card, links, breadcrumb, empty_state, markdown.
+    assert_contains(&html, r#"href="/abs-card.html""#);
+    assert_contains(&html, r#"href="/abs-link.html""#);
+    assert_contains(&html, r#"href="/abs-crumb.html""#);
+    assert_contains(&html, r#"href="/abs-action.html""#);
+    assert_contains(&html, r#"href="/abs-md.html""#);
+    // Plain relative href in markdown gets depth-1 base (../) prepended.
+    assert_contains(&html, r#"href="../relative.html""#);
+}
+
+#[test]
 fn init_refuses_existing_dir() {
     let dir = tmp_dir("init-exists");
     std::fs::create_dir_all(&dir).unwrap();
