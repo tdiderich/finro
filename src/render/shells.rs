@@ -486,11 +486,16 @@ pub mod deck {
         let mut scripts = body.scripts.clone();
         scripts.push("reload");
 
+        let flow_class = match page.print_flow.unwrap_or_default() {
+            crate::types::PrintFlow::Slides => "print-slides",
+            crate::types::PrintFlow::Continuous => "print-continuous",
+        };
+
         format!(
             r#"<!DOCTYPE html>
 <html lang="en">
 {head}
-<body class="{cls}">
+<body class="{cls} {flow_class}">
 <div class="deck-root">
 
 {bar}
@@ -508,6 +513,7 @@ pub mod deck {
 </html>"#,
             head = head(page, config, base, rel_path),
             cls = Shell::Deck.class(),
+            flow_class = flow_class,
             bar = bar,
             body = body.html,
             scripts = collect_scripts(&scripts),

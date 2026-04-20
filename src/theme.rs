@@ -1523,10 +1523,12 @@ body.shell-document .doc-body strong { color: #fff; }
 
 /* ──────────────────── Print ──────────────────── */
 
-/* Default @page — portrait content pages; deck forces landscape full-bleed */
+/* Default @page — portrait content pages; deck in slides mode forces
+   landscape full-bleed. `print-continuous` decks stay on the default
+   portrait page. */
 @page { margin: 0.5in; }
 @page deck-page { size: landscape; margin: 0; }
-body.shell-deck { page: deck-page; }
+body.shell-deck.print-slides { page: deck-page; }
 
 @media print {
   .no-print { display: none !important; }
@@ -1563,17 +1565,47 @@ body.shell-deck { page: deck-page; }
   body.shell-document .c-callout,
   body.shell-document .c-card { break-inside: avoid; page-break-inside: avoid; }
 
-  /* ── Deck shell ── (already working — landscape full-bleed via @page deck-page) ── */
+  /* ── Deck shell: print ── */
   html:has(body.shell-deck), body.shell-deck { background: var(--bg) !important; }
   body.shell-deck { height: auto !important; overflow: visible !important; }
   body.shell-deck .deck-root { position: static !important; height: auto !important; }
   body.shell-deck .deck-viewport { overflow: visible !important; height: auto !important; }
   body.shell-deck .deck-track { transform: none !important; flex-direction: column !important; height: auto !important; }
-  body.shell-deck .deck-slide { min-width: 100% !important; height: auto !important; page-break-after: always; overflow: visible !important; }
-  body.shell-deck .deck-slide:last-child { page-break-after: avoid; }
-  body.shell-deck .deck-inner { min-height: 0 !important; padding: 0.4in 0.5in !important; }
+  body.shell-deck .deck-slide { min-width: 100% !important; overflow: visible !important; }
   body.shell-deck .deck-nav { display: none !important; }
+
+  /* Default print mode: one slide per landscape page, Keynote-style.
+     Pin slide height to the page so flex centering inside .deck-inner
+     actually has a container to center against — otherwise content hugs
+     the top of each page. Width is the @page deck-page landscape size. */
+  body.shell-deck.print-slides .deck-slide {
+    height: 7.5in !important;
+    min-height: 7.5in !important;
+    page-break-after: always;
+  }
+  body.shell-deck.print-slides .deck-slide:last-child { page-break-after: avoid; }
+  body.shell-deck.print-slides .deck-inner {
+    min-height: 7.5in !important;
+    padding: 0.4in 0.5in !important;
+  }
+
+  /* Continuous print mode: slides flow as one scrolling document with a
+     thin separator between them. Portrait orientation, no forced page
+     breaks. Nicer for sharing a readable artifact than a presentation. */
+  body.shell-deck.print-continuous { page: auto !important; }
+  body.shell-deck.print-continuous .deck-slide {
+    height: auto !important;
+    min-height: 0 !important;
+    page-break-after: auto;
+    border-bottom: 1px solid rgba(var(--text-rgb), 0.12);
+  }
+  body.shell-deck.print-continuous .deck-slide:last-child { border-bottom: none; }
+  body.shell-deck.print-continuous .deck-inner {
+    min-height: 0 !important;
+    padding: 0.5in 0.6in !important;
+  }
 }
+
 
 /* ──────────────────── Mobile responsiveness ──────────────────── */
 

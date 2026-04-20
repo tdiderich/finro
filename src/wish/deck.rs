@@ -47,6 +47,10 @@ If you're running with context about the user (a `CLAUDE.md`, auto-memory, or co
 4. No placeholder copy. Every slide fully written.
 5. If unsure about a field, prefer *omitting* it — most fields are optional.
 
+## Top-level keys
+
+Always include `print_flow: continuous` alongside `title`, `shell: deck`, `eyebrow`, and `subtitle`. PDF export flows as one readable document.
+
 ## Slide plan (guidance, not a rigid script)
 
 Aim for 5-8 slides. Default shape:
@@ -178,6 +182,10 @@ The current working directory is a wish workspace with this layout:
    must be fully populated. If the user's answers are thin, infer confidently
    from the other files.
 5. If unsure about a field, prefer *omitting* it — most fields are optional.
+
+## Top-level keys
+
+Always include `print_flow: continuous` alongside `title`, `shell: deck`, `eyebrow`, and `subtitle`. This makes the PDF export flow as one readable document with thin separators between slides instead of one slide per landscape page.
 
 ## Slide plan (guidance, not a rigid script)
 
