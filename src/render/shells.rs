@@ -442,7 +442,13 @@ pub mod document {
 pub mod deck {
     use super::*;
 
-    pub fn render(_page: &Page, _config: &SiteConfig, slides: &[Slide], out: &mut Rendered) {
+    pub fn render(
+        _page: &Page,
+        _config: &SiteConfig,
+        slides: &[Slide],
+        base: &str,
+        out: &mut Rendered,
+    ) {
         out.html
             .push_str(r#"<div class="deck-viewport"><div class="deck-track">"#);
         for slide in slides {
@@ -461,7 +467,7 @@ pub mod deck {
                 label_html = label_html,
             ));
             for c in &slide.components {
-                out.extend(components::render(c));
+                out.extend(components::render(c, base));
             }
             out.html.push_str("</div></div>");
         }
