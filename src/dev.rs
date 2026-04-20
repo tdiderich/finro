@@ -56,13 +56,25 @@ fn watch_loop(dir: PathBuf, out: PathBuf, version: Arc<AtomicU64>) {
         return;
     }
 
+    // notify emits absolute paths. `out` is usually relative (e.g. "_site"
+    // or "docs/_site"), so a direct `starts_with(&out)` never matches and
+    // every rebuild re-triggers itself in an infinite loop. Canonicalize
+    // out once up front so the comparison actually works. If canonicalize
+    // fails (dir doesn't exist yet), fall back to current_dir().join(out).
+    let out_abs = out
+        .canonicalize()
+        .or_else(|_| std::env::current_dir().map(|cwd| cwd.join(&out)))
+        .unwrap_or_else(|_| out.clone());
+
     let mut last_build = Instant::now() - Duration::from_secs(10);
 
     for event in rx {
         let Ok(event) = event else { continue };
         let relevant = event.paths.iter().any(|p| {
-            // Ignore output dir and its contents
-            if p.starts_with(&out) {
+            // Ignore anything inside the output directory — both the
+            // configured `out` and any nested `_site` (e.g. a previously
+            // built sub-site). Otherwise every rebuild retriggers itself.
+            if p.starts_with(&out_abs) || p.components().any(|c| c.as_os_str() == "_site") {
                 return false;
             }
             p.extension().map(|e| e == "yaml").unwrap_or(false)

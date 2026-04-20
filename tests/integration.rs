@@ -622,6 +622,122 @@ fn wish_deck_refuses_existing_output_on_grant() {
 }
 
 #[test]
+fn wish_auto_creates_kazam_yaml_in_empty_dir() {
+    // Running `kazam wish deck` in a fresh empty directory should auto-create
+    // a minimal kazam.yaml so the user can immediately follow up with
+    // `kazam dev .` — no hand-authoring required.
+    let dir = tmp_dir("wish-auto-config");
+    std::fs::create_dir_all(&dir).unwrap();
+    assert!(!dir.join("kazam.yaml").exists());
+
+    let status = Command::new(bin())
+        .args(["wish", "deck"])
+        .current_dir(&dir)
+        .status()
+        .expect("run kazam wish deck");
+    assert!(status.success());
+
+    // kazam.yaml should exist with a name derived from the CWD basename.
+    let cfg = dir.join("kazam.yaml");
+    assert!(cfg.exists(), "kazam.yaml auto-create failed");
+    let content = read(&cfg);
+    assert_contains(&content, "name:");
+    assert_contains(&content, "theme: dark");
+
+    // And the subsequent build works cleanly — proves the generated config
+    // is valid for kazam build.
+    let out = dir.join("_site");
+    let build_status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("build after auto-config");
+    assert!(build_status.success(), "build failed after auto-config");
+}
+
+#[test]
+fn wish_does_not_overwrite_existing_kazam_yaml() {
+    // If the user already has a kazam.yaml (even with custom settings),
+    // `kazam wish` must not clobber it.
+    let dir = tmp_dir("wish-keep-config");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("kazam.yaml"),
+        "name: Custom\ntheme: blue\ntexture: grid\n",
+    )
+    .unwrap();
+
+    let status = Command::new(bin())
+        .args(["wish", "deck"])
+        .current_dir(&dir)
+        .status()
+        .expect("run kazam wish deck");
+    assert!(status.success());
+
+    let content = read(&dir.join("kazam.yaml"));
+    assert_contains(&content, "name: Custom");
+    assert_contains(&content, "theme: blue");
+    assert_contains(&content, "texture: grid");
+}
+
+#[test]
+fn build_skips_nested_site_directories() {
+    // Running `kazam build` from a directory that contains previously-built
+    // sub-sites (each with their own `_site/` full of .html and .yaml) must
+    // not recursively ingest those outputs as if they were source. This is
+    // the bug where running `kazam dev` in /tmp caused 181 pages of
+    // cross-contamination.
+    let dir = tmp_dir("build-skips-nested-site");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Outer\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Outer home\n",
+    )
+    .unwrap();
+
+    // Simulate a nested previously-built sub-site with its own _site/ that
+    // happens to contain yaml files (e.g. source-view YAMLs, wish
+    // reference/example-deck.yaml, whatever).
+    let nested_site = dir.join("sub").join("_site");
+    std::fs::create_dir_all(&nested_site).unwrap();
+    std::fs::write(
+        nested_site.join("contaminating.yaml"),
+        "title: SHOULD_NOT_BUILD\nshell: standard\ncomponents:\n  - type: header\n    title: bad\n",
+    )
+    .unwrap();
+    std::fs::write(
+        nested_site.join("contaminating.html"),
+        "<html>pollution</html>",
+    )
+    .unwrap();
+
+    let out = tmp_dir("build-skips-nested-site-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+
+    // Outer site built.
+    assert!(out.join("index.html").exists());
+    // Nested _site content was NOT ingested.
+    assert!(
+        !out.join("sub/_site/contaminating.html").exists(),
+        "nested _site leaked into output"
+    );
+    assert!(
+        !out.join("contaminating.html").exists(),
+        "nested _site yaml got ingested"
+    );
+}
+
+#[test]
 fn wish_unknown_name_errors() {
     let output = Command::new(bin())
         .args(["wish", "nope-this-does-not-exist"])

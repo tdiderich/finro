@@ -2,7 +2,7 @@
 
 **Beautiful static sites from simple YAML. One Rust binary, no framework, no npm, no runtime JS. Designed so AI agents can author your site end-to-end.**
 
-**Full docs + live examples:** https://tdiderich.github.io/kazam/
+**[▶ Watch the 3-minute demo](https://www.loom.com/share/528d98fef421443497753af86cd7d737)** · **[Docs + live examples](https://tdiderich.github.io/kazam/)**
 
 ---
 
