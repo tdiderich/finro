@@ -16,6 +16,8 @@ nav:
     href: how.html
   - label: Guide
     href: guide.html
+  - label: Wishes
+    href: wishes.html
   - label: Components
     href: components/index.html
     children:

@@ -623,20 +623,35 @@ body.shell-deck .deck-track {
 }
 body.shell-deck .deck-slide { min-width: 100%; height: 100%; overflow: hidden; }
 body.shell-deck .deck-inner {
-  max-width: 900px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 48px 48px 80px;
+  padding: 56px 56px 88px;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   min-height: 100%;
-  gap: 20px;
+  gap: 28px;
 }
 body.shell-deck .deck-slide-cover .deck-inner {
-  justify-content: center;
   align-items: center;
   text-align: center;
 }
-body.shell-deck .deck-slide-cover .c-header-title { font-size: 40px; }
+
+/* Deck-scale typography: every content primitive steps up one tier so a
+   slide reads as a slide, not a doc page. */
+body.shell-deck .c-header-title { font-size: 36px; line-height: 1.2; }
+body.shell-deck .c-header-subtitle { font-size: 18px; }
+body.shell-deck .c-stat-value { font-size: 40px; }
+body.shell-deck .c-stat-label { font-size: 12px; letter-spacing: 2px; }
+body.shell-deck .c-card-title { font-size: 20px; }
+body.shell-deck .c-card-description { font-size: 15px; line-height: 1.55; }
+body.shell-deck .c-callout-title { font-size: 18px; }
+body.shell-deck .c-callout-body { font-size: 17px; line-height: 1.55; }
+body.shell-deck .c-markdown p { font-size: 17px; line-height: 1.65; }
+
+/* Cover slide: oversized headline + softer subtitle for the first impression. */
+body.shell-deck .deck-slide-cover .c-header-title { font-size: 56px; letter-spacing: -0.01em; }
+body.shell-deck .deck-slide-cover .c-header-subtitle { font-size: 20px; color: var(--light-muted); }
 body.shell-deck .deck-label {
   font-size: 13px;
   font-weight: 600;
@@ -1571,10 +1586,12 @@ body.shell-document .doc-body strong { color: #fff; }
 
 /* ──────────────────── Print ──────────────────── */
 
-/* Default @page — portrait content pages; deck forces landscape full-bleed */
+/* Default @page — portrait content pages; deck in slides mode forces
+   landscape full-bleed. `print-continuous` decks stay on the default
+   portrait page. */
 @page { margin: 0.5in; }
 @page deck-page { size: landscape; margin: 0; }
-body.shell-deck { page: deck-page; }
+body.shell-deck.print-slides { page: deck-page; }
 
 @media print {
   .no-print { display: none !important; }
@@ -1611,17 +1628,47 @@ body.shell-deck { page: deck-page; }
   body.shell-document .c-callout,
   body.shell-document .c-card { break-inside: avoid; page-break-inside: avoid; }
 
-  /* ── Deck shell ── (already working — landscape full-bleed via @page deck-page) ── */
+  /* ── Deck shell: print ── */
   html:has(body.shell-deck), body.shell-deck { background: var(--bg) !important; }
   body.shell-deck { height: auto !important; overflow: visible !important; }
   body.shell-deck .deck-root { position: static !important; height: auto !important; }
   body.shell-deck .deck-viewport { overflow: visible !important; height: auto !important; }
   body.shell-deck .deck-track { transform: none !important; flex-direction: column !important; height: auto !important; }
-  body.shell-deck .deck-slide { min-width: 100% !important; height: auto !important; page-break-after: always; overflow: visible !important; }
-  body.shell-deck .deck-slide:last-child { page-break-after: avoid; }
-  body.shell-deck .deck-inner { min-height: 0 !important; padding: 0.4in 0.5in !important; }
+  body.shell-deck .deck-slide { min-width: 100% !important; overflow: visible !important; }
   body.shell-deck .deck-nav { display: none !important; }
+
+  /* Default print mode: one slide per landscape page, Keynote-style.
+     Pin slide height to the page so flex centering inside .deck-inner
+     actually has a container to center against — otherwise content hugs
+     the top of each page. Width is the @page deck-page landscape size. */
+  body.shell-deck.print-slides .deck-slide {
+    height: 7.5in !important;
+    min-height: 7.5in !important;
+    page-break-after: always;
+  }
+  body.shell-deck.print-slides .deck-slide:last-child { page-break-after: avoid; }
+  body.shell-deck.print-slides .deck-inner {
+    min-height: 7.5in !important;
+    padding: 0.4in 0.5in !important;
+  }
+
+  /* Continuous print mode: slides flow as one scrolling document with a
+     thin separator between them. Portrait orientation, no forced page
+     breaks. Nicer for sharing a readable artifact than a presentation. */
+  body.shell-deck.print-continuous { page: auto !important; }
+  body.shell-deck.print-continuous .deck-slide {
+    height: auto !important;
+    min-height: 0 !important;
+    page-break-after: auto;
+    border-bottom: 1px solid rgba(var(--text-rgb), 0.12);
+  }
+  body.shell-deck.print-continuous .deck-slide:last-child { border-bottom: none; }
+  body.shell-deck.print-continuous .deck-inner {
+    min-height: 0 !important;
+    padding: 0.5in 0.6in !important;
+  }
 }
+
 
 /* ──────────────────── Mobile responsiveness ──────────────────── */
 
@@ -1716,9 +1763,15 @@ body.shell-deck { page: deck-page; }
   /* Section + card padding step-down. */
   .c-card { padding: 20px; }
 
-  /* Deck shell: reduce interior padding so content isn't crushed. */
-  body.shell-deck .deck-inner { padding: 32px 24px 56px; }
-  body.shell-deck .deck-slide-cover .c-header-title { font-size: 30px; }
+  /* Deck shell on tablet: tighter padding, step typography down one tier
+     from the big desktop sizes. */
+  body.shell-deck .deck-inner { padding: 36px 28px 64px; gap: 20px; }
+  body.shell-deck .c-header-title { font-size: 28px; }
+  body.shell-deck .c-header-subtitle { font-size: 16px; }
+  body.shell-deck .c-stat-value { font-size: 32px; }
+  body.shell-deck .c-card-title { font-size: 18px; }
+  body.shell-deck .deck-slide-cover .c-header-title { font-size: 40px; }
+  body.shell-deck .deck-slide-cover .c-header-subtitle { font-size: 16px; }
 }
 
 /* Phone (≤640px): collapse remaining grids, step down type, let tables scroll. */
@@ -1731,7 +1784,15 @@ body.shell-deck { page: deck-page; }
   /* Header type step-down. */
   .c-header-title { font-size: 26px; }
   .c-header-subtitle { font-size: 15px; }
-  body.shell-deck .deck-slide-cover .c-header-title { font-size: 26px; }
+
+  /* Deck shell on phone: smallest step. Keeps slides legible without
+     overflowing the viewport on vertical phone screens. */
+  body.shell-deck .c-header-title { font-size: 24px; }
+  body.shell-deck .c-header-subtitle { font-size: 14px; }
+  body.shell-deck .c-stat-value { font-size: 26px; }
+  body.shell-deck .c-card-title { font-size: 17px; }
+  body.shell-deck .deck-slide-cover .c-header-title { font-size: 32px; }
+  body.shell-deck .deck-slide-cover .c-header-subtitle { font-size: 15px; }
 
   /* Section heading tighter. */
   .c-section-header { margin-bottom: 16px; }

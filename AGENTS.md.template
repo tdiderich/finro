@@ -420,7 +420,11 @@ Every colored component accepts the same 5-value palette:
   emitted verbatim. Any other href is rewritten per-page based on directory
   depth so `index.html` works from any subfolder.
 - **deck shell** expects `slides:` not `components:` at the page root. Each
-  slide has its own `label:` + `components:` list.
+  slide has its own `label:` + `components:` list. Optional top-level
+  `print_flow: slides | continuous` controls PDF export shape. `slides`
+  (default) = one slide per landscape page (Keynote-style). `continuous`
+  = all slides flow as one portrait document with thin separators — nicer
+  for sharing as a readable artifact.
 - **Markdown body scalars**: use the `|` literal block style in YAML to preserve
   newlines — `body: |` followed by indented content.
 

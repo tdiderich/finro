@@ -36,6 +36,7 @@ pub fn render_source_view(
         unlisted: true,
         texture: None,
         glow: None,
+        print_flow: None,
     };
 
     render_page(&synthetic, config, base, "", rel_path)

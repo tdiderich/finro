@@ -7,7 +7,7 @@
 
 use anyhow::Result;
 
-const AGENTS_MD: &str = include_str!("../AGENTS.md.template");
+pub const AGENTS_MD: &str = include_str!("../AGENTS.md.template");
 
 pub fn run() -> Result<()> {
     let preamble = "\

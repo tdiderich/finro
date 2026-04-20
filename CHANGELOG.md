@@ -7,6 +7,25 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- `kazam wish <name>` — scaffolds a `wish-<name>/` workspace with structured
+  prompts (`questions.md`), usage hints (`README.md`), and a version-matched
+  schema + worked example (`reference/`). Fill in what you know, drop real
+  context (docs, notes, transcripts, PDFs) into the workspace, then run the
+  same command again to grant: kazam shells out to the first agent it finds
+  on `$PATH` (Claude, Gemini, Codex, OpenCode) with the workspace as CWD.
+  The agent reads everything with its own file tools and writes a populated
+  YAML. kazam itself does no file parsing. First wish: `kazam wish deck` —
+  a ~7-slide deck for any topic (QBR, launch review, pitch, retrospective,
+  etc.). Flags: `--agent` (force a specific CLI), `--yolo [topic]` (skip
+  the workspace, let the agent invent everything), `--dry-run` (print the
+  grant prompt), `--stdout` (portable wish markdown spec), `--out`
+  (override output path).
+- `/wishes` docs page with the scaffold→grant flow, agent-applications
+  panel, and 8-week roadmap.
+- Deck shell typography + layout pass — non-cover slides vertically
+  center their content, inner width widened 900 → 1100px, every content
+  primitive steps one type tier up on `shell: deck` so slides read as
+  slides, not doc pages. Mobile scales down proportionally.
 - Mobile responsiveness pass across the whole theme: stat grids, callout
   columns, before/after, tab buttons, tables, code blocks, and the deck
   shell all adapt to phone (≤640px) and tablet (≤768px) viewports.
