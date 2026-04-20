@@ -46,24 +46,28 @@ enum Command {
     Init { name: String },
     /// Print the LLM authoring guide (full AGENTS.md to stdout)
     Agents,
-    /// Grant a wish — populated YAML from a short interview
-    ///
-    /// `kazam wish list` shows available wishes. `kazam wish deck` runs the
-    /// QBR-deck interview. Pass `--agent claude|gemini|codex|opencode` to let
-    /// the agent generate the YAML from your answers; pass `--stdout` to
-    /// print the portable wish markdown for piping into any agent.
+    /// Grant a wish — populated YAML from a workspace full of your context.
+    /// First run scaffolds `./wish-<name>/` with `questions.md`, `README.md`,
+    /// and a `reference/` folder containing the schema and a worked example.
+    /// Fill in what you can, drop real context (docs, notes, transcripts)
+    /// into the workspace, then run again to grant: kazam shells out to the
+    /// first agent on $PATH with the workspace as CWD and writes the YAML.
+    /// `kazam wish list` shows available wishes.
     Wish {
         /// Name of the wish (e.g., "deck", or "list" to see all)
         name: String,
         /// Where to write the populated YAML
         #[arg(short, long)]
         out: Option<PathBuf>,
-        /// Shell out to this agent for rich generation
+        /// Force a specific agent (otherwise auto-detect first one on $PATH)
         #[arg(long, value_enum)]
         agent: Option<wish::Agent>,
-        /// Print the wish markdown to stdout (pipe into any agent yourself)
+        /// Print the portable wish markdown spec (no scaffold, no grant)
         #[arg(long)]
         stdout: bool,
+        /// Print the grant prompt instead of running the agent
+        #[arg(long)]
+        dry_run: bool,
     },
 }
 
@@ -78,6 +82,7 @@ fn main() -> Result<()> {
             out,
             agent,
             stdout,
-        } => wish::run(&name, out, agent, stdout),
+            dry_run,
+        } => wish::run(&name, out, agent, stdout, dry_run),
     }
 }

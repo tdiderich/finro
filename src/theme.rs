@@ -623,20 +623,35 @@ body.shell-deck .deck-track {
 }
 body.shell-deck .deck-slide { min-width: 100%; height: 100%; overflow: hidden; }
 body.shell-deck .deck-inner {
-  max-width: 900px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 48px 48px 80px;
+  padding: 56px 56px 88px;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   min-height: 100%;
-  gap: 20px;
+  gap: 28px;
 }
 body.shell-deck .deck-slide-cover .deck-inner {
-  justify-content: center;
   align-items: center;
   text-align: center;
 }
-body.shell-deck .deck-slide-cover .c-header-title { font-size: 40px; }
+
+/* Deck-scale typography: every content primitive steps up one tier so a
+   slide reads as a slide, not a doc page. */
+body.shell-deck .c-header-title { font-size: 36px; line-height: 1.2; }
+body.shell-deck .c-header-subtitle { font-size: 18px; }
+body.shell-deck .c-stat-value { font-size: 40px; }
+body.shell-deck .c-stat-label { font-size: 12px; letter-spacing: 2px; }
+body.shell-deck .c-card-title { font-size: 20px; }
+body.shell-deck .c-card-description { font-size: 15px; line-height: 1.55; }
+body.shell-deck .c-callout-title { font-size: 18px; }
+body.shell-deck .c-callout-body { font-size: 17px; line-height: 1.55; }
+body.shell-deck .c-markdown p { font-size: 17px; line-height: 1.65; }
+
+/* Cover slide: oversized headline + softer subtitle for the first impression. */
+body.shell-deck .deck-slide-cover .c-header-title { font-size: 56px; letter-spacing: -0.01em; }
+body.shell-deck .deck-slide-cover .c-header-subtitle { font-size: 20px; color: var(--light-muted); }
 body.shell-deck .deck-label {
   font-size: 13px;
   font-weight: 600;
@@ -1653,9 +1668,15 @@ body.shell-deck { page: deck-page; }
   /* Section + card padding step-down. */
   .c-card { padding: 20px; }
 
-  /* Deck shell: reduce interior padding so content isn't crushed. */
-  body.shell-deck .deck-inner { padding: 32px 24px 56px; }
-  body.shell-deck .deck-slide-cover .c-header-title { font-size: 30px; }
+  /* Deck shell on tablet: tighter padding, step typography down one tier
+     from the big desktop sizes. */
+  body.shell-deck .deck-inner { padding: 36px 28px 64px; gap: 20px; }
+  body.shell-deck .c-header-title { font-size: 28px; }
+  body.shell-deck .c-header-subtitle { font-size: 16px; }
+  body.shell-deck .c-stat-value { font-size: 32px; }
+  body.shell-deck .c-card-title { font-size: 18px; }
+  body.shell-deck .deck-slide-cover .c-header-title { font-size: 40px; }
+  body.shell-deck .deck-slide-cover .c-header-subtitle { font-size: 16px; }
 }
 
 /* Phone (≤640px): collapse remaining grids, step down type, let tables scroll. */
@@ -1668,7 +1689,15 @@ body.shell-deck { page: deck-page; }
   /* Header type step-down. */
   .c-header-title { font-size: 26px; }
   .c-header-subtitle { font-size: 15px; }
-  body.shell-deck .deck-slide-cover .c-header-title { font-size: 26px; }
+
+  /* Deck shell on phone: smallest step. Keeps slides legible without
+     overflowing the viewport on vertical phone screens. */
+  body.shell-deck .c-header-title { font-size: 24px; }
+  body.shell-deck .c-header-subtitle { font-size: 14px; }
+  body.shell-deck .c-stat-value { font-size: 26px; }
+  body.shell-deck .c-card-title { font-size: 17px; }
+  body.shell-deck .deck-slide-cover .c-header-title { font-size: 32px; }
+  body.shell-deck .deck-slide-cover .c-header-subtitle { font-size: 15px; }
 
   /* Section heading tighter. */
   .c-section-header { margin-bottom: 16px; }

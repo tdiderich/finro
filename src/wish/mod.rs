@@ -1,26 +1,32 @@
-//! `kazam wish <name>` — ask a few questions, emit a populated kazam YAML.
+//! `kazam wish <name>` — point the agent at a workspace full of your real
+//! context and get back a populated kazam YAML.
 //!
-//! Each wish is a small Rust module (see `deck.rs`) that declares:
-//!   * the interview questions
-//!   * a pure Rust template that fills a YAML file from the answers
-//!   * an agent prompt template for `--agent` mode
-//!   * a markdown spec for `--stdout` mode (pipe into any LLM)
+//! kazam's job: scaffold the workspace and shell out to an agent. File
+//! parsing, PDF handling, large-file chunking — all of that is the agent's
+//! problem. kazam just sets the CWD to the workspace and tells the agent to
+//! read whatever's there.
 //!
-//! The wish *is the skill*: same markdown works in kazam's TUI, shelled out
-//! to `claude -p` / `gemini -p` / `codex exec` / `opencode run`, or pasted
-//! into any other agent's context.
+//! Each wish (see `deck.rs`) declares:
+//!   * a template `questions.md` written to the workspace on init
+//!   * a template `README.md` explaining what to drop in
+//!   * a static agent prompt that tells the agent how to turn the workspace
+//!     into a valid kazam YAML for this wish type
+//!   * a markdown spec for `--stdout` mode (portable, pipe into any agent)
 //!
 //! Flow:
-//!   kazam wish deck                     → kazam asks the questions, writes deck.yaml
-//!   kazam wish deck --agent claude      → kazam asks the questions, shells out for rich generation
-//!   kazam wish deck --stdout            → prints the wish markdown for piping anywhere
-//!   kazam wish list                     → lists available wishes
+//!   kazam wish deck              → scaffold ./wish-deck/ if missing, else
+//!                                  shell out to the first agent on $PATH
+//!                                  from inside the workspace to write deck.yaml
+//!   kazam wish deck --agent X    → force a specific agent
+//!   kazam wish deck --dry-run    → print the prompt that would be sent
+//!   kazam wish deck --stdout     → print the portable wish markdown spec
+//!   kazam wish list              → enumerate available wishes
 
 use anyhow::{anyhow, bail, Context, Result};
 use clap::ValueEnum;
 use std::fs;
-use std::io::{self, BufRead, Read, Write};
-use std::path::PathBuf;
+use std::io::Read;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 mod deck;
@@ -43,86 +49,58 @@ impl Agent {
         }
     }
 
+    fn bin(&self) -> &'static str {
+        match self {
+            Agent::Claude => "claude",
+            Agent::Gemini => "gemini",
+            Agent::Codex => "codex",
+            Agent::Opencode => "opencode",
+        }
+    }
+
     /// Build the `Command` that feeds `prompt` to the agent in non-interactive
     /// mode and prints the generated text to stdout.
     fn command(&self, prompt: &str) -> Command {
+        let mut c = Command::new(self.bin());
         match self {
-            Agent::Claude => {
-                let mut c = Command::new("claude");
+            Agent::Claude | Agent::Gemini => {
                 c.arg("-p").arg(prompt);
-                c
-            }
-            Agent::Gemini => {
-                let mut c = Command::new("gemini");
-                c.arg("-p").arg(prompt);
-                c
             }
             Agent::Codex => {
-                let mut c = Command::new("codex");
                 c.arg("exec").arg(prompt);
-                c
             }
             Agent::Opencode => {
-                let mut c = Command::new("opencode");
                 c.arg("run").arg(prompt);
-                c
             }
         }
-    }
-}
-
-/// One interview question asked by kazam's TUI.
-pub struct Question {
-    pub key: &'static str,
-    pub prompt: &'static str,
-    pub hint: Option<&'static str>,
-    /// Multi-line: keep reading stdin lines until a blank line.
-    pub multiline: bool,
-}
-
-/// Answers keyed by `Question::key`. Stored as plain strings — wishes decide
-/// how to splice them into YAML or an LLM prompt.
-pub struct Answers {
-    values: Vec<(String, String)>,
-}
-
-impl Answers {
-    pub fn new() -> Self {
-        Answers { values: Vec::new() }
+        c
     }
 
-    pub fn insert(&mut self, key: &str, value: String) {
-        self.values.push((key.to_string(), value));
-    }
-
-    pub fn get(&self, key: &str) -> &str {
-        self.values
-            .iter()
-            .find(|(k, _)| k == key)
-            .map(|(_, v)| v.as_str())
-            .unwrap_or("")
-    }
+    /// Order matters — first match on $PATH wins when `--agent` isn't given.
+    const AUTO_DETECT_ORDER: &'static [Agent] =
+        &[Agent::Claude, Agent::Gemini, Agent::Codex, Agent::Opencode];
 }
 
-impl Default for Answers {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-/// A wish: interview questions + rendering + agent prompt + stdout markdown.
+/// A wish: workspace scaffolding + agent prompt + portable markdown.
 pub struct Wish {
     pub name: &'static str,
     pub description: &'static str,
+    /// Where the populated YAML is written (e.g. "deck.yaml"). Next to the
+    /// workspace directory, not inside it.
     pub default_out: &'static str,
-    pub questions: &'static [Question],
-    /// Pure Rust template — fills a YAML file from answers. Used when no
-    /// `--agent` is given.
-    pub render: fn(&Answers) -> String,
-    /// Build the single prompt shelled out to the agent in `--agent` mode.
-    pub agent_prompt: fn(&Answers) -> String,
-    /// Markdown printed in `--stdout` mode — the portable "paste into any
-    /// agent" form of the wish.
+    /// Template written to `<workspace>/questions.md` on init.
+    pub questions_md: &'static str,
+    /// Template written to `<workspace>/README.md` on init.
+    pub readme_md: &'static str,
+    /// Reference material dropped into `<workspace>/reference/` on init —
+    /// schema guide, example decks, anything the agent should consult for
+    /// shape/validation. Pairs of (filename, contents).
+    pub references: &'static [(&'static str, &'static str)],
+    /// The single prompt shelled out to the agent. The agent is run with its
+    /// CWD set to the workspace, so the prompt refers to files in "this
+    /// directory" and lets the agent read them with its own tools.
+    pub agent_prompt: &'static str,
+    /// Portable spec printed by `--stdout`.
     pub stdout_markdown: &'static str,
 }
 
@@ -140,6 +118,7 @@ pub fn run(
     out: Option<PathBuf>,
     agent: Option<Agent>,
     stdout_mode: bool,
+    dry_run: bool,
 ) -> Result<()> {
     if name == "list" {
         return list();
@@ -153,6 +132,72 @@ pub fn run(
         return Ok(());
     }
 
+    let workspace = PathBuf::from(format!("wish-{}", wish.name));
+    if !workspace.exists() {
+        scaffold(wish, &workspace)?;
+        return Ok(());
+    }
+
+    // Workspace exists → grant.
+    grant(wish, &workspace, out, agent, dry_run)
+}
+
+fn scaffold(wish: &Wish, workspace: &Path) -> Result<()> {
+    fs::create_dir_all(workspace)
+        .with_context(|| format!("creating workspace {}", workspace.display()))?;
+    fs::write(workspace.join("questions.md"), wish.questions_md)?;
+    fs::write(workspace.join("README.md"), wish.readme_md)?;
+
+    // Reference material — version-matched to this binary. The agent reads
+    // these during grant; the user can edit or inspect them too.
+    if !wish.references.is_empty() {
+        let ref_dir = workspace.join("reference");
+        fs::create_dir_all(&ref_dir).with_context(|| format!("creating {}", ref_dir.display()))?;
+        for (name, contents) in wish.references {
+            fs::write(ref_dir.join(name), contents)
+                .with_context(|| format!("writing reference/{}", name))?;
+        }
+    }
+
+    println!();
+    println!(
+        "  ✨ Making your {} wish — {}",
+        wish.name, wish.description
+    );
+    println!();
+    println!("  Created workspace: {}/", workspace.display());
+    println!("    questions.md       structured prompts — fill in what you know");
+    println!("    README.md          what to drop in this folder");
+    if !wish.references.is_empty() {
+        println!("    reference/         kazam schema + worked example (read-only to the agent)");
+    }
+    println!();
+    println!("  Next:");
+    println!(
+        "    1. Fill in {}/questions.md with whatever you want to",
+        workspace.display()
+    );
+    println!("       answer up front (blanks are fine — the agent will infer).");
+    println!("    2. Drop any real context (docs, notes, transcripts, last");
+    println!("       quarter's deck) into {}/.", workspace.display());
+    println!("    3. Run `kazam wish {}` again to grant it.", wish.name);
+    println!();
+
+    Ok(())
+}
+
+fn grant(
+    wish: &Wish,
+    workspace: &Path,
+    out: Option<PathBuf>,
+    agent: Option<Agent>,
+    dry_run: bool,
+) -> Result<()> {
+    if dry_run {
+        print!("{}", wish.agent_prompt);
+        return Ok(());
+    }
+
     let out_path = out.unwrap_or_else(|| PathBuf::from(wish.default_out));
     if out_path.exists() {
         bail!(
@@ -161,116 +206,78 @@ pub fn run(
         );
     }
 
+    let agent = agent.or_else(detect_agent).ok_or_else(|| {
+        anyhow!(
+            "no agent found on $PATH (looked for claude, gemini, codex, opencode). \
+             Install one, pass --agent explicitly, or use --dry-run to print the prompt."
+        )
+    })?;
+
     println!();
-    println!("  ✨ kazam wish {} — {}", wish.name, wish.description);
+    println!(
+        "  ✨ Granting your {} wish via {}",
+        wish.name,
+        agent.label()
+    );
     println!();
-    match agent {
-        Some(a) => println!(
-            "  A few quick questions, then I'll hand off to {} to write the YAML.",
-            a.label()
-        ),
-        None => println!("  A few quick questions, then I'll write the starter YAML."),
-    }
+    println!(
+        "  Running {} in {} (can take 30-90s)…",
+        agent.bin(),
+        workspace.display()
+    );
     println!();
 
-    let answers = interview(wish.questions)?;
-
-    let yaml = match agent {
-        Some(a) => generate_with_agent(a, (wish.agent_prompt)(&answers))?,
-        None => (wish.render)(&answers),
-    };
-
+    let yaml = run_agent(agent, wish.agent_prompt, workspace)?;
     fs::write(&out_path, &yaml).with_context(|| format!("writing {}", out_path.display()))?;
+
+    let page_url = out_path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .map(|stem| format!("http://localhost:3000/{}.html", stem))
+        .unwrap_or_else(|| "http://localhost:3000/".to_string());
 
     println!();
     println!("  ✓ Wrote {}", out_path.display());
     println!();
     println!("  Next:");
-    println!("    kazam dev .            # watch + serve at localhost:3000");
+    println!("    kazam dev .");
+    println!("    → open {}", page_url);
     println!();
 
     Ok(())
 }
 
-fn list() -> Result<()> {
-    println!();
-    println!("  Available wishes:");
-    println!();
-    for w in all() {
-        println!("    kazam wish {:<10}  {}", w.name, w.description);
-    }
-    println!();
-    println!("  Flags:");
-    println!("    --agent <claude|gemini|codex|opencode>   Let an agent write the YAML");
-    println!(
-        "    --stdout                                 Print the wish markdown (pipe anywhere)"
-    );
-    println!("    --out <path>                             Where to write the YAML");
-    println!();
-    Ok(())
+fn detect_agent() -> Option<Agent> {
+    Agent::AUTO_DETECT_ORDER
+        .iter()
+        .copied()
+        .find(|a| cmd_on_path(a.bin()))
 }
 
-fn interview(questions: &[Question]) -> Result<Answers> {
-    let stdin = io::stdin();
-    let mut answers = Answers::new();
-    let mut input = stdin.lock();
-
-    for (i, q) in questions.iter().enumerate() {
-        println!("  {}. {}", i + 1, q.prompt);
-        if let Some(h) = q.hint {
-            println!("     ({})", h);
+fn cmd_on_path(name: &str) -> bool {
+    let path = match std::env::var_os("PATH") {
+        Some(p) => p,
+        None => return false,
+    };
+    for dir in std::env::split_paths(&path) {
+        if dir.join(name).is_file() {
+            return true;
         }
-        if q.multiline {
-            println!("     (multiple lines OK — finish with a blank line)");
-            let mut lines: Vec<String> = Vec::new();
-            loop {
-                print!("     > ");
-                io::stdout().flush().ok();
-                let mut buf = String::new();
-                let n = input.read_line(&mut buf)?;
-                if n == 0 {
-                    break;
-                }
-                let trimmed = buf.trim_end_matches(&['\r', '\n'][..]).to_string();
-                if trimmed.is_empty() {
-                    break;
-                }
-                lines.push(trimmed);
-            }
-            answers.insert(q.key, lines.join("\n"));
-        } else {
-            print!("     > ");
-            io::stdout().flush().ok();
-            let mut buf = String::new();
-            input.read_line(&mut buf)?;
-            let answer = buf.trim_end_matches(&['\r', '\n'][..]).to_string();
-            answers.insert(q.key, answer);
-        }
-        println!();
     }
-
-    Ok(answers)
+    false
 }
 
-fn generate_with_agent(agent: Agent, prompt: String) -> Result<String> {
-    println!();
-    println!("  → Handing off to {}…", agent.label());
-    println!();
-
+fn run_agent(agent: Agent, prompt: &str, cwd: &Path) -> Result<String> {
     let mut child = agent
-        .command(&prompt)
+        .command(prompt)
+        .current_dir(cwd)
         .stdout(Stdio::piped())
         .stderr(Stdio::inherit())
         .spawn()
         .with_context(|| {
             format!(
                 "could not start `{}` — is it installed and on your $PATH?",
-                match agent {
-                    Agent::Claude => "claude",
-                    Agent::Gemini => "gemini",
-                    Agent::Codex => "codex",
-                    Agent::Opencode => "opencode",
-                }
+                agent.bin()
             )
         })?;
 
@@ -281,7 +288,6 @@ fn generate_with_agent(agent: Agent, prompt: String) -> Result<String> {
     if !status.success() {
         bail!("{} exited with {}", agent.label(), status);
     }
-
     Ok(strip_code_fence(&raw))
 }
 
@@ -300,6 +306,23 @@ fn strip_code_fence(s: &str) -> String {
     } else {
         trimmed.to_string()
     }
+}
+
+fn list() -> Result<()> {
+    println!();
+    println!("  Available wishes:");
+    println!();
+    for w in all() {
+        println!("    kazam wish {:<10}  {}", w.name, w.description);
+    }
+    println!();
+    println!("  Flags:");
+    println!("    --agent <claude|gemini|codex|opencode>   Force a specific agent");
+    println!("    --dry-run                                Print the prompt instead of running the agent");
+    println!("    --stdout                                 Print the portable wish markdown");
+    println!("    --out <path>                             Where to write the populated YAML");
+    println!();
+    Ok(())
 }
 
 #[cfg(test)]

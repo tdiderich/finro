@@ -1,364 +1,203 @@
 //! `kazam wish deck` — a 7-slide QBR / strategy-review deck.
+//!
+//! The user drops real context (docs, notes, transcripts, prior decks) into
+//! `wish-deck/` and fills in whatever parts of `questions.md` they want. The
+//! agent reads all of it (plus the schema + example in `reference/`) and
+//! writes a populated `deck.yaml`.
 
-use super::{Answers, Question, Wish};
+use super::Wish;
 
 pub static DECK: Wish = Wish {
     name: "deck",
     description: "QBR / strategy-review deck (7 slides)",
     default_out: "deck.yaml",
-    questions: &[
-        Question {
-            key: "topic",
-            prompt: "What's this deck about?",
-            hint: Some("one sentence — becomes the cover title"),
-            multiline: false,
-        },
-        Question {
-            key: "audience",
-            prompt: "Who's the audience?",
-            hint: Some("e.g., \"Leadership team\", \"Engineering all-hands\", \"The board\""),
-            multiline: false,
-        },
-        Question {
-            key: "timeframe",
-            prompt: "What timeframe does this cover?",
-            hint: Some("e.g., \"Q1 2026\", \"Last 90 days\""),
-            multiline: false,
-        },
-        Question {
-            key: "wins",
-            prompt: "What are the 2-3 biggest wins to highlight?",
-            hint: Some("one per line"),
-            multiline: true,
-        },
-        Question {
-            key: "challenges",
-            prompt: "What are the 1-2 challenges or misses?",
-            hint: Some("one per line — be honest"),
-            multiline: true,
-        },
-        Question {
-            key: "ask",
-            prompt: "What's the single ask or call-to-action at the close?",
-            hint: Some("one sentence"),
-            multiline: false,
-        },
-    ],
-    render,
-    agent_prompt,
+    questions_md: QUESTIONS_MD,
+    readme_md: README_MD,
+    references: REFERENCES,
+    agent_prompt: AGENT_PROMPT,
     stdout_markdown: STDOUT_MARKDOWN,
 };
 
-fn render(a: &Answers) -> String {
-    let topic = a.get("topic");
-    let audience = a.get("audience");
-    let timeframe = a.get("timeframe");
-    let wins: Vec<&str> = a
-        .get("wins")
-        .lines()
-        .filter(|l| !l.trim().is_empty())
-        .collect();
-    let challenges: Vec<&str> = a
-        .get("challenges")
-        .lines()
-        .filter(|l| !l.trim().is_empty())
-        .collect();
-    let ask = a.get("ask");
+const EXAMPLE_DECK_YAML: &str = include_str!("../../docs/examples/deck.yaml");
 
-    let mut s = String::new();
-    s.push_str(&format!("title: {}\n", yaml_string(topic)));
-    s.push_str("shell: deck\n");
-    s.push_str(&format!("eyebrow: {}\n", yaml_string(timeframe)));
-    s.push_str(&format!(
-        "subtitle: {}\n",
-        yaml_string(&format!("For {}", audience))
-    ));
-    s.push('\n');
-    s.push_str("slides:\n");
+const REFERENCES: &[(&str, &str)] = &[
+    ("kazam-schema.md", crate::agents::AGENTS_MD),
+    ("example-deck.yaml", EXAMPLE_DECK_YAML),
+];
 
-    // 1. Cover
-    s.push_str("  - label: Cover\n");
-    s.push_str("    hide_label: true\n");
-    s.push_str("    components:\n");
-    s.push_str("      - type: header\n");
-    s.push_str(&format!("        title: {}\n", yaml_string(topic)));
-    s.push_str(&format!(
-        "        subtitle: {}\n",
-        yaml_string(&format!("{} · {}", timeframe, audience))
-    ));
-    s.push_str("        align: center\n\n");
+const QUESTIONS_MD: &str = r#"# Deck — structured prompts
 
-    // 2. Context
-    s.push_str("  - label: Context\n");
-    s.push_str("    components:\n");
-    s.push_str("      - type: header\n");
-    s.push_str(&format!(
-        "        title: {}\n",
-        yaml_string(&format!("{} at a glance", timeframe))
-    ));
-    s.push_str("      - type: markdown\n");
-    s.push_str("        body: |\n");
-    s.push_str("          A quick recap before we dig in. Replace this paragraph with the shape of the quarter: where we started, the theme of the cycle, and the context the audience needs before seeing the numbers.\n");
-    s.push('\n');
+Fill in whatever you want to answer up front. Leave any section blank and
+the agent will infer it from the other files you've dropped in this folder.
 
-    // 3. Wins
-    s.push_str("  - label: Wins\n");
-    s.push_str("    components:\n");
-    s.push_str("      - type: header\n");
-    s.push_str("        title: What went well\n");
-    if !wins.is_empty() {
-        let columns = wins.len().clamp(1, 4);
-        s.push_str("      - type: stat_grid\n");
-        s.push_str(&format!("        columns: {}\n", columns));
-        s.push_str("        stats:\n");
-        for (i, w) in wins.iter().enumerate() {
-            let color = ["green", "default", "teal", "yellow"][i % 4];
-            s.push_str(&format!(
-                "          - label: {}\n",
-                yaml_string(&format!("Win {}", i + 1))
-            ));
-            s.push_str(&format!("            value: {}\n", yaml_string(w)));
-            s.push_str(&format!("            color: {}\n", color));
-        }
-    } else {
-        s.push_str("      - type: markdown\n");
-        s.push_str("        body: |\n");
-        s.push_str(
-            "          Add your wins here — swap this block for a `stat_grid` or `card_grid`.\n",
-        );
-    }
-    s.push('\n');
+---
 
-    // 4. Challenges
-    s.push_str("  - label: Challenges\n");
-    s.push_str("    components:\n");
-    s.push_str("      - type: header\n");
-    s.push_str("        title: Where we fell short\n");
-    if !challenges.is_empty() {
-        s.push_str("      - type: card_grid\n");
-        s.push_str(&format!(
-            "        columns: {}\n",
-            challenges.len().clamp(1, 3)
-        ));
-        s.push_str("        cards:\n");
-        for (i, c) in challenges.iter().enumerate() {
-            s.push_str(&format!(
-                "          - title: {}\n",
-                yaml_string(&format!("Challenge {}", i + 1))
-            ));
-            s.push_str(&format!("            description: {}\n", yaml_string(c)));
-            s.push_str("            color: yellow\n");
-        }
-    } else {
-        s.push_str("      - type: callout\n");
-        s.push_str("        variant: warning\n");
-        s.push_str("        title: Be honest\n");
-        s.push_str("        body: Swap this for a specific challenge and the lesson learned. Decks that only show wins get less trust than decks that admit misses.\n");
-    }
-    s.push('\n');
+## Topic
+<!-- One sentence. Becomes the cover title. -->
 
-    // 5. What we learned
-    s.push_str("  - label: Learnings\n");
-    s.push_str("    components:\n");
-    s.push_str("      - type: header\n");
-    s.push_str("        title: What we're taking forward\n");
-    s.push_str("      - type: markdown\n");
-    s.push_str("        body: |\n");
-    s.push_str("          The through-line between the wins and the misses. Replace this with the 2-3 patterns you want the audience to remember.\n\n");
+## Audience
+<!-- Who's presenting to whom? e.g., "Leadership team", "Engineering all-hands". -->
 
-    // 6. Next
-    s.push_str("  - label: Next\n");
-    s.push_str("    components:\n");
-    s.push_str("      - type: header\n");
-    s.push_str(&format!(
-        "        title: {}\n",
-        yaml_string(&format!("After {}", timeframe))
-    ));
-    s.push_str("      - type: steps\n");
-    s.push_str("        numbered: true\n");
-    s.push_str("        items:\n");
-    s.push_str("          - title: Priority 1\n");
-    s.push_str("            detail: Replace with your first next-quarter bet and why.\n");
-    s.push_str("          - title: Priority 2\n");
-    s.push_str("            detail: Replace with the second bet. Keep this list short.\n");
-    s.push_str("          - title: Priority 3\n");
-    s.push_str("            detail: Replace or delete — three is a healthy ceiling for a QBR.\n\n");
+## Timeframe
+<!-- What cycle? e.g., "Q1 2026", "Last 90 days". -->
 
-    // 7. The ask
-    s.push_str("  - label: The ask\n");
-    s.push_str("    components:\n");
-    s.push_str("      - type: header\n");
-    s.push_str("        title: The ask\n");
-    s.push_str("      - type: callout\n");
-    s.push_str("        variant: info\n");
-    s.push_str("        title: What we need\n");
-    s.push_str(&format!("        body: {}\n", yaml_string(ask)));
+## Commitment
+<!-- What did you commit to deliver this cycle? 1-2 sentences. -->
 
-    s
-}
+## Wins
+<!-- 2-3 biggest wins. One per line. Optional format: "Short label: the win". -->
 
-fn agent_prompt(a: &Answers) -> String {
-    format!(
-        r#"You are generating a 7-slide QBR / strategy-review deck as a single kazam YAML file.
+## Challenges
+<!-- 1-2 honest misses. One per line. Optional format: "Short label: the honest detail". -->
 
-Output ONLY valid YAML — no prose before or after, no code fences. The YAML must start with `title:` and describe a `shell: deck` page.
+## Biggest lesson
+<!-- One sentence. The through-line between the wins and the misses. -->
 
-## Inputs from the user
+## Priorities for next cycle
+<!-- Top 2-3 bets. One per line. Optional format: "Priority: why it matters". -->
 
-- Topic:       {topic}
-- Audience:    {audience}
-- Timeframe:   {timeframe}
-- Wins:
-{wins}
-- Challenges:
-{challenges}
-- Ask:         {ask}
+## The ask
+<!-- One sentence. What you need from the audience. -->
+"#;
+
+const README_MD: &str = r#"# kazam wish deck — workspace
+
+This folder is where you gather the real context for your deck. When you run
+`kazam wish deck` from the parent directory, kazam shells out to an agent
+(Claude, Gemini, Codex, or OpenCode) with this folder as the working
+directory. The agent reads everything here and writes `../deck.yaml`.
+
+## What to put here
+
+- **`questions.md`** — structured prompts. Fill in what you know. Blanks
+  are fine; the agent infers from the other files.
+- **Anything with real context** — meeting notes, Slack transcripts,
+  Granola recaps, last quarter's deck, metrics dumps, planning docs,
+  board-deck PDFs. Drop it in. kazam does not parse files itself; the
+  agent handles reading with its own tools. If the agent can read the
+  format, it'll use it.
+- **`reference/`** — schema + a worked example that kazam wrote here for
+  you. The agent consults these for shape + exact field names. Version-
+  matched to the kazam binary you have installed. You can edit them if
+  you're experimenting, but usually leave them alone.
+
+## When you're ready
+
+```
+kazam wish deck
+```
+
+from the parent directory (not from inside this folder).
+
+## Flags
+
+- `--agent claude|gemini|codex|opencode` — force a specific agent
+- `--dry-run` — print the prompt that would be sent (don't run the agent)
+- `--out path/to/out.yaml` — write somewhere other than `../deck.yaml`
+"#;
+
+const AGENT_PROMPT: &str = r#"You are generating a 7-slide QBR / strategy-review deck as a single kazam YAML file.
+
+The current working directory is a wish workspace with this layout:
+
+  questions.md           — structured prompts. The user may have filled some in.
+  <other files>          — real context dropped in by the user (notes, transcripts,
+                           prior decks, PDFs, metrics dumps, anything).
+  reference/kazam-schema.md   — authoritative field/enum reference for every
+                                kazam component. Consult for EXACT field names.
+  reference/example-deck.yaml — a worked deck in valid kazam YAML. Use it as a
+                                shape reference (headers, slides, components).
+
+## What to do
+
+1. Read `questions.md`. For each `##` section the user filled in, use their answer.
+2. For any section left blank, read the other top-level files in this directory
+   and infer a confident answer from them.
+3. Consult `reference/kazam-schema.md` for field names and enum values.
+   Consult `reference/example-deck.yaml` for shape/style.
+4. Write a populated `shell: deck` YAML to stdout.
+
+## Output rules
+
+1. Output ONLY valid YAML — no prose before or after, no ``` code fences, no commentary.
+2. The YAML MUST start with `title:` and describe a `shell: deck` page.
+3. Every component and field name MUST match `reference/kazam-schema.md` exactly.
+   Fields like `detail`, `description`, and `body` are distinct — don't guess.
+4. No placeholder copy ("replace this", "your win here", etc.). Every slide
+   must be fully populated. If the user's answers are thin, infer confidently
+   from the other files.
+5. If unsure about a field, prefer *omitting* it — most fields are optional.
 
 ## Slide plan (7 slides, in this order)
 
-1. Cover — center-aligned header with the topic as title and "{timeframe} · {audience}" as subtitle. Use `hide_label: true`.
-2. Context — header + a markdown paragraph framing where the quarter started.
-3. Wins — header + `stat_grid` with one stat per win. Use colors: green, default, teal, yellow (cycle).
-4. Challenges — header + `card_grid` with one card per challenge, `color: yellow`. Cards: `title` (3-5 word label), `description` (1-2 sentences of honest analysis + what you learned).
-5. Learnings — header + markdown with the through-line between wins and misses.
-6. Next — header ("After {timeframe}") + `steps` (numbered) with 2-4 next-quarter priorities.
-7. The ask — header + `callout` with `variant: info`, the ask verbatim in the body.
+1. **Cover** — `hide_label: true`. One `header` with `align: center`,
+   `title:` (topic), `subtitle:` (`"<timeframe> · <audience>"`).
+2. **Context** — `header` (`title: "Going into <timeframe>"`, `subtitle: "What we set out to do"`)
+   + `blockquote` with `body:` set to the commitment (expand to 2-3 sentences if terse).
+3. **Wins** — `header` (`title: "What went well"`) + `stat_grid`. Each stat:
+   `label:` (short punchy phrase), `value:` (the win itself). Cycle `color:`
+   through green, default, teal, yellow.
+4. **Challenges** — `header` (`title: "Where we fell short"`) + `card_grid`.
+   Each card: `title:` (3-5 word label), `description:` (honest 1-2 sentence
+   analysis + lesson). `color: yellow`.
+5. **Learnings** — `header` (`title: "What we're taking forward"`) + `callout`
+   (`variant: info`, `title: "The through-line"`, `body:` set to the biggest
+   lesson, expanded to 2-3 sentences).
+6. **Next** — `header` (`title: "After <timeframe>"`) + `steps` with
+   `numbered: true` and `items:`. Each item: `title:` (priority), `detail:`
+   (why it matters).
+7. **The ask** — `header` (`title: "The ask"`) + `callout` (`variant: info`,
+   `title: "What we need"`, `body:` set to the ask verbatim).
 
-## Kazam YAML conventions
-
-- Every page starts with top-level `title`, `shell`, optional `eyebrow` and `subtitle`.
-- `slides:` is a list of slides. Each slide has a `label` and `components`.
-- Components are typed maps with `type:` — e.g. `type: header`, `type: markdown`, `type: stat_grid`, `type: card_grid`, `type: callout`, `type: steps`.
-- Markdown `body:` uses the `|` block literal style.
-- Keep the YAML tidy: 2-space indent, no trailing whitespace.
-
-Write the YAML now.
-"#,
-        topic = a.get("topic"),
-        audience = a.get("audience"),
-        timeframe = a.get("timeframe"),
-        wins = bullet_list(a.get("wins")),
-        challenges = bullet_list(a.get("challenges")),
-        ask = a.get("ask"),
-    )
-}
-
-fn bullet_list(s: &str) -> String {
-    let lines: Vec<String> = s
-        .lines()
-        .filter(|l| !l.trim().is_empty())
-        .map(|l| format!("    - {}", l))
-        .collect();
-    if lines.is_empty() {
-        "    - (none provided)".to_string()
-    } else {
-        lines.join("\n")
-    }
-}
-
-/// YAML-safe double-quoted string. Handles backslashes and double quotes.
-/// Keep this conservative — we'd rather over-quote than emit invalid YAML.
-fn yaml_string(s: &str) -> String {
-    let escaped = s.replace('\\', "\\\\").replace('"', "\\\"");
-    format!("\"{}\"", escaped)
-}
+Now read the workspace and write the YAML.
+"#;
 
 const STDOUT_MARKDOWN: &str = r#"# kazam wish: deck
 
-Grants a 7-slide QBR / strategy-review deck as a populated `kazam` YAML file.
+Grants a fully populated 7-slide QBR / strategy-review deck as a `kazam` YAML
+file. kazam scaffolds a workspace; the user drops their real context in; the
+agent reads everything and writes the deck.
 
-## Ask the user these questions
+## Flow
 
-1. **Topic** — one sentence. Becomes the cover title.
-2. **Audience** — e.g., "Leadership team", "Engineering all-hands".
-3. **Timeframe** — e.g., "Q1 2026", "Last 90 days".
-4. **Wins** — 2-3 biggest wins to highlight, one per line.
-5. **Challenges** — 1-2 honest misses, one per line.
-6. **Ask** — one-sentence call-to-action for the close.
+1. `kazam wish deck` (first run) — scaffolds `./wish-deck/` with:
+   - `questions.md` (structured prompts)
+   - `README.md` (usage hint)
+   - `reference/kazam-schema.md` (full schema, version-matched to the binary)
+   - `reference/example-deck.yaml` (worked example deck)
+2. The user fills in as much of `questions.md` as they want and drops real
+   context (docs, transcripts, prior decks, PDFs) into `./wish-deck/`.
+3. `kazam wish deck` (second run) — granting. kazam shells out to the first
+   agent on `$PATH` (Claude, Gemini, Codex, OpenCode) with `./wish-deck/` as
+   the CWD. The agent reads everything and writes `deck.yaml`.
 
-## Emit this exact YAML shape
+kazam does NOT parse files itself. File handling is the agent's job.
 
-```yaml
-title: "<topic>"
-shell: deck
-eyebrow: "<timeframe>"
-subtitle: "For <audience>"
+## Agent prompt shape (what kazam sends)
 
-slides:
-  - label: Cover
-    hide_label: true
-    components:
-      - type: header
-        title: "<topic>"
-        subtitle: "<timeframe> · <audience>"
-        align: center
+The agent receives a prompt that:
+1. Describes the workspace layout (`questions.md` + user context + `reference/`).
+2. Tells it to read the user's answers, fall back to other files for blanks,
+   and consult `reference/` for exact field names and shape.
+3. Spells out the 7-slide plan.
+4. Requires YAML-only output (no fences, no prose) and no placeholder copy.
 
-  - label: Context
-    components:
-      - type: header
-        title: "<timeframe> at a glance"
-      - type: markdown
-        body: |
-          <1-2 paragraphs framing where the quarter started>
+## Slide plan
 
-  - label: Wins
-    components:
-      - type: header
-        title: What went well
-      - type: stat_grid
-        columns: <len(wins) clamped 1..=4>
-        stats:
-          - label: "Win 1"
-            value: "<win 1>"
-            color: green
-          # ... cycle colors: green, default, teal, yellow
-
-  - label: Challenges
-    components:
-      - type: header
-        title: Where we fell short
-      - type: card_grid
-        columns: <len(challenges) clamped 1..=3>
-        cards:
-          - title: "<3-5 word label>"
-            description: "<honest 1-2 sentence analysis + lesson learned>"
-            color: yellow
-
-  - label: Learnings
-    components:
-      - type: header
-        title: What we're taking forward
-      - type: markdown
-        body: |
-          <through-line between wins and misses>
-
-  - label: Next
-    components:
-      - type: header
-        title: "After <timeframe>"
-      - type: steps
-        numbered: true
-        items:
-          - title: "Priority 1"
-            detail: "<first next-quarter bet + why>"
-          # ... 2-4 priorities, keep it short
-
-  - label: The ask
-    components:
-      - type: header
-        title: The ask
-      - type: callout
-        variant: info
-        title: What we need
-        body: "<ask verbatim>"
-```
+1. Cover — header centered, topic as title, "<timeframe> · <audience>" as subtitle.
+2. Context — header + blockquote of the commitment.
+3. Wins — header + stat_grid (one stat per win, cycle green/default/teal/yellow).
+4. Challenges — header + card_grid (one card per challenge, color yellow).
+5. Learnings — header + callout with the biggest lesson.
+6. Next — header + numbered steps (one per priority with title + detail).
+7. The ask — header + callout with the ask verbatim.
 
 ## Kazam YAML conventions
 
 - 2-space indent. No trailing whitespace.
 - `shell: deck` enables slide navigation + PDF export.
-- Markdown body uses `|` block literal.
+- Multi-line text uses the `|` block literal.
 - Full component reference: `kazam agents` or https://tdiderich.github.io/kazam/
 
-Output ONLY the YAML — no prose before or after, no code fences.
+Output ONLY the YAML. No prose, no code fences. No placeholder copy.
 "#;
