@@ -61,7 +61,7 @@ Edit `index.yaml`. Save. The browser reloads. That's the loop.
 ```bash
 mkdir yolo-deck && cd yolo-deck
 printf 'name: Yolo\ntheme: dark\n' > kazam.yaml
-kazam wish deck --yolo "the history of static site generators"
+kazam wish deck --yolo "about me, based on our interaction history"
 kazam dev .
 # → http://localhost:3000/deck.html
 ```
