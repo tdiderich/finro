@@ -1,45 +1,75 @@
 # kazam
 
-**Write YAML. Ship a themed static site. Skip the 1,500-line Node.js tax.**
-
-One Rust binary. No framework, no npm, no runtime JS. Built so AI agents can author your site end-to-end.
+**Beautiful static sites from simple YAML. One Rust binary, no framework, no npm, no runtime JS. Designed so AI agents can author your site end-to-end.**
 
 **Full docs + live examples:** https://tdiderich.github.io/kazam/
 
 ---
 
-## Why it matters
+## Why
 
-- **88% less source than React.** A real personal site migrated from Create-React-App: **1,722 → 210** hand-authored lines, **0 npm deps**. Full numbers in [`STATS.md`](STATS.md).
-- **Agents are first-class authors.** `AGENTS.md` ships bundled in the binary. Point Claude / GPT / Codex at it and the YAML writes itself — no prose rules to interpret, just a typed schema that validates or doesn't.
-- **No JavaScript supply chain.** The output is HTML and CSS. No webpack, no thousand-package transitive tree, no hydration, no `_next/`. Your attack surface is whatever your CDN serves.
-- **Boring is the feature.** One binary, one format, one build step. `kazam dev` reloads on save; `kazam build --release` emits minified static HTML. That's the toolchain.
+**Markdown isn't enough. Next.js is too much.**
 
-## Before → After
+| Markdown is too simple | Next.js is too heavy | kazam is the middle path |
+|---|---|---|
+| Plain pages — grey text on white, no cards, no badges, no interactive tables. Fine for a blog post, wastes what the web can do. | A thousand-package npm tree, a webpack build, a client runtime, and a supply chain you'll never audit — for a site that renders static content. | Typed YAML components, LLM-friendly schema, themed output. Ships as pure HTML and CSS. One Rust binary. |
 
-A real migration — not a pitch deck.
+## Receipts
+
+A real personal site migrated from Create-React-App to kazam — whole repo, not a hand-picked excerpt:
 
 | | Before: Create-React-App | After: kazam |
 |---|---|---|
-| Hand-authored LOC | 1,722 | 210 |
+| Hand-authored LOC | 1,722 | **210** (−88%) |
 | npm dependencies | react, react-router, axios, tailwind, react-gravatar, react-toggle + ~1000s transitive | **0** |
 | Build tool | webpack | single Rust binary |
 | Deploy | Firebase Hosting + 2 cloud functions | Firebase Hosting (static only) |
-| Migration effort | — | one conversation |
+| Migration effort | — | **one conversation** with an agent |
 
 Full breakdown: [`STATS.md`](STATS.md).
 
-## 60-second quickstart
+## Beyond docs
 
-Install Rust via [rustup](https://rustup.rs), then:
+If it's a structured artifact, kazam makes it. Slide decks, one-page briefs, landing pages, internal dashboards, API references — all the structured artifacts a team produces in a week, from the same typed components. The format LLMs generate correctly; the output you actually ship.
+
+## Install
 
 ```bash
+# Homebrew (macOS / Linux)
+brew install tdiderich/tap/kazam
+
+# Cargo (any platform with Rust — install via rustup.rs first)
+cargo install kazam
+
+# Bleeding edge — straight from main
 cargo install --git https://github.com/tdiderich/kazam
+```
+
+## 60-second quickstart
+
+Two paths — pick one.
+
+**Bare:** scaffold a site, edit a YAML file, see it render.
+
+```bash
 kazam init my-site && cd my-site
 kazam dev . --port 3000
+# → http://localhost:3000
 ```
 
 Edit `index.yaml`. Save. The browser reloads. That's the loop.
+
+**With an agent:** let Claude / Gemini / Codex / OpenCode write a whole deck from a topic. (Requires one of those CLIs on your `$PATH`.)
+
+```bash
+mkdir yolo-deck && cd yolo-deck
+printf 'name: Yolo\ntheme: dark\n' > kazam.yaml
+kazam wish deck --yolo "about me, based on our interaction history"
+kazam dev .
+# → http://localhost:3000/deck.html
+```
+
+Or drop real context into `wish-deck/` and run `kazam wish deck` without `--yolo` — the agent reads your files (notes, transcripts, prior decks, PDFs) and writes a populated deck from them. Full walk-through: https://tdiderich.github.io/kazam/wishes.html
 
 ## Dev & build
 
@@ -130,7 +160,7 @@ Static sites shouldn't carry a Next.js-sized supply chain. kazam's doesn't.
 - **~10 direct Rust crates.** `Cargo.lock` committed, `cargo-audit` runs in CI, new dependencies require justification in the PR.
 - **No network at build time.** Build scripts that reach the network are rejected. No post-install scripts, no npm-style drive-by compromise.
 - **Protected main.** Branch protection, required CODEOWNER review, required CI (`cargo test` / `fmt` / `clippy -D warnings` / `cargo-audit`), no force-pushes. Release tags are signed.
-- **Pin a specific commit** if you want reproducibility: `cargo install --git https://github.com/tdiderich/kazam --rev <sha>`.
+- **Pin a specific version** for reproducibility: `cargo install kazam --version 0.4.0` (or `--git … --rev <sha>` for an unreleased commit).
 
 Report vulnerabilities privately via the [GitHub advisory form](https://github.com/tdiderich/kazam/security/advisories/new) — **do not** open a public issue. Full scope and supply-chain protections: [`SECURITY.md`](SECURITY.md).
 

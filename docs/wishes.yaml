@@ -88,11 +88,11 @@ components:
           - title: "OpenCode"
             description: "`opencode run` — SST's open-source agent CLI."
             color: default
-          - title: "Any other agent"
+          - title: "No CLI agent? No problem."
             badge:
               label: universal
               color: teal
-            description: "`kazam wish deck --dry-run` prints the grant prompt. Paste it into ChatGPT, Cursor, Aider, or any LLM context — point it at the `wish-deck/` folder."
+            description: "Scaffold the workspace with `kazam wish deck`, fill in questions.md, then `kazam wish deck --dry-run` prints the full grant prompt. Paste it into ChatGPT, Claude.ai, Gemini web, Cursor, Aider, or any other LLM context window — save what comes back as `deck.yaml`."
             color: teal
 
   - type: section

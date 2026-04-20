@@ -215,12 +215,7 @@ fn grant(
         );
     }
 
-    let agent = agent.or_else(detect_agent).ok_or_else(|| {
-        anyhow!(
-            "no agent found on $PATH (looked for claude, gemini, codex, opencode). \
-             Install one, pass --agent explicitly, or use --dry-run to print the prompt."
-        )
-    })?;
+    let agent = agent.or_else(detect_agent).ok_or_else(no_agent_error)?;
 
     println!();
     println!(
@@ -278,12 +273,7 @@ fn grant_yolo(
         );
     }
 
-    let agent = agent.or_else(detect_agent).ok_or_else(|| {
-        anyhow!(
-            "no agent found on $PATH (looked for claude, gemini, codex, opencode). \
-             Install one, pass --agent explicitly, or use --dry-run to print the prompt."
-        )
-    })?;
+    let agent = agent.or_else(detect_agent).ok_or_else(no_agent_error)?;
 
     let cwd = std::env::current_dir().context("reading current directory")?;
     println!();
@@ -329,6 +319,23 @@ fn detect_agent() -> Option<Agent> {
         .iter()
         .copied()
         .find(|a| cmd_on_path(a.bin()))
+}
+
+fn no_agent_error() -> anyhow::Error {
+    anyhow!(
+        "no agent CLI found on $PATH.
+
+kazam wish shells out to your agent to write the YAML. Install any one of:
+
+  Claude Code    https://docs.claude.com/en/docs/claude-code/install
+  Gemini CLI     https://github.com/google-gemini/gemini-cli
+  Codex          https://developers.openai.com/codex/cli
+  OpenCode       https://opencode.ai
+
+Then re-run this command. Or for a no-CLI-agent path, pass --dry-run
+to print the prompt and paste it into ChatGPT, Claude.ai, Gemini web,
+or any other LLM context window — save what comes back as deck.yaml."
+    )
 }
 
 fn cmd_on_path(name: &str) -> bool {
