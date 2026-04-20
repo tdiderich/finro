@@ -299,14 +299,42 @@ fn site_bar(page: &Page, config: &SiteConfig, base: &str, right_html: &str) -> S
             esc(e)
         ))
         .unwrap_or_default();
+
+    // Brand slot: <img> when `logo:` is configured, falling back to the
+    // text name. The logo's `src` passes through resolve_href so relative
+    // paths work from any subfolder page. An explicit `height:` becomes
+    // an inline style ceiling; without it, CSS caps the rendered height
+    // at the site-bar content height.
+    let brand_html = match &config.logo {
+        Some(logo) => {
+            let src = resolve_href(logo.src(), base);
+            let alt = logo.alt(&config.name);
+            let height_attr = logo
+                .height()
+                .map(|h| format!(r#" height="{h}" style="max-height:{h}px""#))
+                .unwrap_or_default();
+            format!(
+                r#"<a class="site-bar-brand" href="{home}" aria-label="{alt}"><img class="site-bar-logo" src="{src}" alt="{alt}"{height_attr}></a>"#,
+                home = esc(&home_href),
+                src = esc(&src),
+                alt = esc(alt),
+                height_attr = height_attr,
+            )
+        }
+        None => format!(
+            r#"<a class="site-bar-name" href="{home}">{site}</a>"#,
+            home = esc(&home_href),
+            site = esc(&config.name),
+        ),
+    };
+
     format!(
         r#"<div class="site-bar">
-  <a class="site-bar-name" href="{home}">{site}</a>{eyebrow}
+  {brand}{eyebrow}
   <div class="site-bar-right">{right}</div>
 </div>
 "#,
-        home = esc(&home_href),
-        site = esc(&config.name),
+        brand = brand_html,
         eyebrow = eyebrow_html,
         right = right_html,
     )

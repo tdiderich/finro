@@ -32,6 +32,13 @@ mode: dark               # optional: dark (default) | light — flips rainbow th
 colors:                  # optional per-token overrides
   accent: '#14b8b8'
 favicon: favicon.svg
+logo: assets/logo.svg    # optional — replaces the text `name:` in the site bar with an <img>.
+                         # Expanded form: logo: { src, height, alt }. height caps rendered px;
+                         # alt defaults to `name`. Rendered height is bounded by the site-bar
+                         # content area (never pushes the bar taller); width flows from aspect
+                         # ratio and caps at 240px. SVG recommended; raster sources should be
+                         # 2× target height for retina. Use `/absolute/paths` or relative paths
+                         # — both are depth-aware rewritten.
 texture: dots            # optional: none | dots | grid | grain | topography | diagonal
 glow: accent             # optional: none | accent | corner
 nav_layout: top          # optional: top (default) | sidebar

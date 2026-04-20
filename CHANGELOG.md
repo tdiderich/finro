@@ -7,6 +7,16 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- `logo:` field on `kazam.yaml` site config — replaces the text `name:`
+  treatment in the site bar with an `<img>`. Accepts both shorthand
+  (`logo: assets/logo.svg`) and expanded object form
+  (`logo: { src, height, alt }`). Rendered height is capped at the
+  site-bar content height so a tall logo never pushes the bar taller;
+  width flows from aspect ratio and caps at 240px so a wide wordmark
+  doesn't crush the nav. `src` routes through the depth-aware path
+  rewriter, so absolute `/…` paths pass through verbatim and relative
+  paths resolve from any subfolder page. Absent → falls back cleanly
+  to the text-name treatment (no layout regression).
 - `AGENTS.md` bug-filing + feature-request protocols. When an agent
   reproduces a bug or has a kazam-shaped feature idea, the guide now
   tells it to check `gh auth`, dedup against existing issues/PRs

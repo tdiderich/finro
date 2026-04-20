@@ -738,6 +738,172 @@ fn build_skips_nested_site_directories() {
 }
 
 #[test]
+fn logo_shorthand_renders_img_in_site_bar() {
+    let dir = tmp_dir("logo-shorthand");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("kazam.yaml"),
+        "name: Acme\ntheme: dark\nlogo: assets/logo.svg\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+    let html = read(&out.join("index.html"));
+    assert_contains(&html, r#"class="site-bar-brand""#);
+    assert_contains(
+        &html,
+        r#"class="site-bar-logo" src="assets/logo.svg" alt="Acme""#,
+    );
+    assert!(
+        !html.contains(r#"class="site-bar-name""#),
+        "text name treatment should be replaced by the logo img"
+    );
+}
+
+#[test]
+fn logo_expanded_form_respects_height_and_alt() {
+    let dir = tmp_dir("logo-expanded");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("kazam.yaml"),
+        "name: Acme\ntheme: dark\nlogo:\n  src: assets/logo.svg\n  height: 40\n  alt: Acme Corporation\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+    let html = read(&out.join("index.html"));
+    assert_contains(&html, r#"alt="Acme Corporation""#);
+    assert_contains(&html, r#"height="40""#);
+    assert_contains(&html, r#"style="max-height:40px""#);
+    assert_contains(&html, r#"aria-label="Acme Corporation""#);
+}
+
+#[test]
+fn logo_src_resolves_depth_aware() {
+    let dir = tmp_dir("logo-depth");
+    std::fs::create_dir_all(dir.join("sub")).unwrap();
+    std::fs::write(
+        dir.join("kazam.yaml"),
+        "name: Acme\ntheme: dark\nlogo: assets/logo.svg\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("sub/page.yaml"),
+        "title: Sub\nshell: standard\ncomponents:\n  - type: header\n    title: Sub\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+    let root = read(&out.join("index.html"));
+    assert_contains(&root, r#"src="assets/logo.svg""#);
+    let sub = read(&out.join("sub/page.html"));
+    assert_contains(&sub, r#"src="../assets/logo.svg""#);
+}
+
+#[test]
+fn logo_absolute_path_passes_through_verbatim() {
+    let dir = tmp_dir("logo-absolute");
+    std::fs::create_dir_all(dir.join("sub")).unwrap();
+    std::fs::write(
+        dir.join("kazam.yaml"),
+        "name: Acme\ntheme: dark\nlogo: /assets/logo.png\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("sub/page.yaml"),
+        "title: Sub\nshell: standard\ncomponents:\n  - type: header\n    title: Sub\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+    let sub = read(&out.join("sub/page.html"));
+    assert_contains(&sub, r#"src="/assets/logo.png""#);
+    assert!(
+        !sub.contains("../assets/logo.png"),
+        "absolute /… logo path must not be rewritten to ../…"
+    );
+}
+
+#[test]
+fn absent_logo_falls_back_to_text_name() {
+    let dir = tmp_dir("logo-absent");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: PlainSite\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+    let html = read(&out.join("index.html"));
+    assert_contains(&html, r#"class="site-bar-name""#);
+    assert_contains(&html, ">PlainSite</a>");
+    // No <a class="site-bar-brand"> anchor and no <img class="site-bar-logo">
+    // tag should appear in the body markup. The class names themselves live
+    // in the inlined stylesheet for every page, so we assert on the full
+    // opening tag pattern instead of a bare substring.
+    assert!(
+        !html.contains(r#"<a class="site-bar-brand""#),
+        "absent logo should not emit the brand <a> wrapper"
+    );
+    assert!(
+        !html.contains(r#"<img class="site-bar-logo""#),
+        "absent logo should not emit any <img class=site-bar-logo>"
+    );
+}
+
+#[test]
 fn wish_unknown_name_errors() {
     let output = Command::new(bin())
         .args(["wish", "nope-this-does-not-exist"])

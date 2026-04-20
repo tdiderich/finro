@@ -622,6 +622,13 @@ pub struct SiteConfig {
     pub colors: std::collections::HashMap<String, String>,
     pub nav: Option<Vec<NavLink>>,
     pub favicon: Option<Favicon>,
+    /// Optional logo image shown in the site bar's brand slot, replacing the
+    /// text `name:` treatment. Accepts either a path (shorthand) or an
+    /// object with `src`, optional `height`, and optional `alt`. The image's
+    /// `src` resolves via the depth-aware rewriter so relative paths work
+    /// from any subfolder page.
+    #[serde(default)]
+    pub logo: Option<Logo>,
     /// When true, each page gets a companion `*.source.html` rendering of its
     /// YAML source, and a "View source" pill links to it. Off by default —
     /// useful for docs/examples sites, noise for most end-user sites.
@@ -688,6 +695,45 @@ pub enum Glow {
     Accent,
     /// Tighter glow tucked into the top-right corner.
     Corner,
+}
+
+/// Logo image for the site-bar brand slot. Accepts either a shorthand
+/// string (a path to the image) or an object with `src`, optional
+/// `height` (px — upper bound on rendered height; defaults to the
+/// site-bar content height), and optional `alt` (defaults to the site
+/// `name`).
+#[derive(Deserialize)]
+#[serde(untagged)]
+pub enum Logo {
+    Simple(String),
+    Full {
+        src: String,
+        #[serde(default)]
+        height: Option<u32>,
+        #[serde(default)]
+        alt: Option<String>,
+    },
+}
+
+impl Logo {
+    pub fn src(&self) -> &str {
+        match self {
+            Logo::Simple(p) => p,
+            Logo::Full { src, .. } => src,
+        }
+    }
+    pub fn height(&self) -> Option<u32> {
+        match self {
+            Logo::Simple(_) => None,
+            Logo::Full { height, .. } => *height,
+        }
+    }
+    pub fn alt<'a>(&'a self, site_name: &'a str) -> &'a str {
+        match self {
+            Logo::Simple(_) => site_name,
+            Logo::Full { alt, .. } => alt.as_deref().unwrap_or(site_name),
+        }
+    }
 }
 
 /// Favicon config: either a single path, or a struct with named slots.
@@ -783,6 +829,7 @@ impl Default for SiteConfig {
             colors: std::collections::HashMap::new(),
             nav: None,
             favicon: None,
+            logo: None,
             view_source: false,
             texture: Texture::None,
             glow: Glow::None,

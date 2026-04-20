@@ -86,6 +86,15 @@ theme: dark
 #   ico: favicon.ico
 #   apple_touch_icon: apple-touch-icon.png
 
+# Optional logo image shown in the site bar instead of the text `name:`.
+# Shorthand: a path (SVG recommended; PNG/JPEG/WebP work).
+# logo: assets/logo.svg
+# Expanded form with optional height (px) + alt text:
+# logo:
+#   src: assets/logo.svg
+#   height: 32               # caps rendered height; defaults to site-bar content
+#   alt: Your Company Name   # defaults to `name:` above
+
 # Opt-in: render a companion `<page>.source.html` for every page and show
 # a floating "View source" pill that links to it. Handy for docs/demo
 # sites. Off by default — most sites don't need it.

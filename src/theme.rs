@@ -374,6 +374,26 @@ h1, h2, h3 { font-weight: 600; color: var(--snow); }
   transition: opacity 0.15s, color 0.15s;
 }
 a.site-bar-name:hover { opacity: 1; color: var(--teal); }
+
+/* Logo variant of the brand slot: hard ceiling on rendered height so a
+   tall image can't push the 56px bar taller. Width flows from aspect
+   ratio, capped at 240px so a billboard SVG doesn't crush the nav. */
+.site-bar-brand {
+  display: inline-flex;
+  align-items: center;
+  opacity: 0.9;
+  transition: opacity 0.15s;
+  line-height: 0; /* Strip the text-line baseline so img sits flush. */
+}
+a.site-bar-brand:hover { opacity: 1; }
+.site-bar-logo {
+  display: block;
+  max-height: 32px;
+  max-width: 240px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
 .site-bar-divider { color: rgba(var(--text-rgb),0.15); font-size: 20px; font-weight: 300; }
 .site-bar-eyebrow {
   font-size: 11px;
@@ -1679,6 +1699,8 @@ body.shell-deck.print-slides { page: deck-page; }
   .container { padding: 0 20px; }
   .site-bar { padding: 0 20px; gap: 12px; }
   .site-bar-subtitle { display: none; }
+  /* Slightly tighter logo cap on phones so it never fights the hamburger. */
+  .site-bar-logo { max-height: 28px; max-width: 160px; }
 
   /* Top-bar nav → hamburger. Hide the inline link row; show the toggle. */
   body:not(.nav-layout-sidebar) .site-bar .nav-menu-toggle {
