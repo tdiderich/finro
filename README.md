@@ -29,12 +29,22 @@ A real migration — not a pitch deck.
 
 Full breakdown: [`STATS.md`](STATS.md).
 
-## 60-second quickstart
-
-Install Rust via [rustup](https://rustup.rs), then:
+## Install
 
 ```bash
+# Homebrew (macOS / Linux)
+brew install tdiderich/tap/kazam
+
+# Cargo (any platform with Rust — install via rustup.rs first)
+cargo install kazam
+
+# Bleeding edge — straight from main
 cargo install --git https://github.com/tdiderich/kazam
+```
+
+## 60-second quickstart
+
+```bash
 kazam init my-site && cd my-site
 kazam dev . --port 3000
 ```
@@ -130,7 +140,7 @@ Static sites shouldn't carry a Next.js-sized supply chain. kazam's doesn't.
 - **~10 direct Rust crates.** `Cargo.lock` committed, `cargo-audit` runs in CI, new dependencies require justification in the PR.
 - **No network at build time.** Build scripts that reach the network are rejected. No post-install scripts, no npm-style drive-by compromise.
 - **Protected main.** Branch protection, required CODEOWNER review, required CI (`cargo test` / `fmt` / `clippy -D warnings` / `cargo-audit`), no force-pushes. Release tags are signed.
-- **Pin a specific commit** if you want reproducibility: `cargo install --git https://github.com/tdiderich/kazam --rev <sha>`.
+- **Pin a specific version** for reproducibility: `cargo install kazam --version 0.4.0` (or `--git … --rev <sha>` for an unreleased commit).
 
 Report vulnerabilities privately via the [GitHub advisory form](https://github.com/tdiderich/kazam/security/advisories/new) — **do not** open a public issue. Full scope and supply-chain protections: [`SECURITY.md`](SECURITY.md).
 
