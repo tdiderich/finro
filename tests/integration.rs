@@ -324,7 +324,7 @@ fn wish_list_succeeds() {
     assert!(output.status.success(), "wish list failed");
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert_contains(&stdout, "deck");
-    assert_contains(&stdout, "QBR");
+    assert_contains(&stdout, "--yolo");
 }
 
 #[test]
@@ -375,16 +375,14 @@ fn wish_deck_scaffolds_workspace() {
     );
 
     // Questions template includes the expected structured sections.
+    // (Generic deck shape — not QBR-specific.)
     let questions = read(&ws.join("questions.md"));
     for heading in [
         "## Topic",
+        "## Purpose",
         "## Audience",
-        "## Timeframe",
-        "## Commitment",
-        "## Wins",
-        "## Challenges",
-        "## Biggest lesson",
-        "## Priorities for next cycle",
+        "## Key messages",
+        "## Supporting evidence",
         "## The ask",
     ] {
         assert_contains(&questions, heading);
@@ -431,6 +429,55 @@ fn wish_deck_dry_run_prints_prompt() {
         !dir.join("deck.yaml").exists(),
         "dry-run must not write deck.yaml"
     );
+}
+
+#[test]
+fn wish_deck_yolo_dry_run_includes_topic() {
+    // --yolo with a topic: dry-run should print an invent-it prompt that
+    // mentions the topic and does NOT require a workspace.
+    let dir = tmp_dir("wish-deck-yolo");
+    std::fs::create_dir_all(&dir).unwrap();
+
+    let output = Command::new(bin())
+        .args([
+            "wish",
+            "deck",
+            "--yolo",
+            "history of tiny rust CLIs",
+            "--dry-run",
+        ])
+        .current_dir(&dir)
+        .output()
+        .expect("run kazam wish deck --yolo ... --dry-run");
+    assert!(output.status.success(), "yolo dry-run failed");
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert_contains(&stdout, "history of tiny rust CLIs");
+    assert_contains(&stdout, "YOLO");
+    assert_contains(&stdout, "shell: deck");
+
+    // No workspace should have been created — yolo bypasses it.
+    assert!(
+        !dir.join("wish-deck").exists(),
+        "yolo must not scaffold a workspace"
+    );
+}
+
+#[test]
+fn wish_deck_yolo_bare_asks_agent_to_surprise() {
+    // Bare `--yolo` (no topic): prompt should still compile and mention
+    // "surprise" (the invent-anything fallback).
+    let dir = tmp_dir("wish-deck-yolo-bare");
+    std::fs::create_dir_all(&dir).unwrap();
+
+    let output = Command::new(bin())
+        .args(["wish", "deck", "--yolo", "--dry-run"])
+        .current_dir(&dir)
+        .output()
+        .expect("run kazam wish deck --yolo --dry-run");
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert_contains(&stdout, "surprise");
+    assert_contains(&stdout, "shell: deck");
 }
 
 #[test]

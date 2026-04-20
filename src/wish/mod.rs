@@ -100,6 +100,11 @@ pub struct Wish {
     /// CWD set to the workspace, so the prompt refers to files in "this
     /// directory" and lets the agent read them with its own tools.
     pub agent_prompt: &'static str,
+    /// Builds the prompt for `--yolo` mode: no workspace, no questions —
+    /// the agent invents the whole thing. Topic is optional; `None` means
+    /// "surprise me." The prompt embeds the schema inline since there's no
+    /// workspace `reference/` folder to read from.
+    pub yolo_prompt: fn(Option<&str>) -> String,
     /// Portable spec printed by `--stdout`.
     pub stdout_markdown: &'static str,
 }
@@ -119,6 +124,7 @@ pub fn run(
     agent: Option<Agent>,
     stdout_mode: bool,
     dry_run: bool,
+    yolo: Option<String>,
 ) -> Result<()> {
     if name == "list" {
         return list();
@@ -130,6 +136,12 @@ pub fn run(
     if stdout_mode {
         print!("{}", wish.stdout_markdown);
         return Ok(());
+    }
+
+    if let Some(topic) = yolo {
+        let topic = topic.trim();
+        let topic = if topic.is_empty() { None } else { Some(topic) };
+        return grant_yolo(wish, topic, out, agent, dry_run);
     }
 
     let workspace = PathBuf::from(format!("wish-{}", wish.name));
@@ -247,6 +259,74 @@ fn grant(
     Ok(())
 }
 
+fn grant_yolo(
+    wish: &Wish,
+    topic: Option<&str>,
+    out: Option<PathBuf>,
+    agent: Option<Agent>,
+    dry_run: bool,
+) -> Result<()> {
+    let prompt = (wish.yolo_prompt)(topic);
+
+    if dry_run {
+        print!("{}", prompt);
+        return Ok(());
+    }
+
+    let out_path = out.unwrap_or_else(|| PathBuf::from(wish.default_out));
+    if out_path.exists() {
+        bail!(
+            "'{}' already exists — pass `--out <path>` to write elsewhere",
+            out_path.display()
+        );
+    }
+
+    let agent = agent.or_else(detect_agent).ok_or_else(|| {
+        anyhow!(
+            "no agent found on $PATH (looked for claude, gemini, codex, opencode). \
+             Install one, pass --agent explicitly, or use --dry-run to print the prompt."
+        )
+    })?;
+
+    let cwd = std::env::current_dir().context("reading current directory")?;
+    println!();
+    match topic {
+        Some(t) => println!(
+            "  🎲 Granting a YOLO {} wish via {} — topic: {}",
+            wish.name,
+            agent.label(),
+            t
+        ),
+        None => println!(
+            "  🎲 Granting a YOLO {} wish via {} — topic: surprise me",
+            wish.name,
+            agent.label()
+        ),
+    }
+    println!();
+    println!("  Running {} (can take 30-90s)…", agent.bin());
+    println!();
+
+    let yaml = run_agent(agent, &prompt, &cwd)?;
+    fs::write(&out_path, &yaml).with_context(|| format!("writing {}", out_path.display()))?;
+
+    let page_url = out_path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .map(|stem| format!("http://localhost:3000/{}.html", stem))
+        .unwrap_or_else(|| "http://localhost:3000/".to_string());
+
+    println!();
+    println!("  ✓ Wrote {}", out_path.display());
+    println!();
+    println!("  Next:");
+    println!("    kazam dev .");
+    println!("    → open {}", page_url);
+    println!();
+
+    Ok(())
+}
+
 fn detect_agent() -> Option<Agent> {
     Agent::AUTO_DETECT_ORDER
         .iter()
@@ -318,6 +398,7 @@ fn list() -> Result<()> {
     println!();
     println!("  Flags:");
     println!("    --agent <claude|gemini|codex|opencode>   Force a specific agent");
+    println!("    --yolo [topic]                           Skip workspace, let the agent invent everything");
     println!("    --dry-run                                Print the prompt instead of running the agent");
     println!("    --stdout                                 Print the portable wish markdown");
     println!("    --out <path>                             Where to write the populated YAML");

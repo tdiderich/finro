@@ -50,11 +50,18 @@ components:
           kazam wish deck                          # 1st run: scaffold wish-deck/
           # …fill in wish-deck/questions.md, drop your context files…
           kazam wish deck                          # 2nd run: grant it
+          kazam wish deck --yolo                   # skip the workspace, agent invents everything
+          kazam wish deck --yolo "about me"        # YOLO with a topic (agent pulls from context)
           kazam wish deck --agent claude           # force a specific agent
           kazam wish deck --dry-run                # print the grant prompt
           kazam wish deck --stdout                 # portable wish spec (markdown)
           kazam wish deck --out quarterly.yaml     # pick the output path
           kazam wish list                          # see every wish
+
+      - type: callout
+        variant: info
+        title: 🎲 YOLO mode
+        body: "Skip the workspace entirely with `kazam wish deck --yolo`. The agent invents every slide — no questions, no context files, just vibes. Pass an optional topic (`--yolo \"about me\"`, `--yolo \"history of coffee\"`) or leave it bare for a surprise. Great for demos, warm-ups, or when your agent already knows you well enough to write the deck."
 
   - type: section
     eyebrow: Applications

@@ -68,6 +68,11 @@ enum Command {
         /// Print the grant prompt instead of running the agent
         #[arg(long)]
         dry_run: bool,
+        /// YOLO mode: skip the workspace, let the agent invent everything.
+        /// Pass a topic (`--yolo "about me"`) or use bare `--yolo` for a
+        /// surprise.
+        #[arg(long, value_name = "TOPIC", num_args = 0..=1, default_missing_value = "")]
+        yolo: Option<String>,
     },
 }
 
@@ -83,6 +88,7 @@ fn main() -> Result<()> {
             agent,
             stdout,
             dry_run,
-        } => wish::run(&name, out, agent, stdout, dry_run),
+            yolo,
+        } => wish::run(&name, out, agent, stdout, dry_run, yolo),
     }
 }

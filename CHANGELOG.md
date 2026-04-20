@@ -15,9 +15,11 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   on `$PATH` (Claude, Gemini, Codex, OpenCode) with the workspace as CWD.
   The agent reads everything with its own file tools and writes a populated
   YAML. kazam itself does no file parsing. First wish: `kazam wish deck` —
-  a 7-slide QBR / strategy-review deck. Flags: `--agent` (force a specific
-  CLI), `--dry-run` (print the grant prompt), `--stdout` (portable wish
-  markdown spec), `--out` (override output path).
+  a ~7-slide deck for any topic (QBR, launch review, pitch, retrospective,
+  etc.). Flags: `--agent` (force a specific CLI), `--yolo [topic]` (skip
+  the workspace, let the agent invent everything), `--dry-run` (print the
+  grant prompt), `--stdout` (portable wish markdown spec), `--out`
+  (override output path).
 - `/wishes` docs page with the scaffold→grant flow, agent-applications
   panel, and 8-week roadmap.
 - Deck shell typography + layout pass — non-cover slides vertically
