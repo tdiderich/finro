@@ -435,3 +435,71 @@ kazam dev .              # watch + serve at localhost:3000 (live reload)
 kazam build .            # one-shot build to _site/
 kazam build . --release  # minified production build
 ```
+
+## If you hit a kazam bug
+
+Agents using this guide are on the front line of catching kazam bugs. If you
+reproduce one (parser error on valid YAML, surprising rendering, flag that
+doesn't work as documented), please file it upstream so the next agent hits a
+fixed version. Follow this protocol in order — do not skip the dedup step.
+
+1. **Confirm `gh` is authenticated.** Run `gh auth status`. If it errors, skip
+   to step 4 and tell the user how to file by hand.
+
+2. **Search for duplicates before filing.** Covers both open and closed —
+   a closed issue may mean the fix already landed and the user just needs to
+   upgrade.
+
+   ```bash
+   gh issue list --repo tdiderich/kazam --state all \
+     --search "<2-4 keywords describing the symptom>"
+   ```
+
+   Skim the titles. If anything looks like a match:
+
+   - Show the user the URL and ask whether to add a reproducer comment on the
+     existing issue instead of opening a new one.
+   - If it's closed and fixed, tell the user which version the fix shipped in
+     and suggest upgrading (`brew upgrade kazam` or
+     `cargo install kazam --force`). Don't file a duplicate.
+
+3. **If no duplicate, file a new issue.** Tell the user what you're about to
+   do before running the command — file-and-surprise is rude. Use this
+   template:
+
+   ```bash
+   gh issue create --repo tdiderich/kazam \
+     --title "<short imperative — what breaks>" \
+     --label bug \
+     --body "$(cat <<'EOF'
+   ## What happened
+   <one sentence>
+
+   ## Minimal repro
+   <smallest YAML + command that reproduces the bug>
+
+   ## Expected
+   <what the docs say should happen>
+
+   ## Actual
+   <what kazam does — paste the error message or wrong HTML snippet>
+
+   ## Version
+   <paste `kazam --version`>
+   EOF
+   )"
+   ```
+
+4. **Fallback when `gh` isn't available.** Show the user:
+
+   > Couldn't auto-file this — open
+   > https://github.com/tdiderich/kazam/issues/new and paste:
+   > [then show the filled-out template body]
+
+Rules of thumb:
+
+- File only reproducible bugs. Feature requests and "I wish kazam did X" go
+  elsewhere (or wait for a considered discussion).
+- Keep the repro minimal — smallest YAML + command that triggers it.
+- Never open duplicates. When in doubt, comment on the closest existing issue
+  instead.
