@@ -10,6 +10,31 @@ use tiny_http::{Header, Method, Response, Server};
 
 use crate::build;
 
+/// How many ports to walk past the requested one before giving up. A run
+/// of 10 covers typical dev-server clustering (ports 3000-3009) without
+/// silently drifting to something surprising.
+const PORT_FALLBACK_ATTEMPTS: u16 = 10;
+
+/// Try to bind `0.0.0.0:<port>`, walking forward on conflict. Returns the
+/// live server and the port it actually bound to.
+fn bind_next_available(start: u16) -> Result<(Server, u16)> {
+    let mut last_err: Option<String> = None;
+    for p in start..start.saturating_add(PORT_FALLBACK_ATTEMPTS) {
+        let addr = format!("0.0.0.0:{p}");
+        match Server::http(&addr) {
+            Ok(s) => return Ok((s, p)),
+            Err(e) => last_err = Some(e.to_string()),
+        }
+    }
+    let tail = start
+        .saturating_add(PORT_FALLBACK_ATTEMPTS)
+        .saturating_sub(1);
+    anyhow::bail!(
+        "no free port in range {start}..={tail} — last error: {}",
+        last_err.unwrap_or_else(|| "unknown".to_string())
+    );
+}
+
 pub fn run(dir: &Path, out: &Path, port: u16) -> Result<()> {
     build::run(dir, out, false)?;
 
@@ -22,10 +47,15 @@ pub fn run(dir: &Path, out: &Path, port: u16) -> Result<()> {
     thread::spawn(move || watch_loop(dir_clone, out_clone, ver_clone));
 
     // ── HTTP server ───────────────────────────────
-    let addr = format!("0.0.0.0:{port}");
-    let server = Server::http(&addr).map_err(|e| anyhow::anyhow!("failed to bind {addr}: {e}"))?;
+    // Try the requested port first; if it's in use, walk forward up to
+    // PORT_FALLBACK_ATTEMPTS before giving up. Matches Vite / Next.js /
+    // Parcel UX — a port being busy shouldn't kill the dev loop.
+    let (server, actual_port) = bind_next_available(port)?;
 
-    println!("\n  ➜ http://localhost:{port}");
+    if actual_port != port {
+        println!("\n  ⚠ port {port} is in use — serving on {actual_port} instead");
+    }
+    println!("\n  ➜ http://localhost:{actual_port}");
     println!("  watching {}\n", dir.display());
 
     for req in server.incoming_requests() {
@@ -170,5 +200,43 @@ fn content_type(path: &Path) -> &'static str {
         Some("woff2") => "font/woff2",
         Some("woff") => "font/woff",
         _ => "application/octet-stream",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::net::TcpListener;
+
+    /// Bind a free port the kernel picks, then ask for the same port.
+    /// bind_next_available should fall back to the next open one.
+    #[test]
+    fn bind_next_available_falls_back_on_conflict() {
+        // Grab an ephemeral port from the OS.
+        let squatter = TcpListener::bind("0.0.0.0:0").expect("bind ephemeral");
+        let taken = squatter.local_addr().unwrap().port();
+
+        let (server, got) = bind_next_available(taken).expect("fallback bind");
+        assert_ne!(got, taken, "expected to walk forward past the taken port");
+        assert!(
+            got > taken && got <= taken.saturating_add(PORT_FALLBACK_ATTEMPTS),
+            "fell back to {got}, expected {}..={}",
+            taken + 1,
+            taken.saturating_add(PORT_FALLBACK_ATTEMPTS)
+        );
+
+        // Tidy up — drop the server and the squatter explicitly so the
+        // sockets close before the test exits.
+        drop(server);
+        drop(squatter);
+    }
+
+    #[test]
+    fn bind_next_available_succeeds_when_port_free() {
+        // High ephemeral-range start — very unlikely to be taken.
+        let start = 49_999;
+        let (server, got) = bind_next_available(start).expect("bind free port");
+        assert_eq!(got, start);
+        drop(server);
     }
 }
