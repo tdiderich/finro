@@ -1,7 +1,8 @@
 //! Integration tests — invoke the kazam binary end-to-end.
 
+use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 fn bin() -> PathBuf {
     // cargo sets CARGO_BIN_EXE_<name> env var for the test runner
@@ -313,6 +314,111 @@ fn build_skips_hidden_entries_and_is_idempotent() {
         !out.join(".stealth").exists(),
         "hidden dir leaked into output"
     );
+}
+
+#[test]
+fn wish_list_succeeds() {
+    let output = Command::new(bin())
+        .args(["wish", "list"])
+        .output()
+        .expect("run kazam wish list");
+    assert!(output.status.success(), "wish list failed");
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert_contains(&stdout, "deck");
+    assert_contains(&stdout, "QBR");
+}
+
+#[test]
+fn wish_deck_stdout_prints_markdown() {
+    let output = Command::new(bin())
+        .args(["wish", "deck", "--stdout"])
+        .output()
+        .expect("run kazam wish deck --stdout");
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    // Markdown spec has these structural headers
+    assert_contains(&stdout, "# kazam wish: deck");
+    assert_contains(&stdout, "Ask the user these questions");
+    assert_contains(&stdout, "shell: deck");
+}
+
+#[test]
+fn wish_deck_populates_and_builds() {
+    let dir = tmp_dir("wish-deck");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: WishDeck\ntheme: dark\n").unwrap();
+
+    // Pipe answers through stdin. Multi-line fields terminate on a blank line.
+    let answers = "Q1 recap\nLeadership team\nQ1 2026\nShipped v0.4.0\nRebuilt personal site\n\nBehind on arc\n\nGreen-light the launch\n";
+
+    let mut child = Command::new(bin())
+        .args(["wish", "deck"])
+        .current_dir(&dir)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::null())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("run kazam wish deck");
+    child
+        .stdin
+        .as_mut()
+        .unwrap()
+        .write_all(answers.as_bytes())
+        .unwrap();
+    let status = child.wait().expect("wait wish deck");
+    assert!(status.success(), "wish deck failed");
+
+    let deck_yaml = dir.join("deck.yaml");
+    assert!(deck_yaml.exists(), "deck.yaml not written");
+    let yaml = read(&deck_yaml);
+    assert_contains(&yaml, "shell: deck");
+    assert_contains(&yaml, "Q1 recap");
+    assert_contains(&yaml, "Shipped v0.4.0");
+    assert_contains(&yaml, "Green-light the launch");
+
+    // And kazam build should accept it cleanly.
+    let out = dir.join("_site");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("build the populated deck");
+    assert!(status.success(), "kazam build failed on generated deck");
+    assert!(out.join("deck.html").exists());
+    let html = read(&out.join("deck.html"));
+    assert_contains(&html, "Q1 recap");
+    assert_contains(&html, "Shipped v0.4.0");
+}
+
+#[test]
+fn wish_deck_refuses_existing_output() {
+    let dir = tmp_dir("wish-deck-exists");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: X\ntheme: dark\n").unwrap();
+    std::fs::write(dir.join("deck.yaml"), "placeholder").unwrap();
+
+    let output = Command::new(bin())
+        .args(["wish", "deck"])
+        .current_dir(&dir)
+        .output()
+        .expect("run kazam wish deck");
+    assert!(
+        !output.status.success(),
+        "wish deck should refuse to overwrite existing deck.yaml"
+    );
+}
+
+#[test]
+fn wish_unknown_name_errors() {
+    let output = Command::new(bin())
+        .args(["wish", "nope-this-does-not-exist"])
+        .output()
+        .expect("run kazam wish <bogus>");
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_contains(&stderr, "unknown wish");
 }
 
 #[test]

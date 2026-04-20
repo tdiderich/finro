@@ -7,6 +7,13 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- `kazam wish <name>` — runs a short interview, then either populates a
+  template directly or hands the answers off to an agent CLI for rich
+  generation. First wish: `kazam wish deck` (7-slide QBR / strategy-review).
+  Supports `--agent claude|gemini|codex|opencode` (shells out to each
+  agent's non-interactive mode: `-p`, `exec`, `run`) and `--stdout` (prints
+  the portable wish markdown for piping into any other agent).
+- `/wishes` docs page with the agent-applications panel and 8-week roadmap.
 - Mobile responsiveness pass across the whole theme: stat grids, callout
   columns, before/after, tab buttons, tables, code blocks, and the deck
   shell all adapt to phone (≤640px) and tablet (≤768px) viewports.
