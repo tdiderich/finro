@@ -6,6 +6,8 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-04-20
+
 ### Added
 - `kazam wish <name>` — scaffolds a `wish-<name>/` workspace with structured
   prompts (`questions.md`), usage hints (`README.md`), and a version-matched
@@ -45,6 +47,13 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `` `code` ``) in its `before`/`after` fields instead of escaping them
   as literal characters.
 - Build walker skips hidden entries (`.git`, `.DS_Store`) at any depth.
+- Deck PDF export: cover slides now vertically center on landscape pages
+  instead of hugging the top. New `print_flow: continuous` page option
+  flows slides as one portrait document with thin separators between them,
+  for sharing as a readable artifact rather than a presentation.
+- Chart component renders inline SVG for pie, bar (vertical / horizontal /
+  stacked), and timeseries (single + multi-series) — themed, zero runtime
+  JS, stackable inside decks/grids/callouts.
 
 ## [0.3.0] — 2026-04-18
 
