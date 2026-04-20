@@ -138,6 +138,11 @@ pub fn run(
         return Ok(());
     }
 
+    // Every path from here ends in a `kazam dev .` suggestion, which needs
+    // kazam.yaml. Auto-create a minimal one if missing so users can run
+    // `kazam wish` in any empty directory and have the whole flow just work.
+    ensure_site_config()?;
+
     if let Some(topic) = yolo {
         let topic = topic.trim();
         let topic = if topic.is_empty() { None } else { Some(topic) };
@@ -152,6 +157,28 @@ pub fn run(
 
     // Workspace exists → grant.
     grant(wish, &workspace, out, agent, dry_run)
+}
+
+/// Write a minimal `kazam.yaml` in the current directory if one isn't
+/// there already. Name derives from the CWD's basename. Lets
+/// `kazam wish` work in any empty directory without forcing the user to
+/// hand-author site config first.
+fn ensure_site_config() -> Result<()> {
+    let cfg = Path::new("kazam.yaml");
+    if cfg.exists() {
+        return Ok(());
+    }
+    let name = std::env::current_dir()
+        .ok()
+        .as_deref()
+        .and_then(|p| p.file_name())
+        .and_then(|n| n.to_str())
+        .filter(|s| !s.is_empty())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| "Site".to_string());
+    fs::write(cfg, format!("name: {}\ntheme: dark\n", name)).context("writing kazam.yaml")?;
+    println!("  (wrote a minimal kazam.yaml — site config for `kazam dev` / `kazam build`)");
+    Ok(())
 }
 
 fn scaffold(wish: &Wish, workspace: &Path) -> Result<()> {

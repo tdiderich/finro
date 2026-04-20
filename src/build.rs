@@ -24,12 +24,19 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
         .follow_links(true)
         .into_iter()
         .filter_entry(|e| {
-            // Skip the output directory (e.g. _site/ nested in source dir)
+            // Skip the configured output directory (e.g. _site/ nested in
+            // source dir), AND any `_site` folder anywhere in the tree —
+            // otherwise running kazam from a parent directory that contains
+            // previously-built sub-sites would recursively ingest all those
+            // `_site/` outputs as if they were source.
             if e.path()
                 .canonicalize()
                 .map(|p| p.starts_with(&out_canonical))
                 .unwrap_or(false)
             {
+                return false;
+            }
+            if e.depth() > 0 && e.file_name() == "_site" && e.file_type().is_dir() {
                 return false;
             }
             // Skip hidden entries (.git, .DS_Store, .vscode, etc.) at any depth
