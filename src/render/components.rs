@@ -1,6 +1,6 @@
 use pulldown_cmark::{html as md_html, Options, Parser as MdParser};
 
-use super::{esc, Rendered};
+use super::{charts, esc, Rendered};
 use crate::icons;
 use crate::types::*;
 
@@ -89,6 +89,25 @@ pub fn render(c: &Component) -> Rendered {
             icon,
         } => empty_state(title, body, action, icon),
         Component::Icon { name, size, color } => icon_component(name, *size, *color),
+        Component::Chart {
+            kind,
+            title,
+            height,
+            x_label,
+            y_label,
+            orientation,
+            data,
+            series,
+        } => charts::render(charts::ChartSpec {
+            kind: *kind,
+            title,
+            height: *height,
+            x_label,
+            y_label,
+            orientation: *orientation,
+            data,
+            series,
+        }),
     }
 }
 

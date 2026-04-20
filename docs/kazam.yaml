@@ -25,6 +25,8 @@ nav:
         href: components/content.html
       - label: Grids
         href: components/grids.html
+      - label: Charts
+        href: components/charts.html
       - label: Indicators
         href: components/indicators.html
       - label: Interactive

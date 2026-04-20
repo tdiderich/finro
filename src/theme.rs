@@ -1478,6 +1478,69 @@ body.shell-document .doc-body strong { color: #fff; }
 /* Icon component (standalone) */
 /* SVG styling is handled via the render; no extra CSS needed */
 
+/* Chart */
+.c-chart {
+  margin: 0;
+  padding: 20px 22px 18px;
+  background: rgba(var(--text-rgb),0.04);
+  border: 1px solid rgba(var(--text-rgb),0.1);
+  border-radius: 12px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.c-chart-title {
+  font-size: 13px; font-weight: 600;
+  color: var(--snow);
+  letter-spacing: 0.2px;
+  margin: 0;
+}
+.c-chart-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+.c-chart-grid {
+  stroke: rgba(var(--text-rgb),0.08);
+  stroke-width: 1;
+}
+.c-chart-axis {
+  fill: rgba(var(--text-rgb),0.55);
+  font-size: 11px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.c-chart-axis-y { text-anchor: end; }
+.c-chart-axis-y-right { text-anchor: end; }
+.c-chart-axis-x { text-anchor: middle; }
+.c-chart-bar {
+  rx: 2px;
+  transition: opacity 0.15s;
+}
+.c-chart-bar:hover, .c-chart-slice:hover, .c-chart-dot:hover { opacity: 0.85; }
+.c-chart-slice { stroke: var(--bg); stroke-width: 2; }
+.c-chart-line { pointer-events: none; }
+.c-chart-dot { cursor: default; }
+.c-chart-empty {
+  fill: rgba(var(--text-rgb),0.35);
+  font-size: 13px;
+}
+.c-chart-legend {
+  display: flex; flex-wrap: wrap;
+  gap: 6px 16px;
+  padding: 0; margin: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--light-muted);
+}
+.c-chart-legend-item {
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.c-chart-swatch {
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
 /* View source link (bottom-right floating pill) */
 .view-source {
   position: fixed;
