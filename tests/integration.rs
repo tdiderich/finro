@@ -903,6 +903,137 @@ fn absent_logo_falls_back_to_text_name() {
     );
 }
 
+/// Build `dir` with a fixed `KAZAM_TODAY`, returning (stdout, rendered HTML).
+fn build_with_today(dir: &Path, today: &str, out: &Path) -> (String, String) {
+    let output = Command::new(bin())
+        .args(["build"])
+        .arg(dir)
+        .arg("--out")
+        .arg(out)
+        .env("KAZAM_TODAY", today)
+        .output()
+        .expect("run kazam build");
+    assert!(
+        output.status.success(),
+        "build failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
+    let html = read(&out.join("index.html"));
+    (stdout, html)
+}
+
+#[test]
+fn freshness_overdue_injects_red_banner_and_reports_stale() {
+    let dir = tmp_dir("fresh-overdue");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Docs\ntheme: dark\n").unwrap();
+    // Updated Jan 1, reviewed every 30 days. On Apr 21 that's 110 days
+    // later → 80 days overdue → red banner.
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Overdue page\nshell: standard\nfreshness:\n  updated: '2026-01-01'\n  review_every: 30d\n  owner: tyler@mazehq.com\n  sources_of_truth:\n    - https://notion.so/abc\n    - label: '#ts-hub'\n      href: https://slack.com/archives/C01\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let (stdout, html) = build_with_today(&dir, "2026-04-21", &out);
+
+    assert_contains(
+        &html,
+        r#"<div class="c-callout c-callout-danger c-freshness-banner""#,
+    );
+    assert_contains(&html, "Review overdue");
+    assert_contains(&html, "tyler@mazehq.com");
+    // sources_of_truth list renders
+    assert_contains(&html, r#"href="https://notion.so/abc""#);
+    assert_contains(&html, r#"href="https://slack.com/archives/C01""#);
+    assert_contains(&html, "#ts-hub");
+
+    // Build report surfaces the overdue page.
+    assert_contains(&stdout, "overdue page(s)");
+    assert_contains(&stdout, "index.html");
+    assert_contains(&stdout, "tyler@mazehq.com");
+}
+
+#[test]
+fn freshness_due_soon_injects_yellow_banner() {
+    let dir = tmp_dir("fresh-due-soon");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Docs\ntheme: dark\n").unwrap();
+    // Updated Jan 23, reviewed every 90 days → due Apr 23. Today is Apr
+    // 21 → 2 days until due → yellow banner.
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Due soon\nshell: standard\nfreshness:\n  updated: '2026-01-23'\n  review_every: 90d\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let (stdout, html) = build_with_today(&dir, "2026-04-21", &out);
+
+    assert_contains(
+        &html,
+        r#"<div class="c-callout c-callout-warn c-freshness-banner""#,
+    );
+    assert_contains(&html, "Review due soon");
+    assert!(
+        !html.contains(r#"<div class="c-callout c-callout-danger c-freshness-banner""#),
+        "due-soon should emit the yellow warn banner, not the red danger one"
+    );
+
+    // Build report shows the due-soon page, not the overdue section.
+    assert_contains(&stdout, "due for review soon");
+    assert!(
+        !stdout.contains("overdue page(s)"),
+        "no overdue pages expected here"
+    );
+}
+
+#[test]
+fn freshness_fresh_page_has_no_banner_and_report_stays_silent() {
+    let dir = tmp_dir("fresh-fresh");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Docs\ntheme: dark\n").unwrap();
+    // Updated today, 90-day cadence → no banner, no report line.
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Fresh\nshell: standard\nfreshness:\n  updated: '2026-04-21'\n  review_every: 90d\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let (stdout, html) = build_with_today(&dir, "2026-04-21", &out);
+
+    // The `.c-freshness-banner` CSS class is inlined in every page's
+    // stylesheet; match the full banner opening tag instead.
+    assert!(
+        !html.contains(r#"<div class="c-callout c-callout-warn c-freshness-banner""#)
+            && !html.contains(r#"<div class="c-callout c-callout-danger c-freshness-banner""#),
+        "fresh page should not emit a banner div"
+    );
+    assert!(!stdout.contains("overdue page(s)"));
+    assert!(!stdout.contains("due for review soon"));
+}
+
+#[test]
+fn freshness_page_without_metadata_is_silent() {
+    // No `freshness:` block at all → no banner, no report entry, exactly
+    // as a pre-feature page would render.
+    let dir = tmp_dir("fresh-none");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Docs\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Plain\nshell: standard\ncomponents:\n  - type: header\n    title: Plain\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let (stdout, html) = build_with_today(&dir, "2026-04-21", &out);
+
+    assert!(!html.contains(r#"<div class="c-callout c-callout-warn c-freshness-banner""#));
+    assert!(!html.contains(r#"<div class="c-callout c-callout-danger c-freshness-banner""#));
+    assert!(!stdout.contains("overdue"));
+    assert!(!stdout.contains("due for review"));
+}
+
 #[test]
 fn wish_unknown_name_errors() {
     let output = Command::new(bin())

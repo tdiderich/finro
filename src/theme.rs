@@ -1139,6 +1139,41 @@ body.shell-document .doc-body strong { color: #fff; }
 .c-callout-body a:hover { text-decoration-color: var(--teal); }
 .c-callout-links { margin-top: 12px; }
 
+/* Freshness banner: the review-overdue / due-soon nudge that kazam
+   injects at the top of a page when its freshness metadata is expired.
+   Builds on `c-callout` for colors — yellow for "due soon", red for
+   "overdue" — and adds a sources-of-truth list underneath. */
+.c-freshness-banner { margin-bottom: 24px; }
+.c-freshness-sources {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(var(--text-rgb), 0.08);
+  font-size: 13px;
+}
+.c-freshness-sources-label {
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 11px;
+}
+.c-freshness-sources ul {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+.c-freshness-sources li { margin: 0; }
+.c-freshness-sources a {
+  color: var(--teal);
+  text-decoration: underline;
+  text-decoration-color: rgba(var(--accent-rgb), 0.3);
+  text-underline-offset: 2px;
+}
+.c-freshness-sources a:hover { text-decoration-color: var(--teal); }
+
 /* Code */
 .c-code {
   background: rgba(var(--text-rgb), 0.07);

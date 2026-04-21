@@ -49,6 +49,57 @@ pub struct Page {
     /// sharing as a readable artifact rather than a presentation.
     #[serde(default)]
     pub print_flow: Option<PrintFlow>,
+    /// Optional freshness metadata: owner, last content update, review cadence,
+    /// and sources of truth the agent / reader can consult to refresh the
+    /// page. When the page is past its review window, a banner is injected
+    /// at the top of the rendered output and the build reports the page as
+    /// stale. Zero runtime JS — staleness is computed at `kazam build` time.
+    #[serde(default)]
+    pub freshness: Option<Freshness>,
+}
+
+/// Freshness metadata for a page — when was it last updated, who owns it,
+/// how often should it be reviewed, and where are the sources of truth.
+#[derive(Deserialize, Clone)]
+pub struct Freshness {
+    /// ISO date (YYYY-MM-DD) of the last content update.
+    pub updated: Option<String>,
+    /// Review cadence. Accepts `Nd` (days), `Nw` (weeks), `Nm` (months,
+    /// 30-day approximation), `Ny` (years, 365-day approximation), or the
+    /// string shortcuts `weekly`, `monthly`, `quarterly`, `yearly`,
+    /// `annually`.
+    pub review_every: Option<String>,
+    /// Who should be contacted before changes land. Free-form — email,
+    /// Slack handle, or team name.
+    pub owner: Option<String>,
+    /// Pointers the agent / reader should consult to refresh the content.
+    /// Shorthand form is a bare URL string; expanded form accepts a label
+    /// alongside the href.
+    #[serde(default)]
+    pub sources_of_truth: Option<Vec<SourceOfTruth>>,
+}
+
+/// One source-of-truth entry. Either a bare URL or a labeled link.
+#[derive(Deserialize, Clone)]
+#[serde(untagged)]
+pub enum SourceOfTruth {
+    Simple(String),
+    Full { label: String, href: String },
+}
+
+impl SourceOfTruth {
+    pub fn href(&self) -> &str {
+        match self {
+            SourceOfTruth::Simple(h) => h,
+            SourceOfTruth::Full { href, .. } => href,
+        }
+    }
+    pub fn label(&self) -> &str {
+        match self {
+            SourceOfTruth::Simple(h) => h,
+            SourceOfTruth::Full { label, .. } => label,
+        }
+    }
 }
 
 #[derive(Deserialize, Clone, Copy, Default)]

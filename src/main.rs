@@ -5,6 +5,7 @@ use std::path::PathBuf;
 mod agents;
 mod build;
 mod dev;
+mod freshness;
 mod icons;
 mod init;
 mod llms;

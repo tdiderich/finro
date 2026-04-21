@@ -7,6 +7,24 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- `freshness:` page metadata — declare last-updated date, review cadence,
+  owner, and sources-of-truth pointers per page. kazam computes status
+  at build time (zero runtime JS) and injects a banner at the top of
+  stale pages: **yellow** when the review comes due within 7 days,
+  **red** when it's already overdue. Every build also prints a grouped
+  summary of every stale page (silent when everything is fresh), sorted
+  most-urgent-first. Use `KAZAM_TODAY=YYYY-MM-DD` for deterministic
+  builds. Full docs at `/freshness`. Example:
+  ```yaml
+  freshness:
+    updated: 2026-01-15
+    review_every: 90d
+    owner: tyler@mazehq.com
+    sources_of_truth:
+      - https://notion.so/abc123
+      - label: "#ts-hub"
+        href: https://company.slack.com/archives/C012345
+  ```
 - `logo:` field on `kazam.yaml` site config — replaces the text `name:`
   treatment in the site bar with an `<img>`. Accepts both shorthand
   (`logo: assets/logo.svg`) and expanded object form

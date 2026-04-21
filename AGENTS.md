@@ -99,6 +99,39 @@ slides:                     # for deck shell only
 setting it to any other preset swaps it in. Omit to inherit the site-wide
 value.
 
+### Freshness (optional)
+
+Pages can declare review cadence + sources of truth. At build time, kazam
+computes staleness against today's date and injects a banner at the top
+of the page — **yellow** if the review comes due within the next 7 days,
+**red** if it's already overdue. No runtime JS; staleness is a pure
+date compare. A build-time report also prints every stale page, grouped
+by overdue vs due-soon, sorted most-urgent first. Silent when nothing
+is stale.
+
+```yaml
+freshness:
+  updated: 2026-01-15              # ISO date of last content change
+  review_every: 90d                # Nd | Nw | Nm | Ny | weekly | monthly | quarterly | yearly
+  owner: tyler@mazehq.com          # free-form — email, handle, team name
+  sources_of_truth:                # bare URL or { label, href }
+    - https://notion.so/abc123
+    - label: "#ts-hub"
+      href: https://company.slack.com/archives/C012345
+    - label: "Linear: TSH"
+      href: https://linear.app/co/project/tsh
+```
+
+All fields are optional. A page with only `updated:` and `review_every:`
+still computes the banner; missing either field means the page is never
+stale (nothing to compare against). To simulate "today" for tests or
+snapshot builds, set `KAZAM_TODAY=YYYY-MM-DD` in the environment.
+
+kazam does not fetch the sources — it just renders the labels as links.
+Refreshing the content is the agent's job: when a reader (or an agent
+working on the page) clicks through, they read the source and propose
+updates.
+
 ## Shells
 
 - **standard** — sticky site header + nav + 1200px container. Default. Use for

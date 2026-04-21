@@ -1,0 +1,182 @@
+title: Freshness
+shell: standard
+description: Build-time staleness checking for docs and knowledge bases — review cadence, owners, sources of truth, zero runtime JS.
+freshness:
+  updated: 2026-04-21
+  review_every: 90d
+  owner: tyler@mazehq.com
+  sources_of_truth:
+    - label: Implementation
+      href: https://github.com/tdiderich/kazam/blob/main/src/freshness.rs
+    - label: "File a freshness bug"
+      href: https://github.com/tdiderich/kazam/issues/new
+
+components:
+  - type: header
+    title: Freshness
+    eyebrow: New in v0.4.x
+    subtitle: Every page can declare who owns it, when it was last updated, how often it should be reviewed, and where the sources of truth live. kazam turns that into a banner — yellow if a review is due within a week, red if it's already overdue — and a build-time report of everything that needs attention.
+
+  - type: section
+    eyebrow: The metadata
+    heading: One block of YAML per page
+    components:
+      - type: markdown
+        body: |
+          Add a `freshness:` block to any page's YAML. Every field is optional — a page with only
+          `updated:` and `review_every:` will still compute status correctly; fields you don't set
+          just aren't shown in the banner.
+
+      - type: code
+        language: yaml
+        code: |
+          title: Onboarding guide
+          shell: standard
+
+          freshness:
+            updated: 2026-01-15              # ISO date of the last content change
+            review_every: 90d                # Nd | Nw | Nm | Ny | weekly | monthly | quarterly | yearly
+            owner: tyler@mazehq.com          # free-form — email, Slack handle, team name
+            sources_of_truth:                # bare URL or { label, href }
+              - https://notion.so/abc123
+              - label: "#ts-hub"
+                href: https://company.slack.com/archives/C012345
+              - label: "Linear: TSH project"
+                href: https://linear.app/co/project/tsh
+
+          components:
+            - type: header
+              title: Onboarding guide
+            ...
+
+  - type: section
+    eyebrow: Banner variants
+    heading: Yellow, then red
+    components:
+      - type: markdown
+        body: |
+          kazam injects a banner at the top of the rendered page based on how close it is to the
+          review deadline. **No runtime JavaScript** — the check runs at `kazam build` time and
+          the banner is baked into the HTML. To keep the banner accurate between rebuilds, run
+          a scheduled daily build (a GitHub Action on `schedule:` works).
+
+      - type: callout
+        variant: warn
+        title: Review due soon
+        body: "Review is due in **5 days**. Last updated **Jan 15, 2026** (85 days ago). Review cadence: **every 90d**. Site last built: Apr 21, 2026. Owner: **tyler@mazehq.com**."
+
+      - type: callout
+        variant: danger
+        title: Review overdue
+        body: "Review is **20 days overdue**. Last updated **Jan 15, 2026** (110 days ago). Review cadence: **every 90d**. Site last built: Apr 21, 2026. Owner: **tyler@mazehq.com**."
+
+      - type: markdown
+        body: |
+          When `sources_of_truth:` is set, the real banner also renders a list of links
+          underneath — the reviewer clicks straight through to the doc / Slack channel / Linear
+          project to do the refresh. *(The two callouts above show the banner body; the real
+          banner adds a sources-of-truth row beneath.)*
+
+  - type: section
+    eyebrow: The build report
+    heading: Every build tells you what's stale
+    components:
+      - type: markdown
+        body: |
+          `kazam build` always prints a grouped summary of every page past (or nearly past) its
+          review window. Overdue items sort first, most-overdue at the top. Silent when nothing
+          is stale — no noise on healthy builds.
+
+      - type: code
+        language: text
+        code: |
+          $ kazam build .
+            _site/guide.html
+            _site/onboarding.html
+            _site/api/reference.html
+
+          ✓ 3 page(s) → _site
+
+          ⚠ 2 overdue page(s):
+              onboarding.html                         20 day(s) overdue (cadence: every 90d) — owner tyler@mazehq.com
+              api/reference.html                       5 day(s) overdue (cadence: every 180d) — owner eng@mazehq.com
+
+          ⏳ 1 page(s) due for review soon:
+              guide.html                              due in 3 day(s) (cadence: every 30d)
+
+      - type: callout
+        variant: info
+        title: Wire it into CI
+        body: "Run `kazam build .` on every PR and capture the log; the report becomes a free review surface. Or on a nightly cron: a weekly `gh action` that emails the owner field for anything overdue costs nothing and keeps the KB honest."
+
+  - type: section
+    eyebrow: Sources of truth
+    heading: kazam doesn't fetch — your agent does
+    components:
+      - type: markdown
+        body: |
+          The `sources_of_truth:` list is deliberately just labeled URLs. kazam never reaches
+          out to Notion, Linear, Slack, or anything else at build time — that preserves the
+          zero-supply-chain, no-network-at-build-time guarantee.
+
+          Where this gets interesting: an agent refreshing the page can see the sources, fetch
+          what it's able to (URLs via WebFetch, Linear via its MCP, Slack via its MCP), and ask
+          the user to paste anything it can't reach. User owns the fetcher; agent owns the
+          integration; kazam stays narrow.
+
+      - type: columns
+        equal_heights: true
+        columns:
+          - - type: callout
+              variant: info
+              title: Shorthand
+              body: "Just a URL. Label becomes the URL itself."
+              links:
+                - label: "sources_of_truth:\n  - https://notion.so/abc"
+                  href: "#"
+          - - type: callout
+              variant: info
+              title: Labeled
+              body: "Any link — Slack channel, Linear project, HubSpot dashboard — gets a readable label."
+              links:
+                - label: "- label: '#ts-hub'\n  href: https://..."
+                  href: "#"
+
+  - type: section
+    eyebrow: How status is computed
+    heading: "`updated + review_every` vs today"
+    components:
+      - type: markdown
+        body: |
+          The check is a pure date comparison — `updated + review_every` vs today (from
+          `KAZAM_TODAY` when set, else the system clock). Three states:
+
+      - type: stat_grid
+        columns: 3
+        stats:
+          - label: Fresh
+            value: No banner
+            detail: More than 7 days until the review deadline.
+            color: green
+          - label: Due soon
+            value: Yellow
+            detail: Within 7 days of the deadline. Reviewer sees the nudge.
+            color: yellow
+          - label: Overdue
+            value: Red
+            detail: Past the deadline. Report surfaces on every build.
+            color: red
+
+      - type: markdown
+        body: |
+          Pages missing either `updated:` or `review_every:` are always Fresh — there's nothing
+          to compare against. The yellow-window size (currently 7 days) will become configurable
+          per site in a future release if demand surfaces.
+
+  - type: section
+    eyebrow: Next
+    components:
+      - type: callout
+        variant: info
+        title: "Next up → `kazam wish refresh`"
+        body: "The natural next step is `kazam wish refresh` — a wish that scans the whole site, builds a workspace listing every stale page + its sources of truth, and hands it to your agent (claude / gemini / codex / opencode) with a 'propose updates' prompt. Planned for the 8-week wish arc."

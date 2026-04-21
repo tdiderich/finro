@@ -18,6 +18,8 @@ nav:
     href: guide.html
   - label: Wishes
     href: wishes.html
+  - label: Freshness
+    href: freshness.html
   - label: Components
     href: components/index.html
     children:
