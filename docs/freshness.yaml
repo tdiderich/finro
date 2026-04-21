@@ -201,3 +201,47 @@ components:
           The file is rewritten on every build and deleted when no pages are stale,
           so "does `_site/stale.md` exist?" is a cheap CI check: any PR that introduces
           stale pages will produce the file; a clean build leaves it absent.
+
+  - type: section
+    eyebrow: Sibling check
+    heading: The link graph
+    components:
+      - type: markdown
+        body: |
+          Same shape, different signal. Every `kazam build` also walks the page graph
+          from `index.html` + the site `nav:` and reports two classes of problem:
+
+          - **Orphan pages** — built pages not reachable from `index.html` via nav
+            or any in-page `href:`. Either link them, delete them, or set
+            `unlisted: true` on the page (same flag that excludes drafts from
+            `llms.txt`).
+          - **Broken internal links** — `.html` hrefs that don't match any built
+            page. Conservative: assets, externals, anchors, `mailto:`, and `tel:`
+            are skipped.
+
+          Silent on clean builds. When anything surfaces, the build prints a grouped
+          summary and writes `_site/links.md` — same agent-consumable pattern as
+          `stale.md`.
+
+      - type: code
+        language: text
+        code: |
+          $ kazam build .
+            _site/index.html
+            _site/guide.html
+            _site/examples/landing.html
+
+          ✓ 3 page(s) → _site
+
+          ⚠ 1 orphan page(s) (not linked from nav or any page):
+              examples/landing.html
+
+          ⚠ 1 broken internal link(s):
+              guide.html                                → /missing.html
+
+      - type: markdown
+        body: |
+          `kazam dev` and `kazam build --allow-orphans` silence orphan detection —
+          useful for work-in-progress pages you haven't wired into nav yet. Broken
+          links always surface; there's no legitimate reason to tolerate a dead
+          internal href.
