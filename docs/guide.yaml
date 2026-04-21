@@ -19,23 +19,44 @@ components:
 
       - type: tabs
         tabs:
-          - label: cargo install (recommended)
+          - label: Homebrew
             components:
               - type: markdown
                 body: |
-                  Works on any system with a Rust toolchain. Installs straight
-                  from GitHub — no crates.io publish needed.
+                  Easiest on macOS / Linux. Pulls from the `tdiderich/tap` tap.
+              - type: code
+                language: bash
+                code: |
+                  brew install tdiderich/tap/kazam
+                  kazam --version
+
+          - label: cargo install
+            components:
+              - type: markdown
+                body: |
+                  Works on any system with a Rust toolchain. Installed to
+                  `~/.cargo/bin/kazam`.
+              - type: code
+                language: bash
+                code: |
+                  cargo install kazam
+                  kazam --version
+
+              - type: markdown
+                body: |
+                  **Bleeding edge:** install straight from `main` to pick up
+                  unreleased fixes.
               - type: code
                 language: bash
                 code: |
                   cargo install --git https://github.com/tdiderich/kazam
-                  kazam --version
 
           - label: From source
             components:
               - type: markdown
                 body: |
-                  For development or if you want to pin to a branch.
+                  For development or if you want to pin to a specific branch
+                  or commit.
               - type: code
                 language: bash
                 code: |
@@ -43,13 +64,6 @@ components:
                   cd kazam
                   cargo build --release
                   cp target/release/kazam /usr/local/bin/kazam
-
-          - label: Prebuilt binary
-            components:
-              - type: callout
-                variant: warn
-                title: Not yet published
-                body: "GitHub Releases + `curl | sh` installer and a Homebrew tap are planned. For now, use `cargo install` above."
 
   - type: section
     eyebrow: Start
