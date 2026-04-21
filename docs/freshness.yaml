@@ -127,20 +127,25 @@ components:
       - type: columns
         equal_heights: true
         columns:
-          - - type: callout
-              variant: info
-              title: Shorthand
-              body: "Just a URL. Label becomes the URL itself."
-              links:
-                - label: "sources_of_truth:\n  - https://notion.so/abc"
-                  href: "#"
-          - - type: callout
-              variant: info
-              title: Labeled
-              body: "Any link — Slack channel, Linear project, HubSpot dashboard — gets a readable label."
-              links:
-                - label: "- label: '#ts-hub'\n  href: https://..."
-                  href: "#"
+          - - type: markdown
+              body: |
+                **Shorthand** — just a URL. The label becomes the URL itself.
+            - type: code
+              language: yaml
+              code: |
+                sources_of_truth:
+                  - https://notion.so/abc
+          - - type: markdown
+              body: |
+                **Labeled** — any link (Slack channel, Linear project, HubSpot dashboard) gets a readable label.
+            - type: code
+              language: yaml
+              code: |
+                sources_of_truth:
+                  - label: "#ts-hub"
+                    href: https://company.slack.com/archives/C01
+                  - label: "Linear: TSH"
+                    href: https://linear.app/co/project/tsh
 
   - type: section
     eyebrow: How status is computed
@@ -174,9 +179,26 @@ components:
           per site in a future release if demand surfaces.
 
   - type: section
-    eyebrow: Next
+    eyebrow: Agent workflow
+    heading: "Point your agent at `_site/stale.md`"
     components:
-      - type: callout
-        variant: info
-        title: "Next up → `kazam wish refresh`"
-        body: "The natural next step is `kazam wish refresh` — a wish that scans the whole site, builds a workspace listing every stale page + its sources of truth, and hands it to your agent (claude / gemini / codex / opencode) with a 'propose updates' prompt. Planned for the 8-week wish arc."
+      - type: markdown
+        body: |
+          Every build that finds any stale pages also writes a markdown report to
+          `_site/stale.md`. Overdue pages first, due-soon below, each with path, cadence,
+          and owner. Perfect for handing an agent one path and saying "fix these."
+
+      - type: code
+        language: bash
+        code: |
+          # Build, then hand the stale report straight to Claude Code.
+          # Claude reads _site/stale.md, then opens each page's .yaml and
+          # its sources_of_truth to propose updates.
+          kazam build .
+          claude -p "Read _site/stale.md. For each stale page, open its source YAML in the repo + the sources_of_truth links, then propose concrete updates."
+
+      - type: markdown
+        body: |
+          The file is rewritten on every build and deleted when no pages are stale,
+          so "does `_site/stale.md` exist?" is a cheap CI check: any PR that introduces
+          stale pages will produce the file; a clean build leaves it absent.

@@ -1014,6 +1014,46 @@ fn freshness_fresh_page_has_no_banner_and_report_stays_silent() {
 }
 
 #[test]
+fn freshness_writes_stale_md_for_overdue_and_removes_when_clean() {
+    // Overdue run → _site/stale.md exists with the overdue details.
+    let dir = tmp_dir("fresh-stalemd");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Docs\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Overdue\nshell: standard\nfreshness:\n  updated: '2026-01-01'\n  review_every: 30d\n  owner: docs@example.com\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    build_with_today(&dir, "2026-04-21", &out);
+
+    let stale_md = out.join("stale.md");
+    assert!(
+        stale_md.exists(),
+        "stale.md should be written for overdue pages"
+    );
+    let content = read(&stale_md);
+    assert_contains(&content, "# Stale page report");
+    assert_contains(&content, "## Overdue");
+    assert_contains(&content, "index.html");
+    assert_contains(&content, "docs@example.com");
+
+    // Now rewrite the page to have a fresh updated date and rebuild into
+    // the same output dir. stale.md should be deleted so dirty state from
+    // a previous build never leaks into a healthy one.
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Fresh\nshell: standard\nfreshness:\n  updated: '2026-04-21'\n  review_every: 30d\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    build_with_today(&dir, "2026-04-21", &out);
+    assert!(
+        !stale_md.exists(),
+        "stale.md must be removed when nothing is stale"
+    );
+}
+
+#[test]
 fn freshness_page_without_metadata_is_silent() {
     // No `freshness:` block at all → no banner, no report entry, exactly
     // as a pre-feature page would render.

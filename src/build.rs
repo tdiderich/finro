@@ -213,6 +213,7 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
     }
 
     print_freshness_report(&stale_pages);
+    write_freshness_report_md(out, &stale_pages, &today)?;
 
     Ok(())
 }
@@ -227,6 +228,88 @@ struct StaleEntry {
     owner: Option<String>,
     status: crate::freshness::FreshnessStatus,
     cadence: String,
+}
+
+/// Write the stale-page report to `<out>/stale.md` whenever any page is
+/// not Fresh. Markdown so agents can read it straight, humans can too.
+/// Silent (no file written) when nothing is stale — matches the console
+/// behavior, keeps the output dir clean on healthy builds.
+fn write_freshness_report_md(out: &Path, stale: &[StaleEntry], today: &str) -> std::io::Result<()> {
+    use crate::freshness::FreshnessStatus;
+
+    if stale.is_empty() {
+        // Don't leave a stale file behind from a previous (dirtier) build.
+        let p = out.join("stale.md");
+        if p.exists() {
+            fs::remove_file(p)?;
+        }
+        return Ok(());
+    }
+
+    let mut overdue: Vec<&StaleEntry> = stale
+        .iter()
+        .filter(|e| matches!(e.status, FreshnessStatus::Overdue { .. }))
+        .collect();
+    let mut due_soon: Vec<&StaleEntry> = stale
+        .iter()
+        .filter(|e| matches!(e.status, FreshnessStatus::DueSoon { .. }))
+        .collect();
+    overdue.sort_by_key(|e| match e.status {
+        FreshnessStatus::Overdue { days_overdue } => -days_overdue,
+        _ => 0,
+    });
+    due_soon.sort_by_key(|e| match e.status {
+        FreshnessStatus::DueSoon { days_until_due } => days_until_due,
+        _ => 0,
+    });
+
+    let mut md = String::new();
+    md.push_str(&format!(
+        "# Stale page report\n\n_Generated {} by `kazam build`. Point an agent at this file and ask it to refresh the listed pages — they're in the source tree as `.yaml`, each with its own `freshness.sources_of_truth`._\n\n",
+        today
+    ));
+
+    if !overdue.is_empty() {
+        md.push_str(&format!("## Overdue ({})\n\n", overdue.len()));
+        for e in &overdue {
+            let days = match e.status {
+                FreshnessStatus::Overdue { days_overdue } => days_overdue,
+                _ => 0,
+            };
+            let owner = e
+                .owner
+                .as_deref()
+                .map(|o| format!(" — owner: {}", o))
+                .unwrap_or_default();
+            md.push_str(&format!(
+                "- **`{}`** — {} day(s) overdue (cadence: every {}){}\n",
+                e.html_path, days, e.cadence, owner
+            ));
+        }
+        md.push('\n');
+    }
+
+    if !due_soon.is_empty() {
+        md.push_str(&format!("## Due soon ({})\n\n", due_soon.len()));
+        for e in &due_soon {
+            let days = match e.status {
+                FreshnessStatus::DueSoon { days_until_due } => days_until_due,
+                _ => 0,
+            };
+            let owner = e
+                .owner
+                .as_deref()
+                .map(|o| format!(" — owner: {}", o))
+                .unwrap_or_default();
+            md.push_str(&format!(
+                "- **`{}`** — due in {} day(s) (cadence: every {}){}\n",
+                e.html_path, days, e.cadence, owner
+            ));
+        }
+        md.push('\n');
+    }
+
+    fs::write(out.join("stale.md"), md)
 }
 
 /// Print a grouped summary of pages past (or nearly past) their review
