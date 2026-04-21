@@ -8,7 +8,7 @@ use crate::minify;
 use crate::render;
 use crate::types::{Page, SiteConfig};
 
-pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
+pub fn run(dir: &Path, out: &Path, release: bool, allow_orphans: bool) -> Result<()> {
     let config = load_config(dir)?;
     fs::create_dir_all(out)?;
 
@@ -19,6 +19,14 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
     let mut pages = 0;
     let mut assets = 0;
     let mut entries: Vec<PageEntry> = Vec::new();
+    // Collect stale-review pages so we can print a summary at the end
+    // of the build. Staleness is evaluated against `KAZAM_TODAY` or the
+    // system clock (see `freshness::today_iso`).
+    let today = crate::freshness::today_iso();
+    let mut stale_pages: Vec<StaleEntry> = Vec::new();
+    // Per-page href inventory so we can run the link-graph analysis after
+    // the walk. Populated alongside each page render.
+    let mut page_links: Vec<crate::links::PageLinks> = Vec::new();
 
     for entry in WalkDir::new(dir)
         .follow_links(true)
@@ -144,6 +152,34 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
                 });
             }
 
+            // Collect internal hrefs for the link-graph pass.
+            let html_rel_for_links = rel
+                .with_extension("html")
+                .to_string_lossy()
+                .replace('\\', "/");
+            page_links.push(crate::links::collect_page_links(&html_rel_for_links, &page));
+
+            // Track freshness status for the end-of-build summary. Uses
+            // the same computation as the banner inject so the report and
+            // the rendered output never disagree. Fresh pages are dropped;
+            // DueSoon and Overdue both feed the summary (grouped).
+            if let Some(info) = crate::freshness::info_for(page.freshness.as_ref(), &today) {
+                let status = info.status();
+                if !matches!(status, crate::freshness::FreshnessStatus::Fresh) {
+                    stale_pages.push(StaleEntry {
+                        html_path: rel.with_extension("html").to_string_lossy().to_string(),
+                        title: page.title.clone(),
+                        owner: page.freshness.as_ref().and_then(|f| f.owner.clone()),
+                        status,
+                        cadence: page
+                            .freshness
+                            .as_ref()
+                            .and_then(|f| f.review_every.clone())
+                            .unwrap_or_default(),
+                    });
+                }
+            }
+
             println!("  {}", out_path.display());
             pages += 1;
         } else {
@@ -185,7 +221,190 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
             if release { " (minified)" } else { "" }
         );
     }
+
+    print_freshness_report(&stale_pages);
+    write_freshness_report_md(out, &stale_pages, &today)?;
+
+    // Link-graph analysis runs after every build. Orphans can be silenced
+    // for draft workflows (dev mode, `--allow-orphans`) but broken links
+    // always surface — there's no legitimate reason to tolerate those.
+    let mut report = crate::links::analyze(&page_links, config.nav.as_deref());
+    if allow_orphans {
+        report.orphans.clear();
+    }
+    crate::links::print_report(&report);
+    crate::links::write_report_md(out, &report)?;
+
     Ok(())
+}
+
+/// One stale-review page collected during the build walk. Separate from
+/// `PageEntry` because it needs cadence/owner info and we want to sort
+/// it by overdue-ness, not by llms.txt order.
+struct StaleEntry {
+    html_path: String,
+    #[allow(dead_code)]
+    title: String,
+    owner: Option<String>,
+    status: crate::freshness::FreshnessStatus,
+    cadence: String,
+}
+
+/// Write the stale-page report to `<out>/stale.md` whenever any page is
+/// not Fresh. Markdown so agents can read it straight, humans can too.
+/// Silent (no file written) when nothing is stale — matches the console
+/// behavior, keeps the output dir clean on healthy builds.
+fn write_freshness_report_md(out: &Path, stale: &[StaleEntry], today: &str) -> std::io::Result<()> {
+    use crate::freshness::FreshnessStatus;
+
+    if stale.is_empty() {
+        // Don't leave a stale file behind from a previous (dirtier) build.
+        let p = out.join("stale.md");
+        if p.exists() {
+            fs::remove_file(p)?;
+        }
+        return Ok(());
+    }
+
+    let mut overdue: Vec<&StaleEntry> = stale
+        .iter()
+        .filter(|e| matches!(e.status, FreshnessStatus::Overdue { .. }))
+        .collect();
+    let mut due_soon: Vec<&StaleEntry> = stale
+        .iter()
+        .filter(|e| matches!(e.status, FreshnessStatus::DueSoon { .. }))
+        .collect();
+    overdue.sort_by_key(|e| match e.status {
+        FreshnessStatus::Overdue { days_overdue } => -days_overdue,
+        _ => 0,
+    });
+    due_soon.sort_by_key(|e| match e.status {
+        FreshnessStatus::DueSoon { days_until_due } => days_until_due,
+        _ => 0,
+    });
+
+    let mut md = String::new();
+    md.push_str(&format!(
+        "# Stale page report\n\n_Generated {} by `kazam build`. Point an agent at this file and ask it to refresh the listed pages — they're in the source tree as `.yaml`, each with its own `freshness.sources_of_truth`._\n\n",
+        today
+    ));
+
+    if !overdue.is_empty() {
+        md.push_str(&format!("## Overdue ({})\n\n", overdue.len()));
+        for e in &overdue {
+            let days = match e.status {
+                FreshnessStatus::Overdue { days_overdue } => days_overdue,
+                _ => 0,
+            };
+            let owner = e
+                .owner
+                .as_deref()
+                .map(|o| format!(" — owner: {}", o))
+                .unwrap_or_default();
+            md.push_str(&format!(
+                "- **`{}`** — {} day(s) overdue (cadence: every {}){}\n",
+                e.html_path, days, e.cadence, owner
+            ));
+        }
+        md.push('\n');
+    }
+
+    if !due_soon.is_empty() {
+        md.push_str(&format!("## Due soon ({})\n\n", due_soon.len()));
+        for e in &due_soon {
+            let days = match e.status {
+                FreshnessStatus::DueSoon { days_until_due } => days_until_due,
+                _ => 0,
+            };
+            let owner = e
+                .owner
+                .as_deref()
+                .map(|o| format!(" — owner: {}", o))
+                .unwrap_or_default();
+            md.push_str(&format!(
+                "- **`{}`** — due in {} day(s) (cadence: every {}){}\n",
+                e.html_path, days, e.cadence, owner
+            ));
+        }
+        md.push('\n');
+    }
+
+    fs::write(out.join("stale.md"), md)
+}
+
+/// Print a grouped summary of pages past (or nearly past) their review
+/// window. Always runs after a build; silent when nothing is stale.
+/// Overdue items sort first, most overdue at the top.
+fn print_freshness_report(stale: &[StaleEntry]) {
+    use crate::freshness::FreshnessStatus;
+
+    let mut overdue: Vec<&StaleEntry> = stale
+        .iter()
+        .filter(|e| matches!(e.status, FreshnessStatus::Overdue { .. }))
+        .collect();
+    let mut due_soon: Vec<&StaleEntry> = stale
+        .iter()
+        .filter(|e| matches!(e.status, FreshnessStatus::DueSoon { .. }))
+        .collect();
+
+    if overdue.is_empty() && due_soon.is_empty() {
+        return;
+    }
+
+    // Most urgent first.
+    overdue.sort_by_key(|e| match e.status {
+        FreshnessStatus::Overdue { days_overdue } => -days_overdue,
+        _ => 0,
+    });
+    due_soon.sort_by_key(|e| match e.status {
+        FreshnessStatus::DueSoon { days_until_due } => days_until_due,
+        _ => 0,
+    });
+
+    println!();
+    if !overdue.is_empty() {
+        println!("⚠ {} overdue page(s):", overdue.len());
+        for e in overdue {
+            let days = match e.status {
+                FreshnessStatus::Overdue { days_overdue } => days_overdue,
+                _ => 0,
+            };
+            let owner = e
+                .owner
+                .as_deref()
+                .map(|o| format!(" — owner {}", o))
+                .unwrap_or_default();
+            println!(
+                "    {:<40}  {} day(s) overdue (cadence: every {}){}",
+                e.html_path, days, e.cadence, owner
+            );
+        }
+    }
+    if !due_soon.is_empty() {
+        if !stale.is_empty()
+            && stale
+                .iter()
+                .any(|e| matches!(e.status, FreshnessStatus::Overdue { .. }))
+        {
+            println!();
+        }
+        println!("⏳ {} page(s) due for review soon:", due_soon.len());
+        for e in due_soon {
+            let days = match e.status {
+                FreshnessStatus::DueSoon { days_until_due } => days_until_due,
+                _ => 0,
+            };
+            let owner = e
+                .owner
+                .as_deref()
+                .map(|o| format!(" — owner {}", o))
+                .unwrap_or_default();
+            println!(
+                "    {:<40}  due in {} day(s) (cadence: every {}){}",
+                e.html_path, days, e.cadence, owner
+            );
+        }
+    }
 }
 
 fn write_sitemap(out: &Path, site_url: &str, entries: &[PageEntry]) -> Result<()> {

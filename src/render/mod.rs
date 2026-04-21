@@ -2,6 +2,7 @@ mod charts;
 mod components;
 mod scripts;
 mod shells;
+mod slug;
 
 use crate::types::{Component, Page, Shell, SiteConfig};
 
@@ -37,6 +38,7 @@ pub fn render_source_view(
         texture: None,
         glow: None,
         print_flow: None,
+        freshness: None,
     };
 
     render_page(&synthetic, config, base, "", rel_path)
@@ -49,7 +51,18 @@ pub fn render_page(
     source_href: &str,
     rel_path: &str,
 ) -> String {
+    // Clear the per-page anchor-id dedup map so slug collisions don't leak
+    // between pages in a single build.
+    slug::reset();
+
     let mut rendered = Rendered::default();
+
+    // Inject the stale-review banner at the top of the page body when the
+    // freshness metadata is expired. Zero runtime JS — this is evaluated
+    // at build time against `KAZAM_TODAY` or the system clock.
+    if let Some(banner) = freshness_banner(page, base) {
+        rendered.html.push_str(&banner);
+    }
 
     match page.shell {
         Shell::Deck => {
@@ -74,6 +87,111 @@ pub fn render_page(
             shells::document::wrap(page, config, rendered, base, source_href, rel_path)
         }
         Shell::Deck => shells::deck::wrap(page, config, rendered, base, source_href, rel_path),
+    }
+}
+
+/// Build the freshness banner HTML for a page, or return `None` when the
+/// page is fresh (or has no freshness metadata). The banner reuses the
+/// existing callout variants so color treatment stays consistent with the
+/// rest of the theme: yellow (`c-callout-warn`) for "due soon" — within
+/// 7 days of the review deadline — and red (`c-callout-danger`) for
+/// overdue pages. A `c-freshness-banner` class is added for future
+/// per-element styling.
+fn freshness_banner(page: &Page, base: &str) -> Option<String> {
+    use crate::freshness::FreshnessStatus;
+
+    let freshness = page.freshness.as_ref()?;
+    let today = crate::freshness::today_iso();
+    let info = crate::freshness::info_for(Some(freshness), &today)?;
+
+    let (variant_class, title, headline) = match info.status() {
+        FreshnessStatus::Fresh => return None,
+        FreshnessStatus::DueSoon { days_until_due } => (
+            "c-callout-warn",
+            "Review due soon",
+            if days_until_due == 0 {
+                "Review is due today.".to_string()
+            } else {
+                format!(
+                    "Review is due in <strong>{} {}</strong>.",
+                    days_until_due,
+                    if days_until_due == 1 { "day" } else { "days" }
+                )
+            },
+        ),
+        FreshnessStatus::Overdue { days_overdue } => (
+            "c-callout-danger",
+            "Review overdue",
+            format!(
+                "Review is <strong>{} {} overdue</strong>.",
+                days_overdue,
+                if days_overdue == 1 { "day" } else { "days" }
+            ),
+        ),
+    };
+
+    let updated_iso = freshness.updated.as_deref().unwrap_or("");
+    let elapsed = info.days_since_update().unwrap_or(0);
+    let cadence = freshness
+        .review_every
+        .as_deref()
+        .unwrap_or("(no cadence set)");
+
+    let mut body = format!(
+        r#"{headline} Last updated <strong>{updated}</strong> ({elapsed} {day_word} ago). Review cadence: <strong>every {cadence}</strong>. Site last built: {today}."#,
+        headline = headline,
+        updated = esc(&human_date(updated_iso)),
+        elapsed = elapsed,
+        day_word = if elapsed == 1 { "day" } else { "days" },
+        cadence = esc(cadence),
+        today = esc(&human_date(&today)),
+    );
+    if let Some(owner) = freshness.owner.as_deref() {
+        body.push_str(&format!(r#" Owner: <strong>{}</strong>."#, esc(owner)));
+    }
+
+    let mut h = format!(
+        r#"<div class="c-callout {variant_class} c-freshness-banner"><div class="c-callout-title">{title}</div>"#,
+        variant_class = variant_class,
+        title = esc(title),
+    );
+    h.push_str(&format!(r#"<div class="c-callout-body">{body}</div>"#));
+
+    if let Some(sources) = freshness.sources_of_truth.as_ref() {
+        if !sources.is_empty() {
+            h.push_str(
+                r#"<div class="c-freshness-sources"><span class="c-freshness-sources-label">Sources of truth:</span><ul>"#,
+            );
+            for src in sources {
+                let href = resolve_href(src.href(), base);
+                h.push_str(&format!(
+                    r#"<li><a href="{}">{}</a></li>"#,
+                    esc(&href),
+                    esc(src.label()),
+                ));
+            }
+            h.push_str("</ul></div>");
+        }
+    }
+    h.push_str("</div>");
+    Some(h)
+}
+
+/// Format an ISO `YYYY-MM-DD` date into a short human-readable form like
+/// `Jan 15, 2026`. Falls back to the raw input when parsing fails.
+fn human_date(iso: &str) -> String {
+    const MONTHS: [&str; 12] = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+    let mut parts = iso.split('-');
+    let y = parts.next().and_then(|p| p.parse::<i32>().ok());
+    let m = parts.next().and_then(|p| p.parse::<u32>().ok());
+    let d = parts.next().and_then(|p| p.parse::<u32>().ok());
+    match (y, m, d) {
+        (Some(y), Some(m), Some(d)) if (1..=12).contains(&m) && (1..=31).contains(&d) => {
+            format!("{} {}, {}", MONTHS[(m - 1) as usize], d, y)
+        }
+        _ => iso.to_string(),
     }
 }
 

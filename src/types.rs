@@ -49,6 +49,57 @@ pub struct Page {
     /// sharing as a readable artifact rather than a presentation.
     #[serde(default)]
     pub print_flow: Option<PrintFlow>,
+    /// Optional freshness metadata: owner, last content update, review cadence,
+    /// and sources of truth the agent / reader can consult to refresh the
+    /// page. When the page is past its review window, a banner is injected
+    /// at the top of the rendered output and the build reports the page as
+    /// stale. Zero runtime JS — staleness is computed at `kazam build` time.
+    #[serde(default)]
+    pub freshness: Option<Freshness>,
+}
+
+/// Freshness metadata for a page — when was it last updated, who owns it,
+/// how often should it be reviewed, and where are the sources of truth.
+#[derive(Deserialize, Clone)]
+pub struct Freshness {
+    /// ISO date (YYYY-MM-DD) of the last content update.
+    pub updated: Option<String>,
+    /// Review cadence. Accepts `Nd` (days), `Nw` (weeks), `Nm` (months,
+    /// 30-day approximation), `Ny` (years, 365-day approximation), or the
+    /// string shortcuts `weekly`, `monthly`, `quarterly`, `yearly`,
+    /// `annually`.
+    pub review_every: Option<String>,
+    /// Who should be contacted before changes land. Free-form — email,
+    /// Slack handle, or team name.
+    pub owner: Option<String>,
+    /// Pointers the agent / reader should consult to refresh the content.
+    /// Shorthand form is a bare URL string; expanded form accepts a label
+    /// alongside the href.
+    #[serde(default)]
+    pub sources_of_truth: Option<Vec<SourceOfTruth>>,
+}
+
+/// One source-of-truth entry. Either a bare URL or a labeled link.
+#[derive(Deserialize, Clone)]
+#[serde(untagged)]
+pub enum SourceOfTruth {
+    Simple(String),
+    Full { label: String, href: String },
+}
+
+impl SourceOfTruth {
+    pub fn href(&self) -> &str {
+        match self {
+            SourceOfTruth::Simple(h) => h,
+            SourceOfTruth::Full { href, .. } => href,
+        }
+    }
+    pub fn label(&self) -> &str {
+        match self {
+            SourceOfTruth::Simple(h) => h,
+            SourceOfTruth::Full { label, .. } => label,
+        }
+    }
 }
 
 #[derive(Deserialize, Clone, Copy, Default)]
@@ -80,6 +131,13 @@ pub enum Component {
         eyebrow: Option<String>,
         #[serde(default)]
         align: Align,
+        /// Optional stable anchor id on the rendered wrapper. When unset,
+        /// kazam auto-slugs from `title` (lowercase, hyphens, punctuation
+        /// stripped) so `#deep-link` URLs Just Work. An explicit id wins
+        /// over the auto-slug so copy changes don't break existing
+        /// bookmarks. Collisions on the same page suffix `-2`, `-3`, etc.
+        #[serde(default)]
+        id: Option<String>,
     },
     Meta {
         fields: Vec<MetaField>,
@@ -143,6 +201,12 @@ pub enum Component {
         components: Vec<Component>,
         #[serde(default)]
         align: Align,
+        /// Optional stable anchor id on the rendered wrapper. When unset
+        /// and `heading` is present, kazam auto-slugs from the heading
+        /// text. Explicit id wins. Same collision handling as `header`.
+        /// No heading and no explicit id → no id attribute emitted.
+        #[serde(default)]
+        id: Option<String>,
     },
     Columns {
         columns: Vec<Vec<Component>>,
@@ -622,6 +686,13 @@ pub struct SiteConfig {
     pub colors: std::collections::HashMap<String, String>,
     pub nav: Option<Vec<NavLink>>,
     pub favicon: Option<Favicon>,
+    /// Optional logo image shown in the site bar's brand slot, replacing the
+    /// text `name:` treatment. Accepts either a path (shorthand) or an
+    /// object with `src`, optional `height`, and optional `alt`. The image's
+    /// `src` resolves via the depth-aware rewriter so relative paths work
+    /// from any subfolder page.
+    #[serde(default)]
+    pub logo: Option<Logo>,
     /// When true, each page gets a companion `*.source.html` rendering of its
     /// YAML source, and a "View source" pill links to it. Off by default —
     /// useful for docs/examples sites, noise for most end-user sites.
@@ -688,6 +759,45 @@ pub enum Glow {
     Accent,
     /// Tighter glow tucked into the top-right corner.
     Corner,
+}
+
+/// Logo image for the site-bar brand slot. Accepts either a shorthand
+/// string (a path to the image) or an object with `src`, optional
+/// `height` (px — upper bound on rendered height; defaults to the
+/// site-bar content height), and optional `alt` (defaults to the site
+/// `name`).
+#[derive(Deserialize)]
+#[serde(untagged)]
+pub enum Logo {
+    Simple(String),
+    Full {
+        src: String,
+        #[serde(default)]
+        height: Option<u32>,
+        #[serde(default)]
+        alt: Option<String>,
+    },
+}
+
+impl Logo {
+    pub fn src(&self) -> &str {
+        match self {
+            Logo::Simple(p) => p,
+            Logo::Full { src, .. } => src,
+        }
+    }
+    pub fn height(&self) -> Option<u32> {
+        match self {
+            Logo::Simple(_) => None,
+            Logo::Full { height, .. } => *height,
+        }
+    }
+    pub fn alt<'a>(&'a self, site_name: &'a str) -> &'a str {
+        match self {
+            Logo::Simple(_) => site_name,
+            Logo::Full { alt, .. } => alt.as_deref().unwrap_or(site_name),
+        }
+    }
 }
 
 /// Favicon config: either a single path, or a struct with named slots.
@@ -783,6 +893,7 @@ impl Default for SiteConfig {
             colors: std::collections::HashMap::new(),
             nav: None,
             favicon: None,
+            logo: None,
             view_source: false,
             texture: Texture::None,
             glow: Glow::None,

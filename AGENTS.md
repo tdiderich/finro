@@ -32,6 +32,13 @@ mode: dark               # optional: dark (default) | light — flips rainbow th
 colors:                  # optional per-token overrides
   accent: '#14b8b8'
 favicon: favicon.svg
+logo: assets/logo.svg    # optional — replaces the text `name:` in the site bar with an <img>.
+                         # Expanded form: logo: { src, height, alt }. height caps rendered px;
+                         # alt defaults to `name`. Rendered height is bounded by the site-bar
+                         # content area (never pushes the bar taller); width flows from aspect
+                         # ratio and caps at 240px. SVG recommended; raster sources should be
+                         # 2× target height for retina. Use `/absolute/paths` or relative paths
+                         # — both are depth-aware rewritten.
 texture: dots            # optional: none | dots | grid | grain | topography | diagonal
 glow: accent             # optional: none | accent | corner
 nav_layout: top          # optional: top (default) | sidebar
@@ -92,6 +99,53 @@ slides:                     # for deck shell only
 setting it to any other preset swaps it in. Omit to inherit the site-wide
 value.
 
+### Freshness (optional)
+
+Pages can declare review cadence + sources of truth. At build time, kazam
+computes staleness against today's date and injects a banner at the top
+of the page — **yellow** if the review comes due within the next 7 days,
+**red** if it's already overdue. No runtime JS; staleness is a pure
+date compare. A build-time report also prints every stale page, grouped
+by overdue vs due-soon, sorted most-urgent first. Silent when nothing
+is stale.
+
+```yaml
+freshness:
+  updated: 2026-01-15              # ISO date of last content change
+  review_every: 90d                # Nd | Nw | Nm | Ny | weekly | monthly | quarterly | yearly
+  owner: owner@example.com         # free-form — email, handle, team name
+  sources_of_truth:                # bare URL or { label, href }
+    - https://notion.so/abc123
+    - label: "#ts-hub"
+      href: https://company.slack.com/archives/C012345
+    - label: "Linear: TSH"
+      href: https://linear.app/co/project/tsh
+```
+
+All fields are optional. A page with only `updated:` and `review_every:`
+still computes the banner; missing either field means the page is never
+stale (nothing to compare against). To simulate "today" for tests or
+snapshot builds, set `KAZAM_TODAY=YYYY-MM-DD` in the environment.
+
+kazam does not fetch the sources — it just renders the labels as links.
+Refreshing the content is the agent's job: when a reader (or an agent
+working on the page) clicks through, they read the source and propose
+updates.
+
+### Link graph (automatic)
+
+Every `kazam build` also runs a link-graph pass. Two things surface in the
+build summary and in `_site/links.md`:
+
+- **Orphan pages** — built pages not reachable from `index.html` via nav or
+  any in-page href. Either link them from somewhere reachable, delete them,
+  or set `unlisted: true` on the page (same flag `llms.txt` uses).
+- **Broken internal links** — `.html` hrefs that don't match any built page.
+
+Silent on clean builds; `links.md` is removed when there's nothing to
+report. `kazam dev` and `kazam build --allow-orphans` silence orphan
+detection (useful for drafts); broken links always surface.
+
 ## Shells
 
 - **standard** — sticky site header + nav + 1200px container. Default. Use for
@@ -108,12 +162,15 @@ consistent (2 spaces). Quote any string that looks like a number (e.g. `"47"`).
 
 ### Content
 
-- **header** — page title block
+- **header** — page title block. Auto-emits `id` from the `title` slug
+  so `/page.html#my-title` works; override with explicit `id:` for a
+  stable anchor that survives copy edits.
   ```yaml
   - type: header
     title: Required
     subtitle: Optional subtitle
     eyebrow: Optional label
+    id: optional-stable-anchor   # else auto-slugged from title
   ```
 
 - **meta** — key-value strip (author, date, status, version)
@@ -235,13 +292,14 @@ consistent (2 spaces). Quote any string that looks like a number (e.g. `"47"`).
           - Use cases defined
   ```
 
-- **before_after** — transformation storytelling (QBR-style). `before` and `after` support inline markdown (`**bold**`, `` `code` ``).
+- **before_after** — transformation storytelling (QBR-style)
   ```yaml
   - type: before_after
     items:
       - title: Deployment time
         before: Manual, 2 weeks
-        after: "**4 hours** — fully automated"
+        after: 4 hours
+        after_context: fully automated
   ```
 
 - **avatar** — profile circle with initials fallback
@@ -333,11 +391,15 @@ consistent (2 spaces). Quote any string that looks like a number (e.g. `"47"`).
 
 ### Layout
 
-- **section** — grouping with eyebrow + heading + nested components
+- **section** — grouping with eyebrow + heading + nested components.
+  Auto-emits `id` from the `heading` slug (no heading → no id); override
+  with explicit `id:` for a stable anchor. Duplicate slugs on a page
+  dedupe with `-2`, `-3`, etc.
   ```yaml
   - type: section
     eyebrow: Category
     heading: Section Title
+    id: optional-stable-anchor   # else auto-slugged from heading
     components: [...]
   ```
 
@@ -419,7 +481,11 @@ Every colored component accepts the same 5-value palette:
   emitted verbatim. Any other href is rewritten per-page based on directory
   depth so `index.html` works from any subfolder.
 - **deck shell** expects `slides:` not `components:` at the page root. Each
-  slide has its own `label:` + `components:` list.
+  slide has its own `label:` + `components:` list. Optional top-level
+  `print_flow: slides | continuous` controls PDF export shape. `slides`
+  (default) = one slide per landscape page (Keynote-style). `continuous`
+  = all slides flow as one portrait document with thin separators — nicer
+  for sharing as a readable artifact.
 - **Markdown body scalars**: use the `|` literal block style in YAML to preserve
   newlines — `body: |` followed by indented content.
 
@@ -493,8 +559,100 @@ fixed version. Follow this protocol in order — do not skip the dedup step.
 
 Rules of thumb:
 
-- File only reproducible bugs. Feature requests and "I wish kazam did X" go
-  elsewhere (or wait for a considered discussion).
+- File only reproducible bugs here. Feature requests use the protocol below.
 - Keep the repro minimal — smallest YAML + command that triggers it.
 - Never open duplicates. When in doubt, comment on the closest existing issue
   instead.
+
+## If you have a feature idea for kazam
+
+Agents often bump into "kazam would be more useful if it could do X" while
+authoring a site. Great — that signal is valuable, but the filing bar is
+higher than for bugs because the maintainer has to weigh scope. Follow this
+protocol in order.
+
+1. **Confirm `gh` is authenticated.** Same check as bug filing (step 1 above).
+   If not, drop to step 5 and tell the user how to file by hand.
+
+2. **Search for duplicates — both issues and open PRs.** Feature ideas get
+   proposed and deferred more than bugs do; the same idea may be open, closed
+   as wontfix, or already in flight as a PR.
+
+   ```bash
+   gh issue list --repo tdiderich/kazam --state all \
+     --search "<2-4 keywords> in:title,body"
+   gh pr list --repo tdiderich/kazam --state all \
+     --search "<2-4 keywords>"
+   ```
+
+   If anything looks like a match:
+
+   - Show the user the URL. If the discussion is active, suggest adding your
+     use case as a comment rather than opening a new issue.
+   - If it's closed as wontfix, respect the decision. Tell the user the
+     outcome and why (read the close comment), and suggest a userland
+     workaround (a `sync.sh` script, a custom component recipe, etc.).
+
+3. **Check the direction of the project first.** Before filing, confirm the
+   feature fits kazam's stated scope:
+
+   - kazam ships as a single Rust binary with no network at build time. A
+     feature that pulls data from a live API at build time is out of scope
+     — it belongs in the user's own `sync.sh` that emits YAML.
+   - kazam does NOT ship third-party connectors (HubSpot, Linear, Slack,
+     etc.). Same reason: user owns the fetcher.
+   - The YAML schema stays narrow on purpose — the goal is LLMs producing it
+     correctly on the first try, which gets harder with every new component.
+     "Nice-to-have" components are a high bar.
+
+   If the idea looks out-of-scope, tell the user and stop. Don't file a
+   request that will be closed as wontfix — that's noise.
+
+4. **If it fits, file a well-shaped feature request.** Tell the user what
+   you're about to do before running the command. Use this template:
+
+   ```bash
+   gh issue create --repo tdiderich/kazam \
+     --title "<short imperative — what to add or change>" \
+     --label enhancement \
+     --body "$(cat <<'EOF'
+   ## What I'm trying to do
+   <the user-level goal — "I want to render a sortable table of customers
+   with per-row health badges" — not the implementation)
+
+   ## Why kazam's current primitives don't fit
+   <specific components / flags you tried, and where they fell short>
+
+   ## Proposed shape
+   <what the YAML would look like if this existed — be concrete>
+
+   ```yaml
+   - type: <whatever>
+     ...
+   ```
+
+   ## Alternatives considered
+   <userland workaround, existing component combos, other tools>
+
+   ## Version
+   <paste `kazam --version`>
+   EOF
+   )"
+   ```
+
+5. **Fallback when `gh` isn't available.** Show the user:
+
+   > Couldn't auto-file this — open
+   > https://github.com/tdiderich/kazam/issues/new and paste:
+   > [then show the filled-out template body]
+
+Rules of thumb for feature requests:
+
+- Lead with the user-level goal, not the implementation. "I want to render
+  sortable customer rows" beats "add a `sortable_table` component."
+- Show a concrete proposed YAML shape. Handwaving is the most common reason
+  a request stalls.
+- Always mention the workaround you already tried. If the answer is
+  "userland script + existing components already works," the maintainer
+  (or another agent reading the issue) will suggest that.
+- Never open duplicates. Comment on the closest existing thread instead.

@@ -4,8 +4,8 @@ shell: standard
 components:
   - type: header
     title: Guide
-    eyebrow: Getting started
-    subtitle: Install kazam, scaffold a site, run the dev server.
+    eyebrow: 60 seconds
+    subtitle: Install the binary, scaffold a site, run the dev server.
 
   - type: section
     eyebrow: Install
@@ -19,23 +19,44 @@ components:
 
       - type: tabs
         tabs:
-          - label: cargo install (recommended)
+          - label: Homebrew
             components:
               - type: markdown
                 body: |
-                  Works on any system with a Rust toolchain. Installs straight
-                  from GitHub — no crates.io publish needed.
+                  Easiest on macOS / Linux. Pulls from the `tdiderich/tap` tap.
+              - type: code
+                language: bash
+                code: |
+                  brew install tdiderich/tap/kazam
+                  kazam --version
+
+          - label: cargo install
+            components:
+              - type: markdown
+                body: |
+                  Works on any system with a Rust toolchain. Installed to
+                  `~/.cargo/bin/kazam`.
+              - type: code
+                language: bash
+                code: |
+                  cargo install kazam
+                  kazam --version
+
+              - type: markdown
+                body: |
+                  **Bleeding edge:** install straight from `main` to pick up
+                  unreleased fixes.
               - type: code
                 language: bash
                 code: |
                   cargo install --git https://github.com/tdiderich/kazam
-                  kazam --version
 
           - label: From source
             components:
               - type: markdown
                 body: |
-                  For development or if you want to pin to a branch.
+                  For development or if you want to pin to a specific branch
+                  or commit.
               - type: code
                 language: bash
                 code: |
@@ -44,16 +65,9 @@ components:
                   cargo build --release
                   cp target/release/kazam /usr/local/bin/kazam
 
-          - label: Prebuilt binary
-            components:
-              - type: callout
-                variant: warn
-                title: Not yet published
-                body: "GitHub Releases + `curl | sh` installer and a Homebrew tap are planned. For now, use `cargo install` above."
-
   - type: section
-    eyebrow: Start
-    heading: Scaffold a site in 30 seconds
+    eyebrow: Scaffold
+    heading: Live on localhost in 30 seconds
     components:
       - type: code
         language: bash
@@ -65,255 +79,39 @@ components:
       - type: markdown
         body: |
           Edit `index.yaml` — the browser reloads on save. Add new `.yaml`
-          files for new pages. When you're happy, `kazam build . --out dist`
-          produces a static HTML bundle you can deploy anywhere.
+          files for new pages. That's the whole dev loop.
 
       - type: callout
         variant: info
-        title: Ready to ship?
-        body: "Every kazam build is just plain HTML/CSS/JS. Check the deploy recipes for a copy-paste setup on Vercel, Netlify, Cloudflare Pages, GitHub Pages, S3 + CloudFront, or Firebase."
+        title: Or skip the scaffold — let your agent write it
+        body: "Drop a folder of real context (notes, transcripts, prior decks, PDFs) and run `kazam wish deck`. Your agent — Claude, Gemini, Codex, or OpenCode — reads everything with its own file tools and writes a populated deck. Or `kazam wish deck --yolo \"about me\"` to skip the folder entirely and let the agent invent the whole thing."
         links:
-          - label: Deploy recipes
-            href: deploy.html
+          - label: Read the wishes guide →
+            href: wishes.html
             variant: primary
 
   - type: section
-    eyebrow: File structure
-    heading: What a kazam site looks like
+    eyebrow: Ship
+    heading: Build a static bundle
     components:
-      - type: markdown
-        body: |
-          Any directory of `.yaml` files. Optional `kazam.yaml` at the root configures
-          the site name and nav. Every other `.yaml` file becomes a page.
-
       - type: code
-        language: text
+        language: bash
         code: |
-          my-site/
-            kazam.yaml              ← site config (name, nav)
-            index.yaml              ← home page → _site/index.html
-            guide.yaml              ← → _site/guide.html
-            reference/
-              api.yaml              ← → _site/reference/api.html
-              cli.yaml              ← → _site/reference/cli.html
-
-  - type: section
-    eyebrow: Site config
-    heading: kazam.yaml
-    components:
-      - type: markdown
-        body: |
-          Shared across every page in the site. `name` is the home-link label in the nav
-          bar on every page. `nav` links appear in the bar on `shell: standard` pages; their
-          `href` values are rewritten per-page based on directory depth so they work from
-          anywhere in the site.
-
-      - type: code
-        language: yaml
-        code: |
-          name: My Knowledge Base
-          theme: dark
-          nav:
-            - label: Home
-              href: index.html
-            - label: Guide
-              href: guide.html
-            - label: API
-              href: api.html
-
-  - type: section
-    eyebrow: Theming
-    heading: Colors in one place
-    components:
-      - type: markdown
-        body: |
-          The renderer exposes a small set of **color tokens** (background,
-          surface, text, accent, border, semantic green/yellow/red, etc.).
-          Every component and shell references those tokens via CSS
-          variables — change a token, every page picks it up on the next
-          build. No per-component CSS knobs.
-
-          There are two built-in themes: `dark` (default) and `light`. Pick
-          one as the base via the `theme:` key in `kazam.yaml`. If you need
-          to customize, the `colors:` map overrides individual tokens on top
-          of the base.
-
-      - type: code
-        language: yaml
-        code: |
-          # kazam.yaml
-          name: My Site
-          theme: dark
-          colors:
-            accent: "#ff9e00"         # brand color (link + highlight + buttons)
-            accent_soft: "rgba(255, 158, 0, 0.08)"
-            header_border: "rgba(255, 158, 0, 0.2)"
-            bg: "#0b0b10"             # page background
-            surface: "rgba(255,255,255,0.04)"
+          kazam build . --out dist --release    # one-shot build to ./dist
 
       - type: markdown
         body: |
-          All available tokens:
-
-      - type: definition_list
-        items:
-          - term: bg
-            definition: Page background.
-          - term: surface
-            definition: Card/panel backgrounds (low-contrast overlay).
-          - term: surface_strong
-            definition: Stronger surface — used for code blocks and kbd pills.
-          - term: border
-            definition: Default border color for cards and dividers.
-          - term: border_strong
-            definition: Active/hover border (cards on hover, focused table).
-          - term: accent
-            definition: The primary brand color. Links, highlights, primary buttons, teal bar on blockquotes and callouts.
-          - term: accent_soft
-            definition: Translucent accent background — used for soft tint fills.
-          - term: text
-            definition: Primary body text.
-          - term: text_muted
-            definition: Secondary text (descriptions, subtitles).
-          - term: text_subtle
-            definition: Tertiary text (labels, captions, placeholder-ish).
-          - term: overlay_hover
-            definition: Subtle hover highlight for nav links and list rows.
-          - term: header_border
-            definition: The teal under-line on the site bar.
-          - term: green
-            definition: Semantic success color (tags, badges, status dots).
-          - term: yellow
-            definition: Semantic warning color.
-          - term: red
-            definition: Semantic danger color.
-
-      - type: callout
-        variant: info
-        title: Picking a strategy
-        body: |
-          Most sites only need to change `accent` and maybe `bg` to feel
-          custom. If you want a bigger departure, override the whole palette
-          — or fork `src/theme.rs` and add a new named theme. The goal is
-          that components stay theme-agnostic either way.
-        links:
-          - label: Theme source
-            href: https://github.com/tdiderich/kazam/blob/main/src/theme.rs
-            variant: secondary
-            external: true
-
-  - type: section
-    eyebrow: Navigation
-    heading: The site bar is built in
-    components:
-      - type: markdown
-        body: |
-          Every shell renders the same nav bar at the top of the page — you don't opt in,
-          and there's no per-page wiring. The bar is driven entirely by the site config and
-          three optional page fields, so navigation stays consistent across `standard`,
-          `document`, and `deck` pages.
-
-      - type: definition_list
-        items:
-          - term: site name
-            definition: Always the left-most item. Links back to `index.html`. Sourced from `name` in `kazam.yaml`.
-          - term: page.eyebrow
-            definition: Optional context crumb rendered as `/ EYEBROW` after the site name. Use for the parent section, customer, or category.
-          - term: page.subtitle
-            definition: Optional right-side label. Use for dates, versions, or secondary context.
-          - term: config.nav
-            definition: Nav links on the right side of `standard` pages. Suppressed on `document` and `deck` so content pages stay focused.
-          - term: Download PDF
-            definition: Auto-added on `deck` pages. Print-optimized CSS is built in — decks export edge-to-edge, documents export without the bar.
-
-      - type: code
-        language: yaml
-        code: |
-          title: Q3 Business Review
-          shell: deck
-          eyebrow: Acme          # → "kazam / ACME" in the bar
-          subtitle: April 2026   # → right-side label
-
-          slides:
-            - label: Cover          # set hide_label: true for a title slide with no "COVER" eyebrow
-              hide_label: true
-              components:
-                - type: image
-                  src: /assets/logo.svg
-                  max_width: 96
-                  align: center
-                - type: header
-                  title: "Q3 Business Review"
-                  align: center
-            - label: Outcomes
-              components: [...]
-
-  - type: section
-    eyebrow: Page structure
-    heading: Every page is a tree
-    components:
-      - type: markdown
-        body: |
-          A page has a `title`, a `shell`, and an ordered list of `components`. For `deck`
-          shell, replace `components` with `slides`, where each slide has its own components.
-
-      - type: code
-        language: yaml
-        code: |
-          title: Page Title
-          shell: standard
-
-          components:
-            - type: breadcrumb
-              items:
-                - label: Home
-                  href: index.html
-                - label: Page Title
-
-            - type: header
-              title: Page Title
-
-            - type: markdown
-              body: |
-                Any **markdown** here. Tables, code, lists, blockquotes.
-
-            - type: callout
-              variant: success
-              title: Done
-              body: This page is ready.
-
-  - type: section
-    eyebrow: Run
-    heading: Build or watch
-    components:
-      - type: tabs
-        tabs:
-          - label: Dev
-            components:
-              - type: markdown
-                body: |
-                  Serves at `localhost:3000`, watches every `.yaml` file, rebuilds
-                  on change, live-reloads the browser.
-              - type: code
-                language: bash
-                code: kazam dev ./my-site --port 3000
-
-          - label: Build
-            components:
-              - type: markdown
-                body: One-shot build to an output directory.
-              - type: code
-                language: bash
-                code: kazam build ./my-site --out ./dist
+          The output is plain HTML, CSS, and copied assets — no runtime, no
+          framework bundle. Any static host works.
 
   - type: callout
     variant: info
     title: Next up
-    body: Every page is composed from ~20 typed components — card grids, tables, tabs, callouts, decks. See them all.
+    body: You've got a site running. The full tour walks through how pages are shaped — shells, components, and a full kazam.yaml — then deploy recipes cover the handful of hosts most people pick.
     links:
-      - label: Components reference
-        href: components/index.html
-        variant: primary
-      - label: See use cases
+      - label: Take the full tour →
         href: about.html
+        variant: primary
+      - label: Deploy recipes
+        href: deploy.html
         variant: secondary

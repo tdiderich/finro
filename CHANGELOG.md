@@ -6,6 +6,82 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Anchor `id:` on `section` and `header` components — auto-slugs from
+  `heading` / `title` by default (lowercase, hyphens, punctuation +
+  emoji stripped) so `/guide.html#outcomes` links work out of the box.
+  Explicit `id:` overrides the slug for stable anchors that survive
+  copy edits. Collisions within a page dedupe with `-2`, `-3`, etc.
+  Scroll-offset CSS clears the sticky site bar so deep-links don't
+  land with the heading hidden behind it.
+- Build-time link report — every `kazam build` now walks the page graph
+  and surfaces **orphan pages** (built but unreachable from `index.html`
+  or the `nav:`) and **broken internal links** (`.html` hrefs that don't
+  match any built page). Silent on clean builds. When anything surfaces,
+  the build prints a grouped summary and writes `_site/links.md` so an
+  agent can consume the list directly. `kazam dev` and
+  `kazam build --allow-orphans` silence the orphan check (useful for
+  draft pages); broken links always surface. `unlisted: true` on a page
+  excludes it from the orphan check.
+- `freshness:` page metadata — declare last-updated date, review cadence,
+  owner, and sources-of-truth pointers per page. kazam computes status
+  at build time (zero runtime JS) and injects a banner at the top of
+  stale pages: **yellow** when the review comes due within 7 days,
+  **red** when it's already overdue. Every build also prints a grouped
+  summary of every stale page (silent when everything is fresh), sorted
+  most-urgent-first. Use `KAZAM_TODAY=YYYY-MM-DD` for deterministic
+  builds. Full docs at `/freshness`. Example:
+  ```yaml
+  freshness:
+    updated: 2026-01-15
+    review_every: 90d
+    owner: owner@example.com
+    sources_of_truth:
+      - https://notion.so/abc123
+      - label: "#ts-hub"
+        href: https://company.slack.com/archives/C012345
+  ```
+- `logo:` field on `kazam.yaml` site config — replaces the text `name:`
+  treatment in the site bar with an `<img>`. Accepts both shorthand
+  (`logo: assets/logo.svg`) and expanded object form
+  (`logo: { src, height, alt }`). Rendered height is capped at the
+  site-bar content height so a tall logo never pushes the bar taller;
+  width flows from aspect ratio and caps at 240px so a wide wordmark
+  doesn't crush the nav. `src` routes through the depth-aware path
+  rewriter, so absolute `/…` paths pass through verbatim and relative
+  paths resolve from any subfolder page. Absent → falls back cleanly
+  to the text-name treatment (no layout regression).
+- `AGENTS.md` bug-filing + feature-request protocols. When an agent
+  reproduces a bug or has a kazam-shaped feature idea, the guide now
+  tells it to check `gh auth`, dedup against existing issues/PRs
+  (including closed ones — a closed bug may mean the fix shipped in a
+  newer version), then file with a consistent template. Feature
+  requests also include a scope-check step ("does this fit kazam?")
+  before filing, so wontfix noise stays down.
+
+### Fixed
+- Every component that emits an `href` now routes through the canonical
+  `resolve_href` helper, honoring the verbatim-prefix rule documented
+  in `AGENTS.md` (`/`, `http://`, `https://`, `#`, `mailto:`, `tel:`
+  pass through untouched). Previously only the site nav followed this;
+  `button_group`, `card_grid` (card href + links), `breadcrumb`,
+  `empty_state`, `callout` links, and markdown link destinations all
+  stripped leading `/` and emitted relative paths that 404'd from
+  pages at depth ≥ 1.
+- `kazam dev` now walks forward to the next free port when the
+  requested one is in use (matches Vite / Next.js / Parcel UX) instead
+  of failing to bind. Prints a one-line warning when it falls back:
+  `⚠ port 3000 is in use — serving on 3001 instead`.
+- `kazam dev` no longer rebuilds itself in an infinite loop when `out`
+  is relative. The watcher canonicalizes `out` up front and also
+  ignores any nested `_site` in the watched tree.
+- `kazam build` skips nested `_site` directories. Running from a
+  parent dir that contains previously-built sub-sites no longer
+  recursively ingests those outputs as source.
+- `kazam wish` auto-creates a minimal `kazam.yaml` in the current
+  directory if one is missing, so the flow works in any fresh empty
+  directory without forcing the user to hand-write site config first.
+
 ## [0.4.0] — 2026-04-20
 
 ### Added

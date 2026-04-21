@@ -738,6 +738,343 @@ fn build_skips_nested_site_directories() {
 }
 
 #[test]
+fn logo_shorthand_renders_img_in_site_bar() {
+    let dir = tmp_dir("logo-shorthand");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("kazam.yaml"),
+        "name: Acme\ntheme: dark\nlogo: assets/logo.svg\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+    let html = read(&out.join("index.html"));
+    assert_contains(&html, r#"class="site-bar-brand""#);
+    assert_contains(
+        &html,
+        r#"class="site-bar-logo" src="assets/logo.svg" alt="Acme""#,
+    );
+    assert!(
+        !html.contains(r#"class="site-bar-name""#),
+        "text name treatment should be replaced by the logo img"
+    );
+}
+
+#[test]
+fn logo_expanded_form_respects_height_and_alt() {
+    let dir = tmp_dir("logo-expanded");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("kazam.yaml"),
+        "name: Acme\ntheme: dark\nlogo:\n  src: assets/logo.svg\n  height: 40\n  alt: Acme Corporation\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+    let html = read(&out.join("index.html"));
+    assert_contains(&html, r#"alt="Acme Corporation""#);
+    assert_contains(&html, r#"height="40""#);
+    assert_contains(&html, r#"style="max-height:40px""#);
+    assert_contains(&html, r#"aria-label="Acme Corporation""#);
+}
+
+#[test]
+fn logo_src_resolves_depth_aware() {
+    let dir = tmp_dir("logo-depth");
+    std::fs::create_dir_all(dir.join("sub")).unwrap();
+    std::fs::write(
+        dir.join("kazam.yaml"),
+        "name: Acme\ntheme: dark\nlogo: assets/logo.svg\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("sub/page.yaml"),
+        "title: Sub\nshell: standard\ncomponents:\n  - type: header\n    title: Sub\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+    let root = read(&out.join("index.html"));
+    assert_contains(&root, r#"src="assets/logo.svg""#);
+    let sub = read(&out.join("sub/page.html"));
+    assert_contains(&sub, r#"src="../assets/logo.svg""#);
+}
+
+#[test]
+fn logo_absolute_path_passes_through_verbatim() {
+    let dir = tmp_dir("logo-absolute");
+    std::fs::create_dir_all(dir.join("sub")).unwrap();
+    std::fs::write(
+        dir.join("kazam.yaml"),
+        "name: Acme\ntheme: dark\nlogo: /assets/logo.png\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("sub/page.yaml"),
+        "title: Sub\nshell: standard\ncomponents:\n  - type: header\n    title: Sub\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+    let sub = read(&out.join("sub/page.html"));
+    assert_contains(&sub, r#"src="/assets/logo.png""#);
+    assert!(
+        !sub.contains("../assets/logo.png"),
+        "absolute /… logo path must not be rewritten to ../…"
+    );
+}
+
+#[test]
+fn absent_logo_falls_back_to_text_name() {
+    let dir = tmp_dir("logo-absent");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: PlainSite\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+    let html = read(&out.join("index.html"));
+    assert_contains(&html, r#"class="site-bar-name""#);
+    assert_contains(&html, ">PlainSite</a>");
+    // No <a class="site-bar-brand"> anchor and no <img class="site-bar-logo">
+    // tag should appear in the body markup. The class names themselves live
+    // in the inlined stylesheet for every page, so we assert on the full
+    // opening tag pattern instead of a bare substring.
+    assert!(
+        !html.contains(r#"<a class="site-bar-brand""#),
+        "absent logo should not emit the brand <a> wrapper"
+    );
+    assert!(
+        !html.contains(r#"<img class="site-bar-logo""#),
+        "absent logo should not emit any <img class=site-bar-logo>"
+    );
+}
+
+/// Build `dir` with a fixed `KAZAM_TODAY`, returning (stdout, rendered HTML).
+fn build_with_today(dir: &Path, today: &str, out: &Path) -> (String, String) {
+    let output = Command::new(bin())
+        .args(["build"])
+        .arg(dir)
+        .arg("--out")
+        .arg(out)
+        .env("KAZAM_TODAY", today)
+        .output()
+        .expect("run kazam build");
+    assert!(
+        output.status.success(),
+        "build failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
+    let html = read(&out.join("index.html"));
+    (stdout, html)
+}
+
+#[test]
+fn freshness_overdue_injects_red_banner_and_reports_stale() {
+    let dir = tmp_dir("fresh-overdue");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Docs\ntheme: dark\n").unwrap();
+    // Updated Jan 1, reviewed every 30 days. On Apr 21 that's 110 days
+    // later → 80 days overdue → red banner.
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Overdue page\nshell: standard\nfreshness:\n  updated: '2026-01-01'\n  review_every: 30d\n  owner: owner@example.com\n  sources_of_truth:\n    - https://notion.so/abc\n    - label: '#ts-hub'\n      href: https://slack.com/archives/C01\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let (stdout, html) = build_with_today(&dir, "2026-04-21", &out);
+
+    assert_contains(
+        &html,
+        r#"<div class="c-callout c-callout-danger c-freshness-banner""#,
+    );
+    assert_contains(&html, "Review overdue");
+    assert_contains(&html, "owner@example.com");
+    // sources_of_truth list renders
+    assert_contains(&html, r#"href="https://notion.so/abc""#);
+    assert_contains(&html, r#"href="https://slack.com/archives/C01""#);
+    assert_contains(&html, "#ts-hub");
+
+    // Build report surfaces the overdue page.
+    assert_contains(&stdout, "overdue page(s)");
+    assert_contains(&stdout, "index.html");
+    assert_contains(&stdout, "owner@example.com");
+}
+
+#[test]
+fn freshness_due_soon_injects_yellow_banner() {
+    let dir = tmp_dir("fresh-due-soon");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Docs\ntheme: dark\n").unwrap();
+    // Updated Jan 23, reviewed every 90 days → due Apr 23. Today is Apr
+    // 21 → 2 days until due → yellow banner.
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Due soon\nshell: standard\nfreshness:\n  updated: '2026-01-23'\n  review_every: 90d\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let (stdout, html) = build_with_today(&dir, "2026-04-21", &out);
+
+    assert_contains(
+        &html,
+        r#"<div class="c-callout c-callout-warn c-freshness-banner""#,
+    );
+    assert_contains(&html, "Review due soon");
+    assert!(
+        !html.contains(r#"<div class="c-callout c-callout-danger c-freshness-banner""#),
+        "due-soon should emit the yellow warn banner, not the red danger one"
+    );
+
+    // Build report shows the due-soon page, not the overdue section.
+    assert_contains(&stdout, "due for review soon");
+    assert!(
+        !stdout.contains("overdue page(s)"),
+        "no overdue pages expected here"
+    );
+}
+
+#[test]
+fn freshness_fresh_page_has_no_banner_and_report_stays_silent() {
+    let dir = tmp_dir("fresh-fresh");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Docs\ntheme: dark\n").unwrap();
+    // Updated today, 90-day cadence → no banner, no report line.
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Fresh\nshell: standard\nfreshness:\n  updated: '2026-04-21'\n  review_every: 90d\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let (stdout, html) = build_with_today(&dir, "2026-04-21", &out);
+
+    // The `.c-freshness-banner` CSS class is inlined in every page's
+    // stylesheet; match the full banner opening tag instead.
+    assert!(
+        !html.contains(r#"<div class="c-callout c-callout-warn c-freshness-banner""#)
+            && !html.contains(r#"<div class="c-callout c-callout-danger c-freshness-banner""#),
+        "fresh page should not emit a banner div"
+    );
+    assert!(!stdout.contains("overdue page(s)"));
+    assert!(!stdout.contains("due for review soon"));
+}
+
+#[test]
+fn freshness_writes_stale_md_for_overdue_and_removes_when_clean() {
+    // Overdue run → _site/stale.md exists with the overdue details.
+    let dir = tmp_dir("fresh-stalemd");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Docs\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Overdue\nshell: standard\nfreshness:\n  updated: '2026-01-01'\n  review_every: 30d\n  owner: docs@example.com\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    build_with_today(&dir, "2026-04-21", &out);
+
+    let stale_md = out.join("stale.md");
+    assert!(
+        stale_md.exists(),
+        "stale.md should be written for overdue pages"
+    );
+    let content = read(&stale_md);
+    assert_contains(&content, "# Stale page report");
+    assert_contains(&content, "## Overdue");
+    assert_contains(&content, "index.html");
+    assert_contains(&content, "docs@example.com");
+
+    // Now rewrite the page to have a fresh updated date and rebuild into
+    // the same output dir. stale.md should be deleted so dirty state from
+    // a previous build never leaks into a healthy one.
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Fresh\nshell: standard\nfreshness:\n  updated: '2026-04-21'\n  review_every: 30d\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    build_with_today(&dir, "2026-04-21", &out);
+    assert!(
+        !stale_md.exists(),
+        "stale.md must be removed when nothing is stale"
+    );
+}
+
+#[test]
+fn freshness_page_without_metadata_is_silent() {
+    // No `freshness:` block at all → no banner, no report entry, exactly
+    // as a pre-feature page would render.
+    let dir = tmp_dir("fresh-none");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Docs\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Plain\nshell: standard\ncomponents:\n  - type: header\n    title: Plain\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let (stdout, html) = build_with_today(&dir, "2026-04-21", &out);
+
+    assert!(!html.contains(r#"<div class="c-callout c-callout-warn c-freshness-banner""#));
+    assert!(!html.contains(r#"<div class="c-callout c-callout-danger c-freshness-banner""#));
+    assert!(!stdout.contains("overdue"));
+    assert!(!stdout.contains("due for review"));
+}
+
+#[test]
 fn wish_unknown_name_errors() {
     let output = Command::new(bin())
         .args(["wish", "nope-this-does-not-exist"])
@@ -823,6 +1160,325 @@ components:
     assert_contains(&html, r#"href="/abs-md.html""#);
     // Plain relative href in markdown gets depth-1 base (../) prepended.
     assert_contains(&html, r#"href="../relative.html""#);
+}
+
+// ── Link report ──────────────────────────────────────────────────────
+
+fn plain_build(dir: &Path, out: &Path) -> String {
+    let output = Command::new(bin())
+        .args(["build"])
+        .arg(dir)
+        .arg("--out")
+        .arg(out)
+        .output()
+        .expect("run kazam build");
+    assert!(
+        output.status.success(),
+        "build failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    String::from_utf8_lossy(&output.stdout).into_owned()
+}
+
+#[test]
+fn links_flags_orphan_page_and_writes_report() {
+    // index.yaml links to /guide.html. `draft.yaml` is built but nothing
+    // links to it — it should surface as an orphan in stdout and in
+    // _site/links.md, but not block the build.
+    let dir = tmp_dir("links-orphan");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: T\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: callout\n    body: Go read the guide.\n    links:\n      - label: Guide\n        href: guide.html\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("guide.yaml"),
+        "title: Guide\nshell: standard\ncomponents:\n  - type: header\n    title: Guide\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("draft.yaml"),
+        "title: Draft\nshell: standard\ncomponents:\n  - type: header\n    title: Draft\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let stdout = plain_build(&dir, &out);
+
+    assert_contains(&stdout, "1 orphan page(s)");
+    assert_contains(&stdout, "draft.html");
+
+    let links_md = read(&out.join("links.md"));
+    assert_contains(&links_md, "## Orphan pages (1)");
+    assert_contains(&links_md, "draft.html");
+}
+
+#[test]
+fn links_unlisted_pages_excluded_from_orphans() {
+    // A page with `unlisted: true` is an explicit opt-out. Skipping llms.txt
+    // should also mean skipping the orphan check — the author knows it's
+    // not meant to be navigable.
+    let dir = tmp_dir("links-unlisted");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: T\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("hidden.yaml"),
+        "title: Hidden\nshell: standard\nunlisted: true\ncomponents:\n  - type: header\n    title: Hidden\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let stdout = plain_build(&dir, &out);
+
+    assert!(
+        !stdout.contains("orphan page(s)"),
+        "unlisted page must not be flagged"
+    );
+    assert!(!out.join("links.md").exists());
+}
+
+#[test]
+fn links_reports_broken_internal_href() {
+    // A callout links to `missing.html` that doesn't exist. Must be reported
+    // as a broken link; non-.html and external hrefs are ignored.
+    let dir = tmp_dir("links-broken");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: T\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: callout\n    body: see missing\n    links:\n      - label: Missing\n        href: missing.html\n      - label: External\n        href: https://example.com\n      - label: Asset\n        href: /favicon.svg\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let stdout = plain_build(&dir, &out);
+
+    assert_contains(&stdout, "broken internal link(s)");
+    assert_contains(&stdout, "missing.html");
+    assert!(!stdout.contains("example.com"), "externals must be skipped");
+    assert!(!stdout.contains("favicon.svg"), "assets must be skipped");
+
+    let links_md = read(&out.join("links.md"));
+    assert_contains(&links_md, "## Broken internal links");
+    assert_contains(&links_md, "missing.html");
+}
+
+#[test]
+fn links_silent_on_clean_build_removes_stale_report() {
+    // Seed a build with an orphan so links.md exists, then remove the
+    // orphan and rebuild into the same output dir — links.md must be
+    // deleted so a clean build never carries stale state forward.
+    let dir = tmp_dir("links-clean");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: T\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("stray.yaml"),
+        "title: Stray\nshell: standard\ncomponents:\n  - type: header\n    title: Stray\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    plain_build(&dir, &out);
+    assert!(
+        out.join("links.md").exists(),
+        "orphan should produce links.md"
+    );
+
+    std::fs::remove_file(dir.join("stray.yaml")).unwrap();
+    let stdout = plain_build(&dir, &out);
+    assert!(!stdout.contains("orphan page(s)"));
+    assert!(
+        !out.join("links.md").exists(),
+        "links.md must be removed on a clean build"
+    );
+}
+
+#[test]
+fn links_allow_orphans_flag_suppresses_orphans_but_not_broken() {
+    // --allow-orphans silences orphan detection entirely but still surfaces
+    // broken internal links, which are never legitimate.
+    let dir = tmp_dir("links-allow-orphans");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: T\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: callout\n    body: broken\n    links:\n      - label: Missing\n        href: missing.html\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("orphan.yaml"),
+        "title: Orphan\nshell: standard\ncomponents:\n  - type: header\n    title: Orphan\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+
+    let output = Command::new(bin())
+        .args(["build", "--allow-orphans"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .output()
+        .expect("run kazam build --allow-orphans");
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert!(!stdout.contains("orphan page(s)"));
+    assert_contains(&stdout, "broken internal link(s)");
+    assert_contains(&stdout, "missing.html");
+}
+
+// ── Anchor ids on section / header ──────────────────────────────────
+
+fn build_one_page(name: &str, page_yaml: &str, extra_config: &str) -> String {
+    let dir = tmp_dir(name);
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("kazam.yaml"),
+        format!("name: T\ntheme: dark\n{extra_config}"),
+    )
+    .unwrap();
+    std::fs::write(dir.join("index.yaml"), page_yaml).unwrap();
+    let out = dir.join("_site");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+    read(&out.join("index.html"))
+}
+
+#[test]
+fn section_auto_slugs_id_from_heading() {
+    let html = build_one_page(
+        "anchor-auto",
+        "title: Home\nshell: standard\ncomponents:\n  - type: section\n    heading: Success outcomes\n    components: []\n",
+        "",
+    );
+    assert_contains(&html, r#"<section id="success-outcomes""#);
+}
+
+#[test]
+fn section_explicit_id_overrides_heading_slug() {
+    // Author locks `id: outcomes` — the stable anchor must win over the
+    // auto-slug from the heading text, so deep-links survive copy edits.
+    let html = build_one_page(
+        "anchor-explicit",
+        "title: Home\nshell: standard\ncomponents:\n  - type: section\n    heading: Success outcomes\n    id: outcomes\n    components: []\n",
+        "",
+    );
+    assert_contains(&html, r#"<section id="outcomes""#);
+    assert!(
+        !html.contains(r#"id="success-outcomes""#),
+        "auto-slug must not duplicate when an explicit id is set"
+    );
+}
+
+#[test]
+fn header_auto_slugs_id_from_title() {
+    let html = build_one_page(
+        "anchor-header",
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Platform Health\n",
+        "",
+    );
+    assert_contains(&html, r#"<div id="platform-health" class="c-header"#);
+}
+
+#[test]
+fn section_without_heading_or_id_emits_no_id() {
+    // A bare section (no heading, no explicit id) should stay anchor-less
+    // so snapshots of pre-feature sites don't shift.
+    let html = build_one_page(
+        "anchor-none",
+        "title: Home\nshell: standard\ncomponents:\n  - type: section\n    eyebrow: Quiet\n    components:\n      - type: markdown\n        body: body\n",
+        "",
+    );
+    assert!(
+        !html.contains("<section id="),
+        "section without heading/id must not emit an id attribute"
+    );
+}
+
+#[test]
+fn colliding_headings_get_suffixed_ids() {
+    // Two sections with the same heading on the same page must dedupe —
+    // first wins `outcomes`, second becomes `outcomes-2`, third `outcomes-3`.
+    let html = build_one_page(
+        "anchor-collide",
+        "title: Home\nshell: standard\ncomponents:\n  - type: section\n    heading: Outcomes\n    components: []\n  - type: section\n    heading: Outcomes\n    components: []\n  - type: section\n    heading: Outcomes\n    components: []\n",
+        "",
+    );
+    assert_contains(&html, r#"<section id="outcomes""#);
+    assert_contains(&html, r#"<section id="outcomes-2""#);
+    assert_contains(&html, r#"<section id="outcomes-3""#);
+}
+
+#[test]
+fn emoji_and_punctuation_stripped_from_slug() {
+    let html = build_one_page(
+        "anchor-emoji",
+        "title: Home\nshell: standard\ncomponents:\n  - type: section\n    heading: \"⚡ Move at Machine Speed\"\n    components: []\n",
+        "",
+    );
+    assert_contains(&html, r#"<section id="move-at-machine-speed""#);
+}
+
+#[test]
+fn scroll_margin_top_css_clears_sticky_site_bar() {
+    // The CSS rule that makes #deep-link jumps clear the sticky bar must
+    // land in the generated stylesheet for shell-standard / shell-document.
+    let html = build_one_page(
+        "anchor-scroll",
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+        "",
+    );
+    assert_contains(&html, "body.shell-standard [id]");
+    assert_contains(&html, "scroll-margin-top");
+}
+
+#[test]
+fn slug_counter_resets_between_pages() {
+    // The dedup tracker is per-page: page A having `outcomes` must not
+    // push page B's `outcomes` to `outcomes-2`.
+    let dir = tmp_dir("anchor-reset");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: T\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: section\n    heading: Outcomes\n    components: []\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("other.yaml"),
+        "title: Other\nshell: standard\ncomponents:\n  - type: section\n    heading: Outcomes\n    components: []\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+
+    let index = read(&out.join("index.html"));
+    let other = read(&out.join("other.html"));
+    assert_contains(&index, r#"id="outcomes""#);
+    assert_contains(&other, r#"id="outcomes""#);
+    assert!(!index.contains(r#"id="outcomes-2""#));
+    assert!(!other.contains(r#"id="outcomes-2""#));
 }
 
 #[test]
