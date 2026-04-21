@@ -6,6 +6,13 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.0] — 2026-04-21
+
+The launch release. Earlier `0.x` versions were pre-launch iteration;
+`1.0.0` is the first line we commit to. Everything shipped in the `0.x`
+series is carried forward; the notes below cover only the delta since
+`0.4.0`.
+
 ### Added
 - Anchor `id:` on `section` and `header` components — auto-slugs from
   `heading` / `title` by default (lowercase, hyphens, punctuation +
