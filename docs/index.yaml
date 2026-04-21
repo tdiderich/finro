@@ -47,33 +47,6 @@ components:
             description: Every change is a diff in a PR. Review design the way you review code.
 
   - type: section
-    eyebrow: New in v0.4.0
-    heading: "kazam wish — let your agent write it"
-    components:
-      - type: markdown
-        body: |
-          Drop a folder of real context (notes, transcripts, prior decks, PDFs) and run
-          `kazam wish deck`. Your agent — Claude, Gemini, Codex, or OpenCode — reads
-          everything with its own file tools and writes a populated deck. kazam does no
-          file parsing; the agent handles it. Or `--yolo "about me, based on our
-          interaction history"` to skip the folder entirely and let the agent invent the
-          whole deck from whatever it already knows about you.
-
-      - type: code
-        language: bash
-        code: |
-          kazam wish deck                                     # scaffold a workspace
-          # …fill questions.md, drop your context files into wish-deck/…
-          kazam wish deck                                     # grant it — agent writes deck.yaml
-          kazam wish deck --yolo "about me"                   # skip workspace, agent invents everything
-
-      - type: button_group
-        buttons:
-          - label: Read the wishes guide →
-            href: wishes.html
-            variant: primary
-
-  - type: section
     eyebrow: 30 seconds
     heading: This YAML…
     components:

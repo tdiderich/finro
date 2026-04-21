@@ -14,7 +14,6 @@ freshness:
 components:
   - type: header
     title: Freshness
-    eyebrow: New in v0.4.x
     subtitle: Every page can declare who owns it, when it was last updated, how often it should be reviewed, and where the sources of truth live. kazam turns that into a banner — yellow if a review is due within a week, red if it's already overdue — and a build-time report of everything that needs attention.
 
   - type: section

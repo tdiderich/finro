@@ -4,7 +4,6 @@ shell: standard
 components:
   - type: header
     title: Wishes
-    eyebrow: New in v0.4.0
     subtitle: Point kazam at a folder with your real context, let your agent read it, get back a populated YAML. No terminal interviews, no file parsing in kazam.
 
   - type: section
