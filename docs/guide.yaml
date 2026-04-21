@@ -82,15 +82,6 @@ components:
           files for new pages. When you're happy, `kazam build . --out dist`
           produces a static HTML bundle you can deploy anywhere.
 
-      - type: callout
-        variant: info
-        title: Ready to ship?
-        body: "Every kazam build is just plain HTML/CSS/JS. Check the deploy recipes for a copy-paste setup on Vercel, Netlify, Cloudflare Pages, GitHub Pages, S3 + CloudFront, or Firebase."
-        links:
-          - label: Deploy recipes
-            href: deploy.html
-            variant: primary
-
   - type: section
     eyebrow: Or skip the scaffold
     heading: Let your agent write it
@@ -346,6 +337,15 @@ components:
               - type: code
                 language: bash
                 code: kazam build ./my-site --out ./dist
+
+  - type: callout
+    variant: info
+    title: Ready to ship?
+    body: "Every kazam build is just plain HTML/CSS/JS. Check the deploy recipes for a copy-paste setup on Vercel, Netlify, Cloudflare Pages, GitHub Pages, S3 + CloudFront, or Firebase."
+    links:
+      - label: Deploy recipes
+        href: deploy.html
+        variant: primary
 
   - type: callout
     variant: info
