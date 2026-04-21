@@ -132,6 +132,20 @@ Refreshing the content is the agent's job: when a reader (or an agent
 working on the page) clicks through, they read the source and propose
 updates.
 
+### Link graph (automatic)
+
+Every `kazam build` also runs a link-graph pass. Two things surface in the
+build summary and in `_site/links.md`:
+
+- **Orphan pages** — built pages not reachable from `index.html` via nav or
+  any in-page href. Either link them from somewhere reachable, delete them,
+  or set `unlisted: true` on the page (same flag `llms.txt` uses).
+- **Broken internal links** — `.html` hrefs that don't match any built page.
+
+Silent on clean builds; `links.md` is removed when there's nothing to
+report. `kazam dev` and `kazam build --allow-orphans` silence orphan
+detection (useful for drafts); broken links always surface.
+
 ## Shells
 
 - **standard** — sticky site header + nav + 1200px container. Default. Use for
@@ -275,13 +289,14 @@ consistent (2 spaces). Quote any string that looks like a number (e.g. `"47"`).
           - Use cases defined
   ```
 
-- **before_after** — transformation storytelling (QBR-style). `before` and `after` support inline markdown (`**bold**`, `` `code` ``).
+- **before_after** — transformation storytelling (QBR-style)
   ```yaml
   - type: before_after
     items:
       - title: Deployment time
         before: Manual, 2 weeks
-        after: "**4 hours** — fully automated"
+        after: 4 hours
+        after_context: fully automated
   ```
 
 - **avatar** — profile circle with initials fallback
@@ -459,7 +474,11 @@ Every colored component accepts the same 5-value palette:
   emitted verbatim. Any other href is rewritten per-page based on directory
   depth so `index.html` works from any subfolder.
 - **deck shell** expects `slides:` not `components:` at the page root. Each
-  slide has its own `label:` + `components:` list.
+  slide has its own `label:` + `components:` list. Optional top-level
+  `print_flow: slides | continuous` controls PDF export shape. `slides`
+  (default) = one slide per landscape page (Keynote-style). `continuous`
+  = all slides flow as one portrait document with thin separators — nicer
+  for sharing as a readable artifact.
 - **Markdown body scalars**: use the `|` literal block style in YAML to preserve
   newlines — `body: |` followed by indented content.
 

@@ -145,6 +145,15 @@ components:
               - label: See example →
                 href: examples/deck.html
 
+          - title: Landing pages
+            badge:
+              label: standard
+              color: default
+            description: Hero, features, stats, CTA — all native components. Not its specialty, but it ships one fine.
+            links:
+              - label: See example →
+                href: examples/landing.html
+
           - title: Dashboards from APIs
             badge:
               label: pattern

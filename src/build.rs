@@ -8,7 +8,7 @@ use crate::minify;
 use crate::render;
 use crate::types::{Page, SiteConfig};
 
-pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
+pub fn run(dir: &Path, out: &Path, release: bool, allow_orphans: bool) -> Result<()> {
     let config = load_config(dir)?;
     fs::create_dir_all(out)?;
 
@@ -24,6 +24,9 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
     // system clock (see `freshness::today_iso`).
     let today = crate::freshness::today_iso();
     let mut stale_pages: Vec<StaleEntry> = Vec::new();
+    // Per-page href inventory so we can run the link-graph analysis after
+    // the walk. Populated alongside each page render.
+    let mut page_links: Vec<crate::links::PageLinks> = Vec::new();
 
     for entry in WalkDir::new(dir)
         .follow_links(true)
@@ -149,6 +152,13 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
                 });
             }
 
+            // Collect internal hrefs for the link-graph pass.
+            let html_rel_for_links = rel
+                .with_extension("html")
+                .to_string_lossy()
+                .replace('\\', "/");
+            page_links.push(crate::links::collect_page_links(&html_rel_for_links, &page));
+
             // Track freshness status for the end-of-build summary. Uses
             // the same computation as the banner inject so the report and
             // the rendered output never disagree. Fresh pages are dropped;
@@ -214,6 +224,16 @@ pub fn run(dir: &Path, out: &Path, release: bool) -> Result<()> {
 
     print_freshness_report(&stale_pages);
     write_freshness_report_md(out, &stale_pages, &today)?;
+
+    // Link-graph analysis runs after every build. Orphans can be silenced
+    // for draft workflows (dev mode, `--allow-orphans`) but broken links
+    // always surface — there's no legitimate reason to tolerate those.
+    let mut report = crate::links::analyze(&page_links, config.nav.as_deref());
+    if allow_orphans {
+        report.orphans.clear();
+    }
+    crate::links::print_report(&report);
+    crate::links::write_report_md(out, &report)?;
 
     Ok(())
 }

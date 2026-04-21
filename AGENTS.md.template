@@ -132,6 +132,20 @@ Refreshing the content is the agent's job: when a reader (or an agent
 working on the page) clicks through, they read the source and propose
 updates.
 
+### Link graph (automatic)
+
+Every `kazam build` also runs a link-graph pass. Two things surface in the
+build summary and in `_site/links.md`:
+
+- **Orphan pages** — built pages not reachable from `index.html` via nav or
+  any in-page href. Either link them from somewhere reachable, delete them,
+  or set `unlisted: true` on the page (same flag `llms.txt` uses).
+- **Broken internal links** — `.html` hrefs that don't match any built page.
+
+Silent on clean builds; `links.md` is removed when there's nothing to
+report. `kazam dev` and `kazam build --allow-orphans` silence orphan
+detection (useful for drafts); broken links always surface.
+
 ## Shells
 
 - **standard** — sticky site header + nav + 1200px container. Default. Use for

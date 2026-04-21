@@ -7,6 +7,15 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- Build-time link report — every `kazam build` now walks the page graph
+  and surfaces **orphan pages** (built but unreachable from `index.html`
+  or the `nav:`) and **broken internal links** (`.html` hrefs that don't
+  match any built page). Silent on clean builds. When anything surfaces,
+  the build prints a grouped summary and writes `_site/links.md` so an
+  agent can consume the list directly. `kazam dev` and
+  `kazam build --allow-orphans` silence the orphan check (useful for
+  draft pages); broken links always surface. `unlisted: true` on a page
+  excludes it from the orphan check.
 - `freshness:` page metadata — declare last-updated date, review cadence,
   owner, and sources-of-truth pointers per page. kazam computes status
   at build time (zero runtime JS) and injects a banner at the top of

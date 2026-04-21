@@ -1162,6 +1162,179 @@ components:
     assert_contains(&html, r#"href="../relative.html""#);
 }
 
+// ── Link report ──────────────────────────────────────────────────────
+
+fn plain_build(dir: &Path, out: &Path) -> String {
+    let output = Command::new(bin())
+        .args(["build"])
+        .arg(dir)
+        .arg("--out")
+        .arg(out)
+        .output()
+        .expect("run kazam build");
+    assert!(
+        output.status.success(),
+        "build failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    String::from_utf8_lossy(&output.stdout).into_owned()
+}
+
+#[test]
+fn links_flags_orphan_page_and_writes_report() {
+    // index.yaml links to /guide.html. `draft.yaml` is built but nothing
+    // links to it — it should surface as an orphan in stdout and in
+    // _site/links.md, but not block the build.
+    let dir = tmp_dir("links-orphan");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: T\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: callout\n    body: Go read the guide.\n    links:\n      - label: Guide\n        href: guide.html\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("guide.yaml"),
+        "title: Guide\nshell: standard\ncomponents:\n  - type: header\n    title: Guide\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("draft.yaml"),
+        "title: Draft\nshell: standard\ncomponents:\n  - type: header\n    title: Draft\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let stdout = plain_build(&dir, &out);
+
+    assert_contains(&stdout, "1 orphan page(s)");
+    assert_contains(&stdout, "draft.html");
+
+    let links_md = read(&out.join("links.md"));
+    assert_contains(&links_md, "## Orphan pages (1)");
+    assert_contains(&links_md, "draft.html");
+}
+
+#[test]
+fn links_unlisted_pages_excluded_from_orphans() {
+    // A page with `unlisted: true` is an explicit opt-out. Skipping llms.txt
+    // should also mean skipping the orphan check — the author knows it's
+    // not meant to be navigable.
+    let dir = tmp_dir("links-unlisted");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: T\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("hidden.yaml"),
+        "title: Hidden\nshell: standard\nunlisted: true\ncomponents:\n  - type: header\n    title: Hidden\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let stdout = plain_build(&dir, &out);
+
+    assert!(
+        !stdout.contains("orphan page(s)"),
+        "unlisted page must not be flagged"
+    );
+    assert!(!out.join("links.md").exists());
+}
+
+#[test]
+fn links_reports_broken_internal_href() {
+    // A callout links to `missing.html` that doesn't exist. Must be reported
+    // as a broken link; non-.html and external hrefs are ignored.
+    let dir = tmp_dir("links-broken");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: T\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: callout\n    body: see missing\n    links:\n      - label: Missing\n        href: missing.html\n      - label: External\n        href: https://example.com\n      - label: Asset\n        href: /favicon.svg\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let stdout = plain_build(&dir, &out);
+
+    assert_contains(&stdout, "broken internal link(s)");
+    assert_contains(&stdout, "missing.html");
+    assert!(!stdout.contains("example.com"), "externals must be skipped");
+    assert!(!stdout.contains("favicon.svg"), "assets must be skipped");
+
+    let links_md = read(&out.join("links.md"));
+    assert_contains(&links_md, "## Broken internal links");
+    assert_contains(&links_md, "missing.html");
+}
+
+#[test]
+fn links_silent_on_clean_build_removes_stale_report() {
+    // Seed a build with an orphan so links.md exists, then remove the
+    // orphan and rebuild into the same output dir — links.md must be
+    // deleted so a clean build never carries stale state forward.
+    let dir = tmp_dir("links-clean");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: T\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("stray.yaml"),
+        "title: Stray\nshell: standard\ncomponents:\n  - type: header\n    title: Stray\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    plain_build(&dir, &out);
+    assert!(
+        out.join("links.md").exists(),
+        "orphan should produce links.md"
+    );
+
+    std::fs::remove_file(dir.join("stray.yaml")).unwrap();
+    let stdout = plain_build(&dir, &out);
+    assert!(!stdout.contains("orphan page(s)"));
+    assert!(
+        !out.join("links.md").exists(),
+        "links.md must be removed on a clean build"
+    );
+}
+
+#[test]
+fn links_allow_orphans_flag_suppresses_orphans_but_not_broken() {
+    // --allow-orphans silences orphan detection entirely but still surfaces
+    // broken internal links, which are never legitimate.
+    let dir = tmp_dir("links-allow-orphans");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: T\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: callout\n    body: broken\n    links:\n      - label: Missing\n        href: missing.html\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("orphan.yaml"),
+        "title: Orphan\nshell: standard\ncomponents:\n  - type: header\n    title: Orphan\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+
+    let output = Command::new(bin())
+        .args(["build", "--allow-orphans"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .output()
+        .expect("run kazam build --allow-orphans");
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert!(!stdout.contains("orphan page(s)"));
+    assert_contains(&stdout, "broken internal link(s)");
+    assert_contains(&stdout, "missing.html");
+}
+
 #[test]
 fn init_refuses_existing_dir() {
     let dir = tmp_dir("init-exists");

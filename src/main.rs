@@ -8,6 +8,7 @@ mod dev;
 mod freshness;
 mod icons;
 mod init;
+mod links;
 mod llms;
 mod minify;
 mod render;
@@ -33,6 +34,10 @@ enum Command {
         /// Minify HTML, CSS, and JS in the output
         #[arg(short, long)]
         release: bool,
+        /// Silence the orphan-page check (broken links still reported).
+        /// Useful for draft pages you haven't wired into nav yet.
+        #[arg(long)]
+        allow_orphans: bool,
     },
     /// Watch source, rebuild on change, serve at localhost:PORT
     Dev {
@@ -79,7 +84,12 @@ enum Command {
 
 fn main() -> Result<()> {
     match Cli::parse().command {
-        Command::Build { dir, out, release } => build::run(&dir, &out, release),
+        Command::Build {
+            dir,
+            out,
+            release,
+            allow_orphans,
+        } => build::run(&dir, &out, release, allow_orphans),
         Command::Dev { dir, out, port } => dev::run(&dir, &out, port),
         Command::Init { name } => init::run(&name),
         Command::Agents => agents::run(),
