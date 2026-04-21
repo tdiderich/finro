@@ -19,7 +19,7 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   freshness:
     updated: 2026-01-15
     review_every: 90d
-    owner: tyler@mazehq.com
+    owner: owner@example.com
     sources_of_truth:
       - https://notion.so/abc123
       - label: "#ts-hub"

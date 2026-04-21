@@ -4,7 +4,7 @@ description: Build-time staleness checking for docs and knowledge bases — revi
 freshness:
   updated: 2026-04-21
   review_every: 90d
-  owner: tyler@mazehq.com
+  owner: owner@example.com
   sources_of_truth:
     - label: Implementation
       href: https://github.com/tdiderich/kazam/blob/main/src/freshness.rs
@@ -36,7 +36,7 @@ components:
           freshness:
             updated: 2026-01-15              # ISO date of the last content change
             review_every: 90d                # Nd | Nw | Nm | Ny | weekly | monthly | quarterly | yearly
-            owner: tyler@mazehq.com          # free-form — email, Slack handle, team name
+            owner: owner@example.com          # free-form — email, Slack handle, team name
             sources_of_truth:                # bare URL or { label, href }
               - https://notion.so/abc123
               - label: "#ts-hub"
@@ -63,12 +63,12 @@ components:
       - type: callout
         variant: warn
         title: Review due soon
-        body: "Review is due in **5 days**. Last updated **Jan 15, 2026** (85 days ago). Review cadence: **every 90d**. Site last built: Apr 21, 2026. Owner: **tyler@mazehq.com**."
+        body: "Review is due in **5 days**. Last updated **Jan 15, 2026** (85 days ago). Review cadence: **every 90d**. Site last built: Apr 21, 2026. Owner: **owner@example.com**."
 
       - type: callout
         variant: danger
         title: Review overdue
-        body: "Review is **20 days overdue**. Last updated **Jan 15, 2026** (110 days ago). Review cadence: **every 90d**. Site last built: Apr 21, 2026. Owner: **tyler@mazehq.com**."
+        body: "Review is **20 days overdue**. Last updated **Jan 15, 2026** (110 days ago). Review cadence: **every 90d**. Site last built: Apr 21, 2026. Owner: **owner@example.com**."
 
       - type: markdown
         body: |
@@ -98,8 +98,8 @@ components:
           ✓ 3 page(s) → _site
 
           ⚠ 2 overdue page(s):
-              onboarding.html                         20 day(s) overdue (cadence: every 90d) — owner tyler@mazehq.com
-              api/reference.html                       5 day(s) overdue (cadence: every 180d) — owner eng@mazehq.com
+              onboarding.html                         20 day(s) overdue (cadence: every 90d) — owner owner@example.com
+              api/reference.html                       5 day(s) overdue (cadence: every 180d) — owner eng@example.com
 
           ⏳ 1 page(s) due for review soon:
               guide.html                              due in 3 day(s) (cadence: every 30d)

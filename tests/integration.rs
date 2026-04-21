@@ -932,7 +932,7 @@ fn freshness_overdue_injects_red_banner_and_reports_stale() {
     // later → 80 days overdue → red banner.
     std::fs::write(
         dir.join("index.yaml"),
-        "title: Overdue page\nshell: standard\nfreshness:\n  updated: '2026-01-01'\n  review_every: 30d\n  owner: tyler@mazehq.com\n  sources_of_truth:\n    - https://notion.so/abc\n    - label: '#ts-hub'\n      href: https://slack.com/archives/C01\ncomponents:\n  - type: header\n    title: Home\n",
+        "title: Overdue page\nshell: standard\nfreshness:\n  updated: '2026-01-01'\n  review_every: 30d\n  owner: owner@example.com\n  sources_of_truth:\n    - https://notion.so/abc\n    - label: '#ts-hub'\n      href: https://slack.com/archives/C01\ncomponents:\n  - type: header\n    title: Home\n",
     )
     .unwrap();
     let out = dir.join("_site");
@@ -943,7 +943,7 @@ fn freshness_overdue_injects_red_banner_and_reports_stale() {
         r#"<div class="c-callout c-callout-danger c-freshness-banner""#,
     );
     assert_contains(&html, "Review overdue");
-    assert_contains(&html, "tyler@mazehq.com");
+    assert_contains(&html, "owner@example.com");
     // sources_of_truth list renders
     assert_contains(&html, r#"href="https://notion.so/abc""#);
     assert_contains(&html, r#"href="https://slack.com/archives/C01""#);
@@ -952,7 +952,7 @@ fn freshness_overdue_injects_red_banner_and_reports_stale() {
     // Build report surfaces the overdue page.
     assert_contains(&stdout, "overdue page(s)");
     assert_contains(&stdout, "index.html");
-    assert_contains(&stdout, "tyler@mazehq.com");
+    assert_contains(&stdout, "owner@example.com");
 }
 
 #[test]

@@ -113,7 +113,7 @@ is stale.
 freshness:
   updated: 2026-01-15              # ISO date of last content change
   review_every: 90d                # Nd | Nw | Nm | Ny | weekly | monthly | quarterly | yearly
-  owner: tyler@mazehq.com          # free-form — email, handle, team name
+  owner: owner@example.com         # free-form — email, handle, team name
   sources_of_truth:                # bare URL or { label, href }
     - https://notion.so/abc123
     - label: "#ts-hub"
