@@ -1,6 +1,6 @@
 use pulldown_cmark::{html as md_html, Event, Options, Parser as MdParser, Tag};
 
-use super::{charts, esc, resolve_href, Rendered};
+use super::{charts, esc, resolve_href, slug, Rendered};
 use crate::icons;
 use crate::types::*;
 
@@ -11,7 +11,8 @@ pub fn render(c: &Component, base: &str) -> Rendered {
             subtitle,
             eyebrow,
             align,
-        } => header(title, subtitle, eyebrow, *align),
+            id,
+        } => header(title, subtitle, eyebrow, *align, id.as_deref()),
         Component::Meta { fields } => meta(fields),
         Component::CardGrid {
             cards,
@@ -46,7 +47,8 @@ pub fn render(c: &Component, base: &str) -> Rendered {
             eyebrow,
             components,
             align,
-        } => section(heading, eyebrow, components, *align, base),
+            id,
+        } => section(heading, eyebrow, components, *align, id.as_deref(), base),
         Component::Columns {
             columns,
             equal_heights,
@@ -122,8 +124,13 @@ fn header(
     subtitle: &Option<String>,
     eyebrow: &Option<String>,
     align: Align,
+    id: Option<&str>,
 ) -> Rendered {
-    let mut h = format!(r#"<div class="c-header {}">"#, align.class());
+    let id_attr = match slug::resolve(id, Some(title)) {
+        Some(slug) => format!(r#" id="{}""#, slug),
+        None => String::new(),
+    };
+    let mut h = format!(r#"<div{} class="c-header {}">"#, id_attr, align.class());
     if let Some(e) = eyebrow {
         h.push_str(&format!(
             r#"<div class="c-header-eyebrow">{}</div>"#,
@@ -562,11 +569,19 @@ fn section(
     eyebrow: &Option<String>,
     comps: &[Component],
     align: Align,
+    id: Option<&str>,
     base: &str,
 ) -> Rendered {
     let mut r = Rendered::default();
-    r.html
-        .push_str(&format!(r#"<section class="c-section {}">"#, align.class()));
+    let id_attr = match slug::resolve(id, heading.as_deref()) {
+        Some(slug) => format!(r#" id="{}""#, slug),
+        None => String::new(),
+    };
+    r.html.push_str(&format!(
+        r#"<section{} class="c-section {}">"#,
+        id_attr,
+        align.class()
+    ));
     if eyebrow.is_some() || heading.is_some() {
         r.html.push_str(r#"<div class="c-section-header">"#);
         if let Some(e) = eyebrow {

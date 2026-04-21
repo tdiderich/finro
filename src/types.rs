@@ -131,6 +131,13 @@ pub enum Component {
         eyebrow: Option<String>,
         #[serde(default)]
         align: Align,
+        /// Optional stable anchor id on the rendered wrapper. When unset,
+        /// kazam auto-slugs from `title` (lowercase, hyphens, punctuation
+        /// stripped) so `#deep-link` URLs Just Work. An explicit id wins
+        /// over the auto-slug so copy changes don't break existing
+        /// bookmarks. Collisions on the same page suffix `-2`, `-3`, etc.
+        #[serde(default)]
+        id: Option<String>,
     },
     Meta {
         fields: Vec<MetaField>,
@@ -194,6 +201,12 @@ pub enum Component {
         components: Vec<Component>,
         #[serde(default)]
         align: Align,
+        /// Optional stable anchor id on the rendered wrapper. When unset
+        /// and `heading` is present, kazam auto-slugs from the heading
+        /// text. Explicit id wins. Same collision handling as `header`.
+        /// No heading and no explicit id → no id attribute emitted.
+        #[serde(default)]
+        id: Option<String>,
     },
     Columns {
         columns: Vec<Vec<Component>>,

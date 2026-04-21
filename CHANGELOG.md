@@ -7,6 +7,13 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- Anchor `id:` on `section` and `header` components — auto-slugs from
+  `heading` / `title` by default (lowercase, hyphens, punctuation +
+  emoji stripped) so `/guide.html#outcomes` links work out of the box.
+  Explicit `id:` overrides the slug for stable anchors that survive
+  copy edits. Collisions within a page dedupe with `-2`, `-3`, etc.
+  Scroll-offset CSS clears the sticky site bar so deep-links don't
+  land with the heading hidden behind it.
 - Build-time link report — every `kazam build` now walks the page graph
   and surfaces **orphan pages** (built but unreachable from `index.html`
   or the `nav:`) and **broken internal links** (`.html` hrefs that don't

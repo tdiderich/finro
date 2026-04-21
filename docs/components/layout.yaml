@@ -27,6 +27,12 @@ components:
           hold any components. Add `align: center | right` to align the eyebrow,
           heading, and text content within the section.
 
+          **Anchors.** When `heading` is set, the rendered `<section>` gets an
+          auto-slugged `id` (lowercase, hyphens, punctuation and emoji stripped),
+          so deep-links like `/guide.html#platform-health` just work. Set
+          `id: stable-name` to lock the anchor even if the heading wording
+          changes. Same behavior applies to `header`.
+
       - type: section
         eyebrow: Example section
         heading: Platform health

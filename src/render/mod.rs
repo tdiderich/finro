@@ -2,6 +2,7 @@ mod charts;
 mod components;
 mod scripts;
 mod shells;
+mod slug;
 
 use crate::types::{Component, Page, Shell, SiteConfig};
 
@@ -50,6 +51,10 @@ pub fn render_page(
     source_href: &str,
     rel_path: &str,
 ) -> String {
+    // Clear the per-page anchor-id dedup map so slug collisions don't leak
+    // between pages in a single build.
+    slug::reset();
+
     let mut rendered = Rendered::default();
 
     // Inject the stale-review banner at the top of the page body when the

@@ -475,6 +475,17 @@ body.shell-standard .site-bar, body.shell-document .site-bar {
   backdrop-filter: blur(12px);
 }
 
+/* Deep-link scroll offset. Any element with an id (section wrappers,
+   header wrappers, and inline markdown heading anchors) gets a
+   scroll-margin-top that clears the sticky 56px site bar plus some
+   breathing room, so `/guide.html#outcomes` doesn't land with the
+   heading tucked under the bar. Deck shell has no sticky bar, so the
+   rule is scoped to the shells that do. */
+body.shell-standard [id],
+body.shell-document [id] {
+  scroll-margin-top: 72px;
+}
+
 /* ──────── Nav dropdowns (parents with children, top layout) ──────── */
 
 .site-bar nav .nav-link-group { position: relative; display: flex; align-items: center; }

@@ -162,12 +162,15 @@ consistent (2 spaces). Quote any string that looks like a number (e.g. `"47"`).
 
 ### Content
 
-- **header** — page title block
+- **header** — page title block. Auto-emits `id` from the `title` slug
+  so `/page.html#my-title` works; override with explicit `id:` for a
+  stable anchor that survives copy edits.
   ```yaml
   - type: header
     title: Required
     subtitle: Optional subtitle
     eyebrow: Optional label
+    id: optional-stable-anchor   # else auto-slugged from title
   ```
 
 - **meta** — key-value strip (author, date, status, version)
@@ -388,11 +391,15 @@ consistent (2 spaces). Quote any string that looks like a number (e.g. `"47"`).
 
 ### Layout
 
-- **section** — grouping with eyebrow + heading + nested components
+- **section** — grouping with eyebrow + heading + nested components.
+  Auto-emits `id` from the `heading` slug (no heading → no id); override
+  with explicit `id:` for a stable anchor. Duplicate slugs on a page
+  dedupe with `-2`, `-3`, etc.
   ```yaml
   - type: section
     eyebrow: Category
     heading: Section Title
+    id: optional-stable-anchor   # else auto-slugged from heading
     components: [...]
   ```
 

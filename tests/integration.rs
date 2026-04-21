@@ -1335,6 +1335,152 @@ fn links_allow_orphans_flag_suppresses_orphans_but_not_broken() {
     assert_contains(&stdout, "missing.html");
 }
 
+// ── Anchor ids on section / header ──────────────────────────────────
+
+fn build_one_page(name: &str, page_yaml: &str, extra_config: &str) -> String {
+    let dir = tmp_dir(name);
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("kazam.yaml"),
+        format!("name: T\ntheme: dark\n{extra_config}"),
+    )
+    .unwrap();
+    std::fs::write(dir.join("index.yaml"), page_yaml).unwrap();
+    let out = dir.join("_site");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+    read(&out.join("index.html"))
+}
+
+#[test]
+fn section_auto_slugs_id_from_heading() {
+    let html = build_one_page(
+        "anchor-auto",
+        "title: Home\nshell: standard\ncomponents:\n  - type: section\n    heading: Success outcomes\n    components: []\n",
+        "",
+    );
+    assert_contains(&html, r#"<section id="success-outcomes""#);
+}
+
+#[test]
+fn section_explicit_id_overrides_heading_slug() {
+    // Author locks `id: outcomes` — the stable anchor must win over the
+    // auto-slug from the heading text, so deep-links survive copy edits.
+    let html = build_one_page(
+        "anchor-explicit",
+        "title: Home\nshell: standard\ncomponents:\n  - type: section\n    heading: Success outcomes\n    id: outcomes\n    components: []\n",
+        "",
+    );
+    assert_contains(&html, r#"<section id="outcomes""#);
+    assert!(
+        !html.contains(r#"id="success-outcomes""#),
+        "auto-slug must not duplicate when an explicit id is set"
+    );
+}
+
+#[test]
+fn header_auto_slugs_id_from_title() {
+    let html = build_one_page(
+        "anchor-header",
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Platform Health\n",
+        "",
+    );
+    assert_contains(&html, r#"<div id="platform-health" class="c-header"#);
+}
+
+#[test]
+fn section_without_heading_or_id_emits_no_id() {
+    // A bare section (no heading, no explicit id) should stay anchor-less
+    // so snapshots of pre-feature sites don't shift.
+    let html = build_one_page(
+        "anchor-none",
+        "title: Home\nshell: standard\ncomponents:\n  - type: section\n    eyebrow: Quiet\n    components:\n      - type: markdown\n        body: body\n",
+        "",
+    );
+    assert!(
+        !html.contains("<section id="),
+        "section without heading/id must not emit an id attribute"
+    );
+}
+
+#[test]
+fn colliding_headings_get_suffixed_ids() {
+    // Two sections with the same heading on the same page must dedupe —
+    // first wins `outcomes`, second becomes `outcomes-2`, third `outcomes-3`.
+    let html = build_one_page(
+        "anchor-collide",
+        "title: Home\nshell: standard\ncomponents:\n  - type: section\n    heading: Outcomes\n    components: []\n  - type: section\n    heading: Outcomes\n    components: []\n  - type: section\n    heading: Outcomes\n    components: []\n",
+        "",
+    );
+    assert_contains(&html, r#"<section id="outcomes""#);
+    assert_contains(&html, r#"<section id="outcomes-2""#);
+    assert_contains(&html, r#"<section id="outcomes-3""#);
+}
+
+#[test]
+fn emoji_and_punctuation_stripped_from_slug() {
+    let html = build_one_page(
+        "anchor-emoji",
+        "title: Home\nshell: standard\ncomponents:\n  - type: section\n    heading: \"⚡ Move at Machine Speed\"\n    components: []\n",
+        "",
+    );
+    assert_contains(&html, r#"<section id="move-at-machine-speed""#);
+}
+
+#[test]
+fn scroll_margin_top_css_clears_sticky_site_bar() {
+    // The CSS rule that makes #deep-link jumps clear the sticky bar must
+    // land in the generated stylesheet for shell-standard / shell-document.
+    let html = build_one_page(
+        "anchor-scroll",
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+        "",
+    );
+    assert_contains(&html, "body.shell-standard [id]");
+    assert_contains(&html, "scroll-margin-top");
+}
+
+#[test]
+fn slug_counter_resets_between_pages() {
+    // The dedup tracker is per-page: page A having `outcomes` must not
+    // push page B's `outcomes` to `outcomes-2`.
+    let dir = tmp_dir("anchor-reset");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: T\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: section\n    heading: Outcomes\n    components: []\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("other.yaml"),
+        "title: Other\nshell: standard\ncomponents:\n  - type: section\n    heading: Outcomes\n    components: []\n",
+    )
+    .unwrap();
+    let out = dir.join("_site");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+
+    let index = read(&out.join("index.html"));
+    let other = read(&out.join("other.html"));
+    assert_contains(&index, r#"id="outcomes""#);
+    assert_contains(&other, r#"id="outcomes""#);
+    assert!(!index.contains(r#"id="outcomes-2""#));
+    assert!(!other.contains(r#"id="outcomes-2""#));
+}
+
 #[test]
 fn init_refuses_existing_dir() {
     let dir = tmp_dir("init-exists");
