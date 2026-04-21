@@ -47,42 +47,53 @@ components:
             description: Every change is a diff in a PR. Review design the way you review code.
 
   - type: section
-    eyebrow: Receipts
-    heading: A real React site, rebuilt on kazam
+    eyebrow: 30 seconds
+    heading: This YAML…
     components:
+      - type: code
+        language: yaml
+        code: |
+          title: Q2 Pipeline Review
+          shell: standard
+
+          components:
+            - type: header
+              title: Q2 Pipeline Review
+              subtitle: Three active opportunities
+
+            - type: stat_grid
+              columns: 3
+              stats:
+                - label: Total ACV
+                  value: $1.2M
+                  color: green
+                - label: Weighted
+                  value: $480K
+                  color: default
+                - label: At risk
+                  value: $200K
+                  color: yellow
+
       - type: markdown
-        body: |
-          One personal site migrated from Create-React-App to kazam. Whole repo,
-          not a hand-picked excerpt.
+        body: "…renders to this:"
+
+      - type: header
+        title: Q2 Pipeline Review
+        subtitle: Three active opportunities
 
       - type: stat_grid
         columns: 3
         stats:
-          - label: Hand-authored LOC
-            value: "−88%"
-            detail: 1,722 → 210
+          - label: Total ACV
+            value: $1.2M
             color: green
-          - label: npm dependencies
-            value: "0"
-            detail: was react, tailwind, axios, +1000s transitive
-            color: green
-          - label: Migration
-            value: 1 conversation
-            detail: one-shot rebuild with an agent
+          - label: Weighted
+            value: $480K
             color: default
-
-      - type: before_after
-        items:
-          - title: Source you maintain
-            before: 1,722 lines across React components, hooks, CSS modules, and Tailwind config.
-            after: "**210 lines of YAML** — `kazam.yaml` + one file per page."
-          - title: Dependency graph
-            before: "react, react-router, axios, tailwind, react-gravatar, react-toggle + thousands of transitive npm packages you'll never audit."
-            after: "**Zero npm dependencies.** ~10 direct Rust crates, `cargo-audit` in CI, `Cargo.lock` committed."
-          - title: Build & deploy
-            before: webpack build, Firebase Hosting, two cloud functions to patch over SPA quirks.
-            after: "**One Rust binary** emits static HTML. Firebase Hosting serves `_site/` — no functions, no runtime."
-
+          - label: At risk
+            value: $200K
+            color: yellow
+            
   - type: section
     eyebrow: Use cases
     heading: What to build with it
@@ -205,54 +216,6 @@ components:
                     instead: React / Vue / Svelte. kazam emits zero JS by design.
                   - use_case: Blogs with comments or user-generated content
                     instead: Ghost, WordPress, or any app with a real backend. A read-only blog is fine.
-
-  - type: section
-    eyebrow: 30 seconds
-    heading: This YAML…
-    components:
-      - type: code
-        language: yaml
-        code: |
-          title: Q2 Pipeline Review
-          shell: standard
-
-          components:
-            - type: header
-              title: Q2 Pipeline Review
-              subtitle: Three active opportunities
-
-            - type: stat_grid
-              columns: 3
-              stats:
-                - label: Total ACV
-                  value: $1.2M
-                  color: green
-                - label: Weighted
-                  value: $480K
-                  color: default
-                - label: At risk
-                  value: $200K
-                  color: yellow
-
-      - type: markdown
-        body: "…renders to this:"
-
-      - type: header
-        title: Q2 Pipeline Review
-        subtitle: Three active opportunities
-
-      - type: stat_grid
-        columns: 3
-        stats:
-          - label: Total ACV
-            value: $1.2M
-            color: green
-          - label: Weighted
-            value: $480K
-            color: default
-          - label: At risk
-            value: $200K
-            color: yellow
 
   - type: section
     eyebrow: Read more

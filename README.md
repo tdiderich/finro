@@ -2,35 +2,9 @@
 
 **Beautiful static sites from simple YAML. One Rust binary, no framework, no npm, no runtime JS. Designed so AI agents can author your site end-to-end.**
 
-**[▶ Watch the 3-minute demo](https://www.loom.com/share/528d98fef421443497753af86cd7d737)** · **[Docs + live examples](https://tdiderich.github.io/kazam/)**
+**[▶ 3-minute demo](https://www.loom.com/share/528d98fef421443497753af86cd7d737)** · **[Docs + live examples](https://tdiderich.github.io/kazam/)** · **[60-second quickstart](https://tdiderich.github.io/kazam/guide.html)** · **[Full tour](https://tdiderich.github.io/kazam/about.html)**
 
 ---
-
-## Why
-
-**Markdown isn't enough. Next.js is too much.**
-
-| Markdown is too simple | Next.js is too heavy | kazam is the middle path |
-|---|---|---|
-| Plain pages — grey text on white, no cards, no badges, no interactive tables. Fine for a blog post, wastes what the web can do. | A thousand-package npm tree, a webpack build, a client runtime, and a supply chain you'll never audit — for a site that renders static content. | Typed YAML components, LLM-friendly schema, themed output. Ships as pure HTML and CSS. One Rust binary. |
-
-## Receipts
-
-A real personal site migrated from Create-React-App to kazam — whole repo, not a hand-picked excerpt:
-
-| | Before: Create-React-App | After: kazam |
-|---|---|---|
-| Hand-authored LOC | 1,722 | **210** (−88%) |
-| npm dependencies | react, react-router, axios, tailwind, react-gravatar, react-toggle + ~1000s transitive | **0** |
-| Build tool | webpack | single Rust binary |
-| Deploy | Firebase Hosting + 2 cloud functions | Firebase Hosting (static only) |
-| Migration effort | — | **one conversation** with an agent |
-
-Full breakdown: [`STATS.md`](STATS.md).
-
-## Beyond docs
-
-If it's a structured artifact, kazam makes it. Slide decks, one-page briefs, landing pages, internal dashboards, API references — all the structured artifacts a team produces in a week, from the same typed components. The format LLMs generate correctly; the output you actually ship.
 
 ## Install
 
@@ -38,135 +12,54 @@ If it's a structured artifact, kazam makes it. Slide decks, one-page briefs, lan
 # Homebrew (macOS / Linux)
 brew install tdiderich/tap/kazam
 
-# Cargo (any platform with Rust — install via rustup.rs first)
+# Cargo (any platform with Rust)
 cargo install kazam
 
-# Bleeding edge — straight from main
+# Bleeding edge
 cargo install --git https://github.com/tdiderich/kazam
 ```
 
-## 60-second quickstart
-
-Two paths — pick one.
-
-**Bare:** scaffold a site, edit a YAML file, see it render.
+## Quickstart
 
 ```bash
 kazam init my-site && cd my-site
-kazam dev . --port 3000
-# → http://localhost:3000
+kazam dev . --port 3000    # → http://localhost:3000, live reload
 ```
 
 Edit `index.yaml`. Save. The browser reloads. That's the loop.
 
-**With an agent:** let Claude / Gemini / Codex / OpenCode write a whole deck from a topic. (Requires one of those CLIs on your `$PATH`.)
+To build a static bundle: `kazam build . --out dist --release`. Drop `dist/` on any static host — [deploy recipes](https://tdiderich.github.io/kazam/deploy.html) cover Vercel, Netlify, Cloudflare Pages, GitHub Pages, S3 + CloudFront, Firebase, and self-hosted nginx.
+
+## Let your agent write it
 
 ```bash
-mkdir yolo-deck && cd yolo-deck
-printf 'name: Yolo\ntheme: dark\n' > kazam.yaml
 kazam wish deck --yolo "about me, based on our interaction history"
-kazam dev .
-# → http://localhost:3000/deck.html
 ```
 
-Or drop real context into `wish-deck/` and run `kazam wish deck` without `--yolo` — the agent reads your files (notes, transcripts, prior decks, PDFs) and writes a populated deck from them. Full walk-through: https://tdiderich.github.io/kazam/wishes.html
+One command, one populated deck. Or drop real context into `wish-deck/` and run `kazam wish deck` without `--yolo` — the agent reads your files (notes, transcripts, prior decks, PDFs) and writes the deck from them. Works with Claude Code, Gemini CLI, Codex, and OpenCode. Full walkthrough: [wishes](https://tdiderich.github.io/kazam/wishes.html).
 
-## Dev & build
+## Docs
 
-```bash
-kazam dev   . --port 3000            # watch + live reload
-kazam build . --out dist             # one-shot build
-kazam build . --out dist --release   # minified production build
-```
+Everything lives at **[tdiderich.github.io/kazam](https://tdiderich.github.io/kazam/)**:
 
-Output is plain static HTML/CSS — drop it on S3, Pages, Cloudflare, Firebase, Vercel, or any static host. Recipes: https://tdiderich.github.io/kazam/deploy.html
-
-## Samples
-
-```yaml
-# index.yaml — a landing page
-title: Acme
-shell: standard
-
-components:
-  - type: header
-    title: Acme
-    subtitle: One binary, no build system
-    align: center
-
-  - type: card_grid
-    connector: arrow
-    cards:
-      - title: Write YAML
-        description: One file per page.
-      - title: kazam build
-        description: Rust binary renders each page.
-      - title: Ship static HTML
-        description: Upload anywhere.
-```
-
-```yaml
-# deck.yaml — a slide deck
-title: Q1 Review
-shell: deck
-
-slides:
-  - label: Cover
-    hide_label: true
-    components:
-      - type: header
-        title: Q1 Product Review
-        subtitle: April 2026
-        align: center
-
-  - label: Wins
-    components:
-      - type: stat_grid
-        stats:
-          - { label: MAU, value: 142K, color: green }
-          - { label: Revenue, value: $4.8M, color: green }
-          - { label: Open P1s, value: "3", color: yellow }
-```
-
-```yaml
-# kazam.yaml — site config
-name: Acme
-theme: dark
-favicon: assets/logo.svg
-colors:
-  accent: "#3CCECE"     # optional — pin any theme token
-nav:
-  - { label: Home, href: index.html }
-  - { label: Docs, href: docs.html }
-```
-
-Live versions of each of these (and ~30 more components) are at https://tdiderich.github.io/kazam/ — the docs site is itself built with kazam.
+- **[Quickstart](https://tdiderich.github.io/kazam/guide.html)** — install, scaffold, run
+- **[Full tour](https://tdiderich.github.io/kazam/about.html)** — how pages are shaped, shells, kazam.yaml, starter pages
+- **[Components](https://tdiderich.github.io/kazam/components/index.html)** — every primitive with live examples
+- **[Themes](https://tdiderich.github.io/kazam/themes.html)** — stock palettes and overrides
+- **[Recipes](https://tdiderich.github.io/kazam/wishes.html)** — `kazam wish` for agent-authored artifacts, `freshness:` for KB review tracking
+- **[Deploy](https://tdiderich.github.io/kazam/deploy.html)** — copy-paste host configs
 
 ## Built for AI agents
 
-kazam's primary audience isn't humans typing YAML — it's Claude, GPT, and Codex generating it. Every page on the docs site was written that way.
-
-- `AGENTS.md` is the authoring guide. It ships inside the binary: run `kazam agents` and it prints the exact syntax for the installed version. No drift between the docs an agent reads and the parser it's feeding.
-- `kazam init` scaffolds `AGENTS.md` and `llms.txt` into new sites so any agent opening the repo finds them without being told.
-- Components are deliberately typed, narrow, and composable — the shape LLMs produce correctly on the first try. Validation is structural: the YAML parses or it doesn't.
-
-Going forward, agents are expected to be the #1 contributors — both to sites built with kazam and to kazam itself. The project is structured around that assumption: short schemas, strict validation, machine-readable guides, one binary per version.
+kazam's #1 audience isn't humans typing YAML — it's Claude, GPT, and Codex generating it. Run `kazam agents` to print the exact authoring guide for the installed version. `kazam init` scaffolds `AGENTS.md` and `llms.txt` into new sites so any agent opening the repo finds them without being told.
 
 ## Security
 
-Static sites shouldn't carry a Next.js-sized supply chain. kazam's doesn't.
-
-- **Zero runtime JS on the output.** No hydration, no client router, no bundled framework. The attacker's surface is whatever bytes your CDN serves.
-- **~10 direct Rust crates.** `Cargo.lock` committed, `cargo-audit` runs in CI, new dependencies require justification in the PR.
-- **No network at build time.** Build scripts that reach the network are rejected. No post-install scripts, no npm-style drive-by compromise.
-- **Protected main.** Branch protection, required CODEOWNER review, required CI (`cargo test` / `fmt` / `clippy -D warnings` / `cargo-audit`), no force-pushes. Release tags are signed.
-- **Pin a specific version** for reproducibility: `cargo install kazam --version 0.4.0` (or `--git … --rev <sha>` for an unreleased commit).
-
-Report vulnerabilities privately via the [GitHub advisory form](https://github.com/tdiderich/kazam/security/advisories/new) — **do not** open a public issue. Full scope and supply-chain protections: [`SECURITY.md`](SECURITY.md).
+Zero runtime JS on the output, ~10 direct Rust crates, `Cargo.lock` committed, `cargo-audit` in CI, protected main, signed release tags. Full scope: [`SECURITY.md`](SECURITY.md). Report vulnerabilities privately via the [GitHub advisory form](https://github.com/tdiderich/kazam/security/advisories/new) — not a public issue.
 
 ## Contributing
 
-PRs welcome — agent-assisted contributions explicitly encouraged. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the fork/PR flow, local dev checks, and guidance on authoring changes with an agent.
+PRs welcome — agent-assisted contributions explicitly encouraged. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## License
 
