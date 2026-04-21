@@ -1,179 +1,303 @@
-title: About kazam
+title: Full Tour
 shell: standard
 
 components:
   - type: header
-    title: About kazam
-    eyebrow: What it replaces
-    subtitle: A real migration from React to kazam, the use cases it fits, and the honest line on what it isn't.
+    title: Full Tour
+    eyebrow: 3 minutes
+    subtitle: How a kazam site is shaped — file tree, shells, components, kazam.yaml. Everything you need to start writing real pages.
 
   - type: section
-    eyebrow: Receipts, not a pitch
-    heading: What kazam replaces
+    eyebrow: Anatomy
+    heading: A kazam site is a folder of YAML
     components:
       - type: markdown
         body: |
-          A real personal site migrated from Create-React-App to kazam.
-          Whole repo, not a hand-picked excerpt.
+          Every `.yaml` file becomes a page. Subdirectories become URL paths.
+          One optional `kazam.yaml` at the root holds site-wide config (name,
+          theme, nav). That's the whole model.
 
-      - type: stat_grid
-        columns: 3
-        stats:
-          - label: Hand-authored LOC
-            value: "−88%"
-            detail: 1,722 → 210
-            color: green
-          - label: npm dependencies
-            value: "0"
-            detail: was react, tailwind, axios, +1000s transitive
-            color: green
-          - label: Migration
-            value: 1 conversation
-            detail: one-shot rebuild with an agent
-            color: default
-
-      - type: before_after
-        items:
-          - title: Source you maintain
-            before: 1,722 lines across React components, hooks, CSS modules, and Tailwind config.
-            after: "**210 lines of YAML** — `kazam.yaml` + one file per page."
-          - title: Dependency graph
-            before: "react, react-router, axios, tailwind, react-gravatar, react-toggle + thousands of transitive npm packages you'll never audit."
-            after: "**Zero npm dependencies.** ~10 direct Rust crates, `cargo-audit` in CI, `Cargo.lock` committed."
-          - title: Build & deploy
-            before: webpack build, Firebase Hosting, two cloud functions to patch over SPA quirks.
-            after: "**One Rust binary** emits static HTML. Firebase Hosting serves `_site/` — no functions, no runtime."
+      - type: code
+        language: text
+        code: |
+          my-site/
+            kazam.yaml              ← site config (name, theme, nav)
+            index.yaml              ← home page → _site/index.html
+            guide.yaml              ← → _site/guide.html
+            reference/
+              api.yaml              ← → _site/reference/api.html
+              cli.yaml              ← → _site/reference/cli.html
 
   - type: section
-    eyebrow: Use cases
-    heading: What to build with it
-    components:
-      - type: card_grid
-        cards:
-          - title: Documentation sites
-            badge:
-              label: standard
-              color: default
-            description: API refs, guides, onboarding docs. Tabs for code samples, sortable tables for references.
-            links:
-              - label: See example →
-                href: examples/doc.html
-
-          - title: API references
-            badge:
-              label: standard
-              color: default
-            description: OpenAPI-style endpoint docs — request/response, parameters, code samples — without the Scalar/Stoplight/Redoc runtime. All from YAML.
-            links:
-              - label: See example →
-                href: examples/api.html
-
-          - title: Internal KBs & wikis
-            badge:
-              label: standard
-              color: default
-            description: Handbooks, runbooks, service catalogs. Card grids for navigation, tables for operational data.
-            links:
-              - label: See example →
-                href: examples/kb.html
-
-          - title: Meeting agendas & briefs
-            badge:
-              label: document
-              color: default
-            description: One-pagers and pre-reads. Centered card layout, print-optimized, exports clean to PDF.
-            links:
-              - label: See example →
-                href: examples/agenda.html
-
-          - title: Decks & presentations
-            badge:
-              label: deck
-              color: default
-            description: QBRs, strategy reviews, pitch decks. Full-viewport slides with keyboard nav and PDF export.
-            links:
-              - label: See example →
-                href: examples/deck.html
-
-          - title: Dashboards from APIs
-            badge:
-              label: pattern
-              color: teal
-            description: Scripts emit YAML, kazam renders. Live data from HN, GitHub, Linear, Sheets, or any JSON endpoint.
-            links:
-              - label: See walkthrough →
-                href: examples/hackernews.html
-              - label: Live HN top 30 →
-                href: examples/hackernews-live.html
-
-  - type: section
-    eyebrow: Fit
-    heading: Is this the right tool for what you're building?
+    eyebrow: Pages
+    heading: title + shell + components
     components:
       - type: markdown
         body: |
-          kazam is narrow on purpose. It replaces the toolchain around **static content** —
-          docs, references, internal pages, decks, briefs. It is **not** a replacement for a
-          real web application framework. Here's the honest line.
+          Every page is three things: a `title`, a `shell`, and an ordered
+          list of `components`. That's it. No routing config, no layout
+          hierarchy, no templates to register.
 
+      - type: code
+        language: yaml
+        code: |
+          title: Page Title
+          shell: standard
+
+          components:
+            - type: header
+              title: Page Title
+
+            - type: markdown
+              body: |
+                Any **markdown** here. Tables, code, lists, blockquotes.
+
+            - type: callout
+              variant: success
+              title: Done
+              body: This page is ready.
+
+  - type: section
+    eyebrow: Shells
+    heading: Three ways a page can be chromed
+    components:
       - type: markdown
-        body: "### Use kazam for"
+        body: |
+          The `shell` decides the top-level layout. Every shell gets the same
+          built-in site bar — you're picking how the content area behaves.
 
-      - type: table
-        columns:
-          - key: use_case
-            label: Use case
-          - key: why
-            label: Why it fits
-        rows:
-          - use_case: Documentation sites & API references
-            why: Structured content, client-side table filter/sort, themed output. What kazam was built for.
-          - use_case: Personal sites & portfolios
-            why: Low interactivity, SEO-friendly static HTML. The tool's author replaced their CRA site this way.
-          - use_case: Internal KBs, runbooks, handbooks
-            why: YAML in git = reviewable in PRs. Card grids and tables cover most navigation patterns.
-          - use_case: Pitch decks, QBRs, strategy reviews
-            why: "`shell: deck` gives full-viewport slides with keyboard nav and clean PDF export."
-          - use_case: Meeting agendas, briefs, one-pagers
-            why: "`shell: document` centers a printable card. Exports cleanly to PDF."
-          - use_case: Build-time dashboards
-            why: Cron a script that emits YAML from your API, rebuild, deploy. Live-ish data, zero runtime.
-          - use_case: Simple landing pages
-            why: Hero, features, stats, CTA — all native components. Not its specialty, but it ships one fine.
+      - type: tabs
+        tabs:
+          - label: standard
+            components:
+              - type: markdown
+                body: |
+                  The default. Nav links on the right of the bar, flowing
+                  content below. Docs, guides, landing pages, references —
+                  anything you'd reach for a docs site for.
+              - type: code
+                language: yaml
+                code: |
+                  title: API reference
+                  shell: standard
+                  components:
+                    - type: header
+                      title: API
+                    - type: markdown
+                      body: |
+                        The full endpoint list.
 
+          - label: document
+            components:
+              - type: markdown
+                body: |
+                  A centered card optimized for printing. No nav links,
+                  print-friendly CSS baked in. Good for briefs, agendas,
+                  one-pagers, pre-reads.
+              - type: code
+                language: yaml
+                code: |
+                  title: Q3 incident brief
+                  shell: document
+                  components:
+                    - type: header
+                      title: Incident Brief
+                    - type: markdown
+                      body: |
+                        Summary, timeline, impact…
+
+          - label: deck
+            components:
+              - type: markdown
+                body: |
+                  Full-viewport slides with keyboard nav and PDF export.
+                  `components:` becomes `slides:`, each with its own component
+                  list. Good for QBRs, strategy reviews, pitch decks.
+              - type: code
+                language: yaml
+                code: |
+                  title: Q3 Business Review
+                  shell: deck
+                  slides:
+                    - label: Cover
+                      hide_label: true
+                      components:
+                        - type: header
+                          title: Q3 Business Review
+                          align: center
+                    - label: Outcomes
+                      components: [...]
+
+  - type: section
+    eyebrow: Site config
+    heading: kazam.yaml in full
+    components:
       - type: markdown
-        body: "### Reach for something else for"
+        body: |
+          One optional file at the root. `name` is the home-link label in the
+          site bar. `nav` links get their `href` values rewritten per-page
+          based on directory depth, so they work from anywhere in the site.
+          `theme` picks a stock palette; `colors:` overrides individual
+          tokens on top.
 
-      - type: table
-        columns:
-          - key: use_case
-            label: Use case
-          - key: instead
-            label: Reach for instead
-        rows:
-          - use_case: Apps with logged-in state or user accounts
-            instead: Next.js, Remix, Rails, Django — kazam has no auth, no sessions, no server.
-          - use_case: E-commerce checkout & payments
-            instead: Shopify, or a real app framework with a backend.
-          - use_case: Real-time feeds, chat, collaborative editing
-            instead: Anything with a websocket. Static output can't push.
-          - use_case: CMSes for non-technical authors
-            instead: Notion, Sanity, Contentful. Authoring kazam content means editing YAML in git.
-          - use_case: Per-request personalized pages
-            instead: Next.js / Remix SSR. kazam builds once, serves the same bytes to everyone.
-          - use_case: Rich client-side SPAs & admin dashboards
-            instead: React / Vue / Svelte. kazam emits zero JS by design.
-          - use_case: Blogs with comments or user-generated content
-            instead: Ghost, WordPress, or any app with a real backend. A read-only blog is fine.
+      - type: code
+        language: yaml
+        code: |
+          name: My Knowledge Base
+          theme: dark                      # dark | light | red/orange/yellow/green/blue/indigo/violet
+          texture: dots                    # optional — decorative background
+          glow: accent                     # optional — soft accent wash
+          description: My knowledge base.  # meta description
+          url: https://example.com         # absolute URL for og:image / canonical
+
+          nav:
+            - label: Home
+              href: index.html
+            - label: Guide
+              href: guide.html
+            - label: Reference
+              href: reference/api.html
+              children:                    # optional dropdown
+                - label: API
+                  href: reference/api.html
+                - label: CLI
+                  href: reference/cli.html
+
+          colors:                          # optional — override any token
+            accent: "#ff9e00"
+            bg: "#0b0b10"
+
+      - type: callout
+        variant: info
+        title: Full token list
+        body: The themes page shows every stock palette as a swatch and lists every overridable color token.
+        links:
+          - label: Themes reference →
+            href: themes.html
+            variant: secondary
+
+  - type: section
+    eyebrow: Your first real page
+    heading: Three starting points
+    components:
+      - type: markdown
+        body: |
+          Copy one of these into a new `.yaml` file and start editing. The
+          `dev` server reloads on save — tweak, see the result, repeat.
+
+      - type: tabs
+        tabs:
+          - label: Minimal
+            components:
+              - type: markdown
+                body: |
+                  Header, markdown, and a callout. A good shape for a docs
+                  index or a landing.
+              - type: code
+                language: yaml
+                code: |
+                  title: My first page
+                  shell: standard
+
+                  components:
+                    - type: header
+                      title: My first page
+                      subtitle: Built with kazam.
+
+                    - type: markdown
+                      body: |
+                        A paragraph here. Add `**markdown**`, lists, tables,
+                        whatever — it all renders.
+
+                    - type: callout
+                      variant: success
+                      title: You're up
+                      body: Save the file and the browser reloads.
+
+          - label: With data
+            components:
+              - type: markdown
+                body: |
+                  Header + stat grid + table. The shape most business pages
+                  want — a QBR summary, a weekly report, a service catalog.
+              - type: code
+                language: yaml
+                code: |
+                  title: Q3 Pipeline
+                  shell: standard
+
+                  components:
+                    - type: header
+                      title: Q3 Pipeline
+                      subtitle: Three active opportunities.
+
+                    - type: stat_grid
+                      columns: 3
+                      stats:
+                        - label: Total ACV
+                          value: $1.2M
+                          color: green
+                        - label: Weighted
+                          value: $480K
+                        - label: At risk
+                          value: $200K
+                          color: yellow
+
+                    - type: table
+                      columns:
+                        - key: account
+                          label: Account
+                        - key: stage
+                          label: Stage
+                        - key: acv
+                          label: ACV
+                      rows:
+                        - { account: Acme, stage: Contract, acv: $600K }
+                        - { account: Globex, stage: POC, acv: $400K }
+                        - { account: Initech, stage: Discovery, acv: $200K }
+
+          - label: Print-ready doc
+            components:
+              - type: markdown
+                body: |
+                  `shell: document` swaps in a centered, print-optimized card.
+                  Same components. Good for briefs, agendas, and one-pagers
+                  you'll export to PDF.
+              - type: code
+                language: yaml
+                code: |
+                  title: Incident brief — 2026-04-19
+                  shell: document
+
+                  components:
+                    - type: header
+                      title: Incident Brief
+                      subtitle: Payments outage — 2026-04-19
+
+                    - type: markdown
+                      body: |
+                        ## Summary
+                        Payments returned 500s for ~18 minutes.
+
+                        ## Timeline
+                        - **14:02** — first alert
+                        - **14:05** — rollback started
+                        - **14:20** — all green
+
+                        ## Impact
+                        ~340 failed transactions, all retried successfully.
 
   - type: callout
     variant: info
     title: Next up
-    body: If this is a fit for what you're building, the next question is how it actually works — three shells, typed components, zero JS on the output.
+    body: You've seen the shape. The components reference has every primitive you can drop into a page; the themes page covers palettes; deploy covers shipping.
     links:
-      - label: How it works
-        href: how.html
+      - label: Components reference
+        href: components/index.html
         variant: primary
-      - label: Install it
-        href: guide.html
+      - label: Pick a theme
+        href: themes.html
+        variant: secondary
+      - label: Deploy recipes
+        href: deploy.html
         variant: secondary

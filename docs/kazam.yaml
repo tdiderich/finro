@@ -10,16 +10,24 @@ og_image: assets/og.svg
 nav:
   - label: Home
     href: index.html
-  - label: About
-    href: about.html
-  - label: How it works
-    href: how.html
-  - label: Guide
+  - label: Handbook
     href: guide.html
-  - label: Wishes
+    children:
+      - label: Quickstart
+        href: guide.html
+      - label: Full Tour
+        href: about.html
+      - label: Themes
+        href: themes.html
+      - label: Deploy
+        href: deploy.html
+  - label: Recipes
     href: wishes.html
-  - label: Freshness
-    href: freshness.html
+    children:
+      - label: Wishes
+        href: wishes.html
+      - label: Freshness
+        href: freshness.html
   - label: Components
     href: components/index.html
     children:
@@ -39,7 +47,3 @@ nav:
         href: components/layout.html
       - label: Navigation
         href: components/navigation.html
-  - label: Themes
-    href: themes.html
-  - label: Deploy
-    href: deploy.html

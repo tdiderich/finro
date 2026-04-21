@@ -5,12 +5,7 @@ components:
   - type: header
     title: Deploy
     eyebrow: Any static host works
-    subtitle: A kazam build is just HTML, CSS, JS, and copied assets. Anything that serves files on the internet can host it.
-
-  - type: callout
-    variant: info
-    title: One build, many hosts
-    body: "Run `kazam build . --out dist --release` once. The `dist/` directory is your whole site — self-contained, no server runtime. Everything below is just how to upload that directory somewhere with a URL."
+    subtitle: "Run `kazam build . --out dist --release` once — the output is a self-contained folder of HTML, CSS, and assets. Every recipe below is just how to upload that folder somewhere with a URL."
 
   - type: section
     eyebrow: Recipes
