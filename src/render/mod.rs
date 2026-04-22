@@ -13,6 +13,7 @@ pub fn render_source_view(
     base: &str,
     source_filename: &str,
     rel_path: &str,
+    release: bool,
 ) -> String {
     let html_href = source_filename
         .strip_suffix(".yaml")
@@ -41,7 +42,7 @@ pub fn render_source_view(
         freshness: None,
     };
 
-    render_page(&synthetic, config, base, "", rel_path)
+    render_page(&synthetic, config, base, "", rel_path, release)
 }
 
 pub fn render_page(
@@ -50,6 +51,7 @@ pub fn render_page(
     base: &str,
     source_href: &str,
     rel_path: &str,
+    release: bool,
 ) -> String {
     // Clear the per-page anchor-id dedup map so slug collisions don't leak
     // between pages in a single build.
@@ -81,12 +83,14 @@ pub fn render_page(
 
     match page.shell {
         Shell::Standard => {
-            shells::standard::wrap(page, config, rendered, base, source_href, rel_path)
+            shells::standard::wrap(page, config, rendered, base, source_href, rel_path, release)
         }
         Shell::Document => {
-            shells::document::wrap(page, config, rendered, base, source_href, rel_path)
+            shells::document::wrap(page, config, rendered, base, source_href, rel_path, release)
         }
-        Shell::Deck => shells::deck::wrap(page, config, rendered, base, source_href, rel_path),
+        Shell::Deck => {
+            shells::deck::wrap(page, config, rendered, base, source_href, rel_path, release)
+        }
     }
 }
 

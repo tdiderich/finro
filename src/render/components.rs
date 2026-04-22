@@ -450,6 +450,58 @@ pub(super) fn parse_markdown_inline(md: &str) -> String {
     }
 }
 
+/// Render a table cell: HTML-escape the raw value, then linkify any
+/// `[text](url)` spans. Only `http(s)://`, `mailto:`, and path-like relative
+/// URLs are accepted; anything else (e.g. `javascript:`) stays as literal
+/// escaped text. Intentionally narrow — cells only grow links, not bold /
+/// italic / code.
+fn render_cell(v: &str) -> String {
+    let escaped = esc(v);
+    let bytes = escaped.as_bytes();
+    let len = bytes.len();
+    let mut out = String::with_capacity(len);
+    let mut i = 0;
+    let mut last = 0;
+    while i < len {
+        if bytes[i] == b'[' {
+            if let Some(close_rel) = escaped[i + 1..].find(']') {
+                let close = i + 1 + close_rel;
+                let after = close + 1;
+                if after < len && bytes[after] == b'(' {
+                    if let Some(end_rel) = escaped[after + 1..].find(')') {
+                        let end = after + 1 + end_rel;
+                        let text = &escaped[i + 1..close];
+                        let url = &escaped[after + 1..end];
+                        if !text.is_empty() && is_cell_link_url(url) {
+                            out.push_str(&escaped[last..i]);
+                            out.push_str(&format!(r#"<a href="{}">{}</a>"#, url, text));
+                            i = end + 1;
+                            last = i;
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+        i += 1;
+    }
+    out.push_str(&escaped[last..]);
+    out
+}
+
+fn is_cell_link_url(url: &str) -> bool {
+    if url.is_empty() || url.contains(char::is_whitespace) {
+        return false;
+    }
+    url.starts_with("http://")
+        || url.starts_with("https://")
+        || url.starts_with("mailto:")
+        || url.starts_with('/')
+        || url.starts_with('#')
+        || url.starts_with("./")
+        || url.starts_with("../")
+}
+
 // ── Table ─────────────────────────────────────────
 
 fn table(
@@ -481,7 +533,7 @@ fn table(
             h.push_str(&format!(
                 r#"<td class="{}">{}</td>"#,
                 col.align.class(),
-                esc(&v)
+                render_cell(&v)
             ));
         }
         h.push_str("</tr>");
@@ -998,4 +1050,76 @@ fn icon_component(name: &str, size: IconSize, color: SemColor) -> Rendered {
         _ => color.hex().to_string(),
     };
     Rendered::new(icons::render(name, px, &color_value))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn render_cell_plain_text_is_escaped() {
+        assert_eq!(render_cell("Acme Corp"), "Acme Corp");
+        assert_eq!(render_cell("<script>"), "&lt;script&gt;");
+        assert_eq!(render_cell("a & b"), "a &amp; b");
+    }
+
+    #[test]
+    fn render_cell_linkifies_markdown_link() {
+        assert_eq!(
+            render_cell("[INT-169](https://linear.app/maze-sec/issue/INT-169)"),
+            r#"<a href="https://linear.app/maze-sec/issue/INT-169">INT-169</a>"#
+        );
+    }
+
+    #[test]
+    fn render_cell_linkifies_inline_link_among_text() {
+        assert_eq!(
+            render_cell("See [docs](https://example.com) for more."),
+            r#"See <a href="https://example.com">docs</a> for more."#
+        );
+    }
+
+    #[test]
+    fn render_cell_rejects_javascript_url() {
+        assert_eq!(
+            render_cell("[x](javascript:alert(1))"),
+            "[x](javascript:alert(1))"
+        );
+    }
+
+    #[test]
+    fn render_cell_ignores_other_markdown() {
+        // Bold / italic / code intentionally not rendered in cells.
+        assert_eq!(render_cell("**bold**"), "**bold**");
+        assert_eq!(render_cell("_italic_"), "_italic_");
+        assert_eq!(render_cell("`code`"), "`code`");
+    }
+
+    #[test]
+    fn render_cell_accepts_relative_and_mailto() {
+        assert_eq!(
+            render_cell("[home](/index.html)"),
+            r#"<a href="/index.html">home</a>"#
+        );
+        assert_eq!(
+            render_cell("[mail](mailto:hi@example.com)"),
+            r#"<a href="mailto:hi@example.com">mail</a>"#
+        );
+    }
+
+    #[test]
+    fn render_cell_preserves_multibyte_text() {
+        // Em dash (3 bytes in UTF-8) must survive unchanged.
+        assert_eq!(render_cell("One — two"), "One — two");
+        assert_eq!(
+            render_cell("[résumé](https://example.com/cv)"),
+            r#"<a href="https://example.com/cv">résumé</a>"#
+        );
+    }
+
+    #[test]
+    fn render_cell_leaves_unmatched_brackets_alone() {
+        assert_eq!(render_cell("[not a link"), "[not a link");
+        assert_eq!(render_cell("[text](no scheme)"), "[text](no scheme)");
+    }
 }

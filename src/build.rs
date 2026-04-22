@@ -107,7 +107,8 @@ pub fn run(dir: &Path, out: &Path, release: bool, allow_orphans: bool) -> Result
                 .replace('\\', "/");
             let source_rel = format!("{}.source.html", source_stem);
 
-            let mut html = render::render_page(&page, &config, &base, &source_view_href, &html_rel);
+            let mut html =
+                render::render_page(&page, &config, &base, &source_view_href, &html_rel, release);
             if release {
                 html = minify::minify_html(&html);
             }
@@ -126,6 +127,7 @@ pub fn run(dir: &Path, out: &Path, release: bool, allow_orphans: bool) -> Result
                     &base,
                     &source_filename,
                     &source_rel,
+                    release,
                 );
                 if release {
                     source_view = minify::minify_html(&source_view);

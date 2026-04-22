@@ -97,6 +97,35 @@ fn build_release_minifies() {
     assert!(!html.contains("<!-- "));
     // Multi-byte content preserved
     assert_contains(&html, "—");
+    // Release builds must NOT inject the dev hot-reload poller (issue #28) —
+    // the site is served from static hosts where /__kazam_version__ 404s.
+    assert!(
+        !html.contains("__kazam_version__"),
+        "release build leaked the dev hot-reload poller"
+    );
+    // Standard shell print CSS uses the zero-margin named page so PDF
+    // exports reach the sheet edges (issue #27).
+    assert_contains(&html, "@page standard-page");
+    assert_contains(&html, "body.shell-standard{page:standard-page}");
+}
+
+#[test]
+fn dev_build_still_injects_hot_reload_poller() {
+    // Counterpart to the release assertion above: without --release, the
+    // dev poller must still be injected so `kazam dev` can hot-reload.
+    let out = tmp_dir("dev-poller");
+    let src = repo_root().join("docs");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&src)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+
+    let html = read(&out.join("index.html"));
+    assert_contains(&html, "__kazam_version__");
 }
 
 #[test]

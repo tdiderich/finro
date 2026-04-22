@@ -360,6 +360,7 @@ pub mod standard {
         base: &str,
         source_href: &str,
         rel_path: &str,
+        release: bool,
     ) -> String {
         let is_sidebar = matches!(config.nav_layout, crate::types::NavLayout::Sidebar);
         // Sidebar layout moves the full nav (including nested children) into
@@ -387,7 +388,9 @@ pub mod standard {
         if has_nav {
             scripts.push("nav");
         }
-        scripts.push("reload");
+        if !release {
+            scripts.push("reload");
+        }
         let view_src = view_source_html(source_href);
 
         let body_class = if is_sidebar {
@@ -431,11 +434,14 @@ pub mod document {
         base: &str,
         source_href: &str,
         rel_path: &str,
+        release: bool,
     ) -> String {
         let bar = site_bar(page, config, base, &subtitle_span(page));
 
         let mut scripts = body.scripts.clone();
-        scripts.push("reload");
+        if !release {
+            scripts.push("reload");
+        }
         let view_src = view_source_html(source_href);
 
         format!(
@@ -510,6 +516,7 @@ pub mod deck {
         base: &str,
         _source_href: &str,
         rel_path: &str,
+        release: bool,
     ) -> String {
         let mut right = subtitle_span(page);
         right.push_str(
@@ -518,7 +525,9 @@ pub mod deck {
         let bar = site_bar(page, config, base, &right);
 
         let mut scripts = body.scripts.clone();
-        scripts.push("reload");
+        if !release {
+            scripts.push("reload");
+        }
 
         let flow_class = match page.print_flow.unwrap_or_default() {
             crate::types::PrintFlow::Slides => "print-slides",
