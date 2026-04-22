@@ -1654,10 +1654,14 @@ body.shell-document .doc-body strong { color: #fff; }
 
 /* Default @page — portrait content pages; deck in slides mode forces
    landscape full-bleed. `print-continuous` decks stay on the default
-   portrait page. */
+   portrait page. Standard shell uses a zero-margin named page so the
+   theme background reaches the sheet edges; breathing room is added
+   back as padding on .main-content inside @media print. */
 @page { margin: 0.5in; }
 @page deck-page { size: landscape; margin: 0; }
+@page standard-page { margin: 0; }
 body.shell-deck.print-slides { page: deck-page; }
+body.shell-standard { page: standard-page; }
 
 @media print {
   .no-print { display: none !important; }
@@ -1669,10 +1673,10 @@ body.shell-deck.print-slides { page: deck-page; }
   .site-sidebar { display: none !important; }
   body.nav-layout-sidebar .main-content { margin-left: 0 !important; }
 
-  /* ── Standard shell ── (dark theme preserved) ── */
+  /* ── Standard shell ── (dark theme preserved, edge-to-edge) ── */
   html, body.shell-standard { background: var(--bg) !important; }
   body.shell-standard { min-height: auto !important; }
-  body.shell-standard .main-content { padding-top: 20px !important; padding-bottom: 20px !important; }
+  body.shell-standard .main-content { padding: 0.5in !important; }
   /* Avoid awkward page breaks inside structured blocks */
   body.shell-standard .c-card,
   body.shell-standard .c-stat,
