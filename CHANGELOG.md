@@ -6,6 +6,29 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.1] — 2026-04-22
+
+Patch release — three bug fixes reported post-launch.
+
+### Added
+- Table cells linkify `[text](url)` syntax. Scheme-allowlisted
+  (`http://`, `https://`, `mailto:`, and relative paths — `/`, `#`,
+  `./`, `../`); anything else (`javascript:` etc.) passes through as
+  literal escaped text. Intentionally narrow — cells grow links only,
+  not bold/italic/code.
+
+### Fixed
+- `kazam build --release` no longer injects the `/__kazam_version__`
+  hot-reload poller. Static hosts (S3/CloudFront, Firebase, Tailscale
+  Serve, `python3 -m http.server`, etc.) no longer see a 404 flood on
+  every open tab. `kazam dev` still injects the poller as before.
+- `shell: standard` PDF exports now print edge-to-edge on dark themes.
+  The white outer frame Chromium painted into the page margin is gone:
+  a new `@page standard-page { margin: 0 }` lets the theme background
+  reach the sheet, with `.main-content { padding: 0.5in }` inside
+  `@media print` restoring reader margins inside the page. `shell: deck`
+  and `shell: document` print paths unchanged.
+
 ## [1.0.0] — 2026-04-21
 
 The launch release. Earlier `0.x` versions were pre-launch iteration;
