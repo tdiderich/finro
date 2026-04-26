@@ -1,6 +1,6 @@
 [package]
 name = "kazam"
-version = "1.0.1"
+version = "1.2.0"
 edition = "2021"
 description = "Beautiful static sites from simple YAML. One Rust binary, no framework, no npm, no runtime JS."
 license = "MIT"

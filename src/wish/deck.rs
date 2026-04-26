@@ -39,6 +39,8 @@ fn yolo_prompt(topic: Option<&str>) -> String {
 
 If you're running with context about the user (a `CLAUDE.md`, auto-memory, or conversation history), use it. The user might say "about me" and expect you to draw on what you already know about their work, voice, and projects. If you have no context, improvise confidently — the goal is a deck that feels deliberate and finished, not generic.
 
+{mcp_guidance}
+
 ## Output rules
 
 1. Output ONLY valid YAML — no prose before or after, no ``` code fences, no commentary.
@@ -69,6 +71,7 @@ Slide labels should match each slide's purpose in plain language.
 Now write the YAML.
 "#,
         topic_block = topic_block,
+        mcp_guidance = super::MCP_GUIDANCE,
         guide = crate::agents::AGENTS_MD,
     )
 }
