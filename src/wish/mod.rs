@@ -29,7 +29,33 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
+mod brief;
 mod deck;
+
+/// Shared instruction block spliced into every wish's `--yolo` prompt. Tells
+/// the agent it can use whatever MCP tools it has — calendar, slack, linear,
+/// granola, gmail — but only when the topic looks like the user's own
+/// work/life, not for a public/external subject. Placed in `mod.rs` so all
+/// wishes opt into the same wording; if the policy changes (or a wish wants
+/// to opt out), it changes once here.
+pub const MCP_GUIDANCE: &str = r#"## You may have MCP tools available — use them when the topic warrants it
+
+If the agent runtime exposes MCP servers (Google Calendar, Gmail, Slack,
+Linear, Granola, HubSpot, Attention, etc.), they are fair game when the
+topic is clearly about the *user's* world: a meeting on their calendar, a
+deal in their CRM, a ticket they own, an incident in their channels, a
+person they work with. Use them to gather real, current context before
+writing — a brief about "my 1:1 with Sam tomorrow" should pull the calendar
+event, recent shared meetings, and any open tickets between them.
+
+Do NOT use MCP for public/external topics ("the history of TLS", "what is
+RAG", "a deck about coffee"). Those are general-knowledge subjects — pulling
+the user's private data into them is a privacy leak, not helpful research.
+When in doubt, lean toward NOT calling MCP tools.
+
+When you do call MCP tools, keep it tasteful: a few targeted queries, not a
+fishing expedition. The output is a finished artifact, not a research log —
+don't cite tool calls or surface raw IDs."#;
 
 #[derive(Copy, Clone, Debug, ValueEnum)]
 pub enum Agent {
@@ -110,7 +136,7 @@ pub struct Wish {
 }
 
 fn all() -> &'static [&'static Wish] {
-    const ALL: &[&Wish] = &[&deck::DECK];
+    const ALL: &[&Wish] = &[&deck::DECK, &brief::BRIEF];
     ALL
 }
 

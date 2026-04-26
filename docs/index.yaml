@@ -133,8 +133,10 @@ components:
               color: default
             description: One-pagers and pre-reads. Centered card layout, print-optimized, exports clean to PDF.
             links:
-              - label: See example →
+              - label: Agenda example →
                 href: examples/agenda.html
+              - label: Brief example →
+                href: examples/brief.html
 
           - title: Decks & presentations
             badge:

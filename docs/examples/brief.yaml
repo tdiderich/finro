@@ -1,0 +1,126 @@
+title: Acme × Northwind — Renewal Sync Brief
+shell: document
+eyebrow: Partner Brief
+subtitle: Pre-call prep — Renewal & expansion conversation
+
+components:
+  - type: meta
+    fields:
+      - key: Meeting
+        value: Mon Apr 27, 10:00 PT (30 min)
+      - key: Attendees
+        value: Sam (Acme), Jordan (Acme), Priya (Northwind), Dev (Northwind)
+      - key: Owner
+        value: Sam
+      - key: Goal
+        value: Confirm renewal scope and surface expansion fit
+
+  - type: callout
+    variant: info
+    title: One-line goal
+    body: |
+      Land a confirmed renewal at current spend, with a credible path to a +30%
+      expansion in Q3 around the new analytics module.
+
+  - type: section
+    eyebrow: Context
+    heading: Where the relationship stands
+    components:
+      - type: stat_grid
+        stats:
+          - value: "$420K"
+            label: Current ARR
+            detail: Renews June 30
+          - value: "94%"
+            label: Adoption
+            detail: 47 of 50 seats active in last 30 days
+          - value: "12"
+            label: Tickets last 90d
+            detail: Median resolution 4h, all P3 or below
+          - value: "+30%"
+            label: Expansion target
+            detail: Analytics module, ~12 new seats
+
+      - type: markdown
+        body: |
+          Northwind has been on the platform for 18 months. They expanded once
+          (10 → 50 seats in Q4 last year) after the integrations rollout.
+          The renewal cycle starts now; their procurement window closes
+          mid-June. Priya's team has been piloting the new analytics module
+          for six weeks and the usage data is strong.
+
+  - type: section
+    eyebrow: Agenda
+    heading: 30-minute walk-through
+    components:
+      - type: steps
+        items:
+          - title: Open and frame (3 min)
+            detail: Reaffirm the goal — confirm renewal, scope expansion conversation. Acknowledge their pilot results.
+          - title: Renewal scope (8 min)
+            detail: Walk through the proposed renewal — same seats, same price, June 30 → June 30. Confirm legal/procurement path.
+          - title: Pilot review (10 min)
+            detail: Share usage data from the analytics pilot. Let Priya speak to outcomes. Position the +30% expansion as a natural next step, not a push.
+          - title: Concerns and pushback (6 min)
+            detail: Make space for procurement-side objections (timing, budget cycle, comparison to internal build). Avoid debating; capture and follow up.
+          - title: Next steps (3 min)
+            detail: Confirm owners and dates for renewal paperwork and expansion proposal.
+
+  - type: section
+    eyebrow: Talking points
+    heading: What to land
+    components:
+      - type: card_grid
+        columns: 2
+        cards:
+          - title: Renewal is a layup
+            description: "Adoption is 94%, ticket volume is low and well-handled, and Priya is a vocal champion. Don't oversell — confirm and move on."
+          - title: Pilot data tells the story
+            description: "47% week-over-week growth in active analytics queries, three exec-facing dashboards built. Let the numbers do the work."
+          - title: Procurement needs space
+            description: "Dev's team flagged budget calendar concerns last quarter. Offer a Q3 start to align with their fiscal cycle if it helps close the expansion."
+          - title: Watch for the build-vs-buy thread
+            description: "Their data platform team has been hiring. If the topic surfaces, anchor on time-to-value and the ongoing roadmap, not feature parity."
+
+  - type: section
+    eyebrow: Risks
+    heading: What could go sideways
+    components:
+      - type: callout
+        variant: warn
+        title: Procurement timing
+        body: |
+          Northwind's fiscal year flips July 1. If the renewal doesn't close before
+          June 15, expect a 4-6 week procurement-side delay. Mitigation: get
+          paperwork moving in the first week of May, even if expansion talks slip.
+
+      - type: callout
+        variant: warn
+        title: New stakeholder
+        body: |
+          Dev is new to the account this quarter — replacing the previous procurement
+          lead who championed the original deal. Spend the first 2 minutes
+          establishing rapport and shared context; don't assume institutional memory.
+
+  - type: section
+    eyebrow: Action items
+    heading: After the meeting
+    components:
+      - type: table
+        columns:
+          - key: owner
+            label: Owner
+          - key: action
+            label: Action
+          - key: due
+            label: Due
+        rows:
+          - owner: Sam
+            action: Send renewal paperwork to Dev
+            due: Apr 28
+          - owner: Jordan
+            action: Package pilot usage data into a 1-pager for Priya
+            due: Apr 30
+          - owner: Sam
+            action: Schedule follow-up to walk through expansion proposal
+            due: May 6
