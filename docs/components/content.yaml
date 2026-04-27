@@ -13,7 +13,7 @@ components:
   - type: header
     title: Content components
     eyebrow: Reference
-    subtitle: header, meta, markdown, code, image, callout, blockquote, kbd
+    subtitle: header, meta, markdown, code, image, callout, blockquote
 
   # ── header ─────────────────────────────────
   - type: section

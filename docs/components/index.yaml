@@ -17,9 +17,9 @@ components:
     cards:
       - title: Content
         badge:
-          label: "8"
+          label: "7"
           color: default
-        description: "header, meta, markdown, code, image, callout, blockquote, kbd"
+        description: "header, meta, markdown, code, image, callout, blockquote"
         links:
           - label: Open →
             href: content.html
