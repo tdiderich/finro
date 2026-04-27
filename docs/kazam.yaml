@@ -1,49 +1,49 @@
 name: kazam
 mode: dark
-favicon: assets/favicon.svg
+favicon: /assets/favicon.svg
 view_source: true
 texture: dots
 glow: accent
 description: Beautiful static sites from simple YAML. One Rust binary. No framework, no npm, no runtime JS. Designed so AI agents can author your site end-to-end.
 url: https://tdiderich.github.io/kazam
-og_image: assets/og.svg
+og_image: /assets/og.svg
 nav:
   - label: Home
-    href: index.html
+    href: /index.html
   - label: Handbook
-    href: guide.html
+    href: /guide.html
     children:
       - label: Quickstart
-        href: guide.html
+        href: /guide.html
       - label: Full Tour
-        href: about.html
+        href: /about.html
       - label: Themes
-        href: themes.html
+        href: /themes.html
       - label: Deploy
-        href: deploy.html
+        href: /deploy.html
   - label: Recipes
-    href: wishes.html
+    href: /wishes.html
     children:
       - label: Wishes
-        href: wishes.html
+        href: /wishes.html
       - label: Freshness
-        href: freshness.html
+        href: /freshness.html
   - label: Components
-    href: components/index.html
+    href: /components/index.html
     children:
       - label: All components
-        href: components/index.html
+        href: /components/index.html
       - label: Content
-        href: components/content.html
+        href: /components/content.html
       - label: Grids
-        href: components/grids.html
+        href: /components/grids.html
       - label: Charts
-        href: components/charts.html
+        href: /components/charts.html
       - label: Indicators
-        href: components/indicators.html
+        href: /components/indicators.html
       - label: Interactive
-        href: components/interactive.html
+        href: /components/interactive.html
       - label: Layout
-        href: components/layout.html
+        href: /components/layout.html
       - label: Navigation
-        href: components/navigation.html
+        href: /components/navigation.html

@@ -87,11 +87,13 @@ theme: dark
 #   apple_touch_icon: apple-touch-icon.png
 
 # Optional logo image shown in the site bar instead of the text `name:`.
-# Shorthand: a path (SVG recommended; PNG/JPEG/WebP work).
-# logo: assets/logo.svg
+# Shorthand: a path (SVG recommended; PNG/JPEG/WebP work). Lead with `/`
+# for site-root paths so the depth-aware rewriter keeps them portable
+# on nested pages.
+# logo: /assets/logo.svg
 # Expanded form with optional height (px) + alt text:
 # logo:
-#   src: assets/logo.svg
+#   src: /assets/logo.svg
 #   height: 32               # caps rendered height; defaults to site-bar content
 #   alt: Your Company Name   # defaults to `name:` above
 
@@ -115,21 +117,21 @@ theme: dark
 # nav_layout: sidebar
 
 # Nav appears in the sticky header of every `shell: standard` page.
-# Hrefs are auto-resolved per-page based on directory depth, so
-# `index.html` works from any subdirectory. Parent entries with
-# `children:` render as a dropdown (top layout) or a labeled section
-# (sidebar layout).
+# Lead each in-site href with `/` so the renderer treats it as a
+# site-root path and prepends the depth base on nested pages — that's
+# what keeps the nav working from any subdirectory. Bare names are
+# page-relative; `http(s)://` passes through.
 nav:
   - label: Home
-    href: index.html
+    href: /index.html
   # - label: Docs
-  #   href: docs.html
+  #   href: /docs.html
   # - label: Reference
   #   children:
   #     - label: API
-  #       href: reference/api.html
+  #       href: /reference/api.html
   #     - label: Config
-  #       href: reference/config.html
+  #       href: /reference/config.html
   # - label: GitHub
   #   href: https://github.com/your-org/your-repo
 "##;

@@ -199,10 +199,19 @@ fn human_date(iso: &str) -> String {
     }
 }
 
+/// Rewrite an `href:` value for emission inside a page at `base` depth.
+///
+/// - Bare names (`content.html`, `assets/og.svg`) are **page-relative** —
+///   left untouched so the browser resolves them against the current page,
+///   matching standard HTML / Markdown semantics.
+/// - Leading-`/` paths (`/index.html`, `/assets/og.svg`) are **site-root** —
+///   the depth-base prefix (`../`) is prepended so they keep working under
+///   subpath deployments (e.g. GitHub Pages `/kazam/`).
+/// - `../`, `./`, `http(s)://`, `#`, `mailto:`, `tel:` pass through verbatim.
 pub(super) fn resolve_href(href: &str, base: &str) -> String {
-    if href.starts_with("http://")
+    if href.is_empty()
+        || href.starts_with("http://")
         || href.starts_with("https://")
-        || href.starts_with('/')
         || href.starts_with('#')
         || href.starts_with("mailto:")
         || href.starts_with("tel:")
@@ -211,7 +220,10 @@ pub(super) fn resolve_href(href: &str, base: &str) -> String {
     {
         return href.to_string();
     }
-    format!("{}{}", base, href)
+    if let Some(rest) = href.strip_prefix('/') {
+        return format!("{}{}", base, rest);
+    }
+    href.to_string()
 }
 
 // ── Rendered: HTML + required JS fragment names ──
@@ -286,8 +298,7 @@ mod tests {
     }
 
     #[test]
-    fn resolve_href_passes_through_root_relative_and_fragments() {
-        assert_eq!(resolve_href("/foo", "../"), "/foo");
+    fn resolve_href_passes_through_anchor_and_protocol_hrefs() {
         assert_eq!(resolve_href("#anchor", "../"), "#anchor");
         assert_eq!(
             resolve_href("mailto:hi@example.com", "../"),
@@ -306,12 +317,30 @@ mod tests {
     }
 
     #[test]
-    fn resolve_href_prepends_base_for_relative() {
+    fn resolve_href_passes_through_bare_names_as_page_relative() {
+        // Bare names are page-relative — the browser resolves them against
+        // the current page, so the depth base must NOT be prepended.
         assert_eq!(resolve_href("index.html", ""), "index.html");
-        assert_eq!(resolve_href("index.html", "../"), "../index.html");
+        assert_eq!(resolve_href("index.html", "../"), "index.html");
         assert_eq!(
             resolve_href("sub/page.html", "../../"),
-            "../../sub/page.html"
+            "sub/page.html"
+        );
+    }
+
+    #[test]
+    fn resolve_href_applies_depth_base_to_site_root_paths() {
+        // Leading `/` = site-root; the depth base is prepended so the link
+        // keeps working under subpath deployments.
+        assert_eq!(resolve_href("/index.html", ""), "index.html");
+        assert_eq!(resolve_href("/index.html", "../"), "../index.html");
+        assert_eq!(
+            resolve_href("/components/index.html", "../"),
+            "../components/index.html"
+        );
+        assert_eq!(
+            resolve_href("/assets/og.svg", "../../"),
+            "../../assets/og.svg"
         );
     }
 }

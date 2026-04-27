@@ -32,26 +32,26 @@ mode: dark               # optional: dark (default) | light — flips rainbow th
 colors:                  # optional per-token overrides
   accent: '#14b8b8'
 favicon: favicon.svg
-logo: assets/logo.svg    # optional — replaces the text `name:` in the site bar with an <img>.
+logo: /assets/logo.svg   # optional — replaces the text `name:` in the site bar with an <img>.
                          # Expanded form: logo: { src, height, alt }. height caps rendered px;
                          # alt defaults to `name`. Rendered height is bounded by the site-bar
                          # content area (never pushes the bar taller); width flows from aspect
                          # ratio and caps at 240px. SVG recommended; raster sources should be
-                         # 2× target height for retina. Use `/absolute/paths` or relative paths
-                         # — both are depth-aware rewritten.
+                         # 2× target height for retina. Lead with `/` for site-root paths so
+                         # the depth-aware rewriter keeps them portable on nested pages.
 texture: dots            # optional: none | dots | grid | grain | topography | diagonal
 glow: accent             # optional: none | accent | corner
 nav_layout: top          # optional: top (default) | sidebar
 nav:
   - label: Home
-    href: index.html
+    href: /index.html
   - label: Guide
-    href: guide.html
+    href: /guide.html
   - label: Components     # parent with a dropdown / sidebar section
-    href: components/index.html   # optional — acts as default link when clicked
+    href: /components/index.html   # optional — acts as default link when clicked
     children:
       - label: Content
-        href: components/content.html
+        href: /components/content.html
       - label: Grids
         href: components/grids.html
 ```
@@ -477,9 +477,16 @@ Every colored component accepts the same 5-value palette:
 - **Columns pattern**: each column is a list of components, so you get `- -` at
   the start of each inner list. This is correct YAML.
 - **nav_back was removed**. Use `breadcrumb` instead (first component on the page).
-- **Hrefs** starting with `http://`, `https://`, `/`, `#`, `mailto:`, `tel:` are
-  emitted verbatim. Any other href is rewritten per-page based on directory
-  depth so `index.html` works from any subfolder.
+- **Hrefs** follow standard HTML/Markdown semantics:
+  - **Bare names** (`content.html`, `assets/foo.svg`) are page-relative — the
+    browser resolves them against the current page. Use these for siblings
+    and same-directory references.
+  - **Leading `/`** (`/index.html`, `/components/grids.html`) is site-root.
+    The renderer prepends the depth base (`../`) per page so the link works
+    on subpath deployments like GitHub Pages `/kazam/`. Use these in
+    `kazam.yaml` nav, site favicon/og_image/logo, and anywhere you need a
+    link that has to work from any page depth.
+  - `../`, `./`, `http(s)://`, `#`, `mailto:`, `tel:` are emitted verbatim.
 - **deck shell** expects `slides:` not `components:` at the page root. Each
   slide has its own `label:` + `components:` list. Optional top-level
   `print_flow: slides | continuous` controls PDF export shape. `slides`

@@ -113,9 +113,10 @@ components:
             description: "QBR / strategy-review deck (7 slides). Cover, context, wins, challenges, learnings, next, the ask."
           - title: "kazam wish brief"
             badge:
-              label: planned
-              color: default
-            description: "Incident brief / meeting agenda. Document shell, print-optimized."
+              label: shipped
+              color: teal
+            description: "A short, print-optimized brief for a meeting or incident. Meta block, one-line goal, agenda or timeline, talking points, action items."
+            href: examples/brief.html
           - title: "kazam wish landing"
             badge:
               label: planned

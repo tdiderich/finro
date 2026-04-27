@@ -6,6 +6,64 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-04-25
+
+Second wish drop in the 8-week series — `kazam wish brief` — plus a
+shared MCP-aware yolo posture across every wish, and an href-resolution
+fix that aligns the renderer with HTML/Markdown semantics.
+
+### Added
+- `kazam wish brief` — generates a short, print-optimized `shell: document`
+  artifact for a meeting, incident, vendor sync, 1:1, or exec readout.
+  Same three-mode shape as `wish deck`: guided (scaffold `wish-brief/`
+  + `questions.md` + `reference/`, drop context, rerun to grant),
+  `--yolo [topic]` (skip the workspace; agent grounds the brief in MCP
+  data and writes the YAML), portable (`--stdout` / `--dry-run`). The
+  brief shape is meta block → one-line goal → context → agenda or
+  timeline → talking points → optional risks → action items.
+- MCP guidance shared across every wish's `--yolo` prompt. When the
+  topic is the user's own world (a real meeting, a recent incident, a
+  deal, a teammate), agents with MCP access (Google Calendar, Gmail,
+  Slack, Linear, Granola, HubSpot, Attention, etc.) are invited to
+  gather real context. Public/external topics ("the history of TLS",
+  "a deck about coffee") never trigger MCP. Wired into both `wish deck`
+  and `wish brief`.
+- **MCP-first rule for `wish brief --yolo`** — for any topic that names a
+  person, company, meeting, deal, ticket, channel, or incident, the
+  agent's first actions are MCP lookups (HubSpot → Calendar → Granola →
+  Linear → Slack → Attention). Every concrete claim in the brief —
+  attendee names, dates, deal amounts, prior-call counts — must trace
+  to a tool result. When a tool returns nothing, the brief writes
+  `TBD — confirm before sending` instead of fabricating. Briefs are
+  artifacts the user walks into real meetings carrying; invented
+  specifics are a hard failure, not a creative liberty.
+- `docs/examples/brief.yaml` — worked partner-renewal-sync brief, used
+  as the in-workspace `reference/example-brief.yaml` and as a use-case
+  example linked from the docs site.
+
+### Changed
+- **Href resolution** now follows standard HTML/Markdown semantics. Bare
+  names (`content.html`, `assets/og.svg`) are page-relative and pass
+  through to the browser; leading-`/` paths (`/index.html`,
+  `/components/grids.html`) are site-root and the renderer prepends the
+  depth base for subpath-deployment portability. Previously bare names
+  were silently rewritten as site-root, which broke sibling links from
+  any nested directory (e.g. the components index card's "Open →"
+  buttons routed to `/kazam/content.html` instead of
+  `/kazam/components/content.html`). The link analyzer already used the
+  HTML/Markdown convention; the renderer now matches it.
+- `docs/wishes.yaml` — `kazam wish brief` flipped from `planned` to
+  `shipped` and now links to its rendered example.
+- `docs/index.yaml` — the meeting-agendas use-case card surfaces both
+  the agenda and brief examples.
+
+### Fixed
+- Docs `Content components` page no longer advertises a `kbd` section in
+  its subtitle — `kbd` lives on the Indicators page. The component
+  count badge on the index card is now `7`.
+- Docs `kazam.yaml` nav, favicon, and og_image switched to `/`-prefixed
+  site-root paths so they remain portable from any page depth.
+
 ## [1.0.1] — 2026-04-22
 
 Patch release — three bug fixes reported post-launch.

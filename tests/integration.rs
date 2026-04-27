@@ -832,12 +832,15 @@ fn logo_expanded_form_respects_height_and_alt() {
 }
 
 #[test]
-fn logo_src_resolves_depth_aware() {
+fn logo_src_site_root_path_resolves_depth_aware() {
+    // Site-root paths (leading `/`) are the portable form for `kazam.yaml`
+    // site config: the renderer prepends the depth base on every page so a
+    // single source path keeps working under subpath deployments.
     let dir = tmp_dir("logo-depth");
     std::fs::create_dir_all(dir.join("sub")).unwrap();
     std::fs::write(
         dir.join("kazam.yaml"),
-        "name: Acme\ntheme: dark\nlogo: assets/logo.svg\n",
+        "name: Acme\ntheme: dark\nlogo: /assets/logo.svg\n",
     )
     .unwrap();
     std::fs::write(
@@ -866,12 +869,15 @@ fn logo_src_resolves_depth_aware() {
 }
 
 #[test]
-fn logo_absolute_path_passes_through_verbatim() {
-    let dir = tmp_dir("logo-absolute");
+fn logo_bare_path_is_page_relative() {
+    // Bare paths (no leading `/`) are page-relative, matching standard
+    // HTML semantics — the browser resolves them against the current page,
+    // so the renderer leaves them alone.
+    let dir = tmp_dir("logo-bare");
     std::fs::create_dir_all(dir.join("sub")).unwrap();
     std::fs::write(
         dir.join("kazam.yaml"),
-        "name: Acme\ntheme: dark\nlogo: /assets/logo.png\n",
+        "name: Acme\ntheme: dark\nlogo: assets/logo.png\n",
     )
     .unwrap();
     std::fs::write(
@@ -889,10 +895,10 @@ fn logo_absolute_path_passes_through_verbatim() {
         .expect("run kazam build");
     assert!(status.success());
     let sub = read(&out.join("sub/page.html"));
-    assert_contains(&sub, r#"src="/assets/logo.png""#);
+    assert_contains(&sub, r#"src="assets/logo.png""#);
     assert!(
         !sub.contains("../assets/logo.png"),
-        "absolute /… logo path must not be rewritten to ../…"
+        "bare path must not be rewritten with depth base"
     );
 }
 
@@ -1117,9 +1123,13 @@ fn wish_unknown_name_errors() {
 #[test]
 fn hrefs_honor_verbatim_prefix_rule() {
     // Page at tsp/demo.yaml is depth-1 so base = "../".
-    // Absolute-slash, hash, mailto, https, and ../‑prefixed hrefs must all
-    // pass through verbatim. A plain relative href in markdown gets the
-    // depth-1 base prefix prepended.
+    //
+    // - Site-root paths (leading `/`) get the depth base prepended so the
+    //   link still resolves under subpath deployments.
+    // - `../‑relative`, hash, mailto, and `https://` hrefs pass through
+    //   verbatim — they're already explicit.
+    // - Bare names are page-relative — the browser resolves them against
+    //   the current page, so the renderer leaves them alone.
     let dir = tmp_dir("href-verbatim");
     std::fs::create_dir_all(dir.join("tsp")).unwrap();
     std::fs::write(dir.join("kazam.yaml"), "name: HrefTest\ntheme: dark\n").unwrap();
@@ -1129,7 +1139,7 @@ shell: standard
 components:
   - type: button_group
     buttons:
-      - label: Abs Slash
+      - label: Site Root
         href: /customers/demo.html
       - label: Already Canonical
         href: ../customers/demo.html
@@ -1173,22 +1183,32 @@ components:
 
     let html = read(&out.join("tsp/demo.html"));
 
-    // Absolute-slash hrefs pass through verbatim.
-    assert_contains(&html, r#"href="/customers/demo.html""#);
-    // Already-canonical ../‑relative href passes through verbatim.
+    // Leading-`/` site-root paths get the depth base prepended.
     assert_contains(&html, r#"href="../customers/demo.html""#);
+    assert_contains(&html, r#"href="../abs-card.html""#);
+    assert_contains(&html, r#"href="../abs-link.html""#);
+    assert_contains(&html, r#"href="../abs-crumb.html""#);
+    assert_contains(&html, r#"href="../abs-action.html""#);
+    assert_contains(&html, r#"href="../abs-md.html""#);
+    // The button labelled "Already Canonical" uses `../customers/demo.html`
+    // which also resolves to `../customers/demo.html` — same target as the
+    // site-root form above, so we verify the absence of any unrewritten
+    // `/customers/demo.html` slash-prefixed survivor in the output.
+    assert!(
+        !html.contains(r#"href="/customers/demo.html""#),
+        "site-root paths should be rewritten with depth base, not emitted verbatim"
+    );
     // Hash, mailto, https pass through verbatim.
     assert_contains(&html, "href=\"#section\"");
     assert_contains(&html, r#"href="mailto:hi@example.com""#);
     assert_contains(&html, r#"href="https://example.com""#);
-    // Absolute-slash hrefs in card, links, breadcrumb, empty_state, markdown.
-    assert_contains(&html, r#"href="/abs-card.html""#);
-    assert_contains(&html, r#"href="/abs-link.html""#);
-    assert_contains(&html, r#"href="/abs-crumb.html""#);
-    assert_contains(&html, r#"href="/abs-action.html""#);
-    assert_contains(&html, r#"href="/abs-md.html""#);
-    // Plain relative href in markdown gets depth-1 base (../) prepended.
-    assert_contains(&html, r#"href="../relative.html""#);
+    // Bare relative href in markdown is page-relative — passes through
+    // unchanged for the browser to resolve.
+    assert_contains(&html, r#"href="relative.html""#);
+    assert!(
+        !html.contains(r#"href="../relative.html""#),
+        "bare names should not be rewritten as site-root"
+    );
 }
 
 // ── Link report ──────────────────────────────────────────────────────
