@@ -34,33 +34,74 @@ components:
               body: "`kazam wish deck` a second time. kazam picks the first agent on your `$PATH` (Claude, Gemini, Codex, OpenCode), runs it from inside the workspace, and writes `deck.yaml`. The agent reads the workspace with its own file tools."
 
   - type: section
-    eyebrow: First wish
-    heading: "kazam wish deck"
+    eyebrow: Shipped wishes
+    heading: One per Friday drop
     components:
       - type: markdown
         body: |
-          A 7-slide QBR / strategy-review deck. The agent writes every slide —
-          cover, context, wins, challenges, learnings, next, the ask — from
-          whatever you drop into the workspace. No placeholder copy.
+          Every shipped wish has the same three-mode shape — scaffold-and-grant,
+          `--yolo` for invent-everything, and portable `--stdout` / `--dry-run`
+          for paste-into-any-LLM. Click through for the CLI shape, modes, and
+          the worked example.
 
-      - type: code
-        language: bash
-        code: |
-          kazam wish deck                          # 1st run: scaffold wish-deck/
-          # …fill in wish-deck/questions.md, drop your context files…
-          kazam wish deck                          # 2nd run: grant it
-          kazam wish deck --yolo                   # skip the workspace, agent invents everything
-          kazam wish deck --yolo "about me"        # YOLO with a topic (agent pulls from context)
-          kazam wish deck --agent claude           # force a specific agent
-          kazam wish deck --dry-run                # print the grant prompt
-          kazam wish deck --stdout                 # portable wish spec (markdown)
-          kazam wish deck --out quarterly.yaml     # pick the output path
-          kazam wish list                          # see every wish
+      - type: accordion
+        items:
+          - title: "kazam wish deck — 7-slide QBR / strategy review"
+            components:
+              - type: markdown
+                body: |
+                  A 7-slide deck. The agent writes every slide — cover, context,
+                  wins, challenges, learnings, next, the ask — from whatever you
+                  drop into the workspace. No placeholder copy.
 
-      - type: callout
-        variant: info
-        title: 🎲 YOLO mode
-        body: "Skip the workspace entirely with `kazam wish deck --yolo`. The agent invents every slide — no questions, no context files, just vibes. Pass an optional topic (`--yolo \"about me\"`, `--yolo \"history of coffee\"`) or leave it bare for a surprise. Great for demos, warm-ups, or when your agent already knows you well enough to write the deck."
+              - type: code
+                language: bash
+                code: |
+                  kazam wish deck                          # 1st run: scaffold wish-deck/
+                  # …fill in wish-deck/questions.md, drop your context files…
+                  kazam wish deck                          # 2nd run: grant it
+                  kazam wish deck --yolo                   # skip the workspace, agent invents everything
+                  kazam wish deck --yolo "about me"        # YOLO with a topic (agent pulls from context)
+                  kazam wish deck --agent claude           # force a specific agent
+                  kazam wish deck --dry-run                # print the grant prompt
+                  kazam wish deck --stdout                 # portable wish spec (markdown)
+                  kazam wish deck --out quarterly.yaml     # pick the output path
+                  kazam wish list                          # see every wish
+
+              - type: callout
+                variant: info
+                title: 🎲 YOLO mode
+                body: "Skip the workspace entirely with `kazam wish deck --yolo`. The agent invents every slide — no questions, no context files, just vibes. Pass an optional topic (`--yolo \"about me\"`, `--yolo \"history of coffee\"`) or leave it bare for a surprise. Great for demos, warm-ups, or when your agent already knows you well enough to write the deck."
+
+          - title: "kazam wish brief — short, print-optimized meeting brief"
+            components:
+              - type: markdown
+                body: |
+                  A short brief for a meeting, incident, vendor sync, 1:1, or
+                  exec readout. The artifact you walk into the room carrying.
+
+                  Shape: meta block → one-line goal → context → agenda or
+                  timeline → talking points → optional risks → action items.
+                  Targets a two-minute cold read. See the
+                  [worked example](examples/brief.html).
+
+              - type: code
+                language: bash
+                code: |
+                  kazam wish brief                          # 1st run: scaffold wish-brief/
+                  # …fill in wish-brief/questions.md, drop your context files…
+                  kazam wish brief                          # 2nd run: grant it
+                  kazam wish brief --yolo                   # skip the workspace, agent invents everything
+                  kazam wish brief --yolo "renewal sync"    # YOLO with a topic
+                  kazam wish brief --agent claude           # force a specific agent
+                  kazam wish brief --dry-run                # print the grant prompt
+                  kazam wish brief --stdout                 # portable wish spec (markdown)
+                  kazam wish brief --out renewal.yaml       # pick the output path
+
+              - type: callout
+                variant: info
+                title: MCP-first for personal-world topics
+                body: "Briefs are artifacts you walk into real meetings carrying — invented specifics are a hard failure, not a creative liberty. When `--yolo`'s topic names a person, company, meeting, deal, ticket, channel, or incident, the agent's first actions are MCP lookups (HubSpot → Calendar → Granola → Linear → Slack → Attention) before any YAML is written. Every concrete claim must trace to a tool result; fields with no grounding write `TBD — confirm before sending` rather than fabricate. Public/external topics (\"the history of TLS\", \"a deck about coffee\") skip MCP entirely."
 
   - type: section
     eyebrow: Applications

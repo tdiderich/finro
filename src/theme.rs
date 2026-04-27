@@ -1659,8 +1659,10 @@ body.shell-document .doc-body strong { color: #fff; }
    back as padding on .main-content inside @media print. */
 @page { margin: 0.5in; }
 @page deck-page { size: landscape; margin: 0; }
+@page deck-page-square { size: 8.5in 8.5in; margin: 0; }
 @page standard-page { margin: 0; }
 body.shell-deck.print-slides { page: deck-page; }
+body.shell-deck.print-square { page: deck-page-square; }
 body.shell-standard { page: standard-page; }
 
 @media print {
@@ -1707,6 +1709,15 @@ body.shell-standard { page: standard-page; }
   body.shell-deck .deck-slide { min-width: 100% !important; overflow: visible !important; }
   body.shell-deck .deck-nav { display: none !important; }
 
+  /* Drop the JS-applied scale transform when printing — the screen-fit
+     scale calculation has nothing to do with the print page size and
+     leaves content top-anchored on the printed page. Browsers honor
+     `!important` on regular CSS over inline styles set via JS. */
+  body.shell-deck .deck-inner {
+    transform: none !important;
+    transform-origin: unset !important;
+  }
+
   /* Default print mode: one slide per landscape page, Keynote-style.
      Pin slide height to the page so flex centering inside .deck-inner
      actually has a container to center against — otherwise content hugs
@@ -1736,6 +1747,35 @@ body.shell-standard { page: standard-page; }
   body.shell-deck.print-continuous .deck-inner {
     min-height: 0 !important;
     padding: 0.5in 0.6in !important;
+  }
+
+  /* Square print mode: one slide per 8.5in × 8.5in page, sized to fit
+     LinkedIn document carousels (and other near-square viewports) without
+     letterboxing. Uses CSS grid + place-items: center on the slide so
+     content lands in the middle regardless of how short it is, with the
+     inner card itself behaving as a flex column that holds component
+     spacing. */
+  body.shell-deck.print-square .deck-slide {
+    height: 8.5in !important;
+    min-height: 8.5in !important;
+    padding: 0 !important;
+    display: grid !important;
+    place-items: center !important;
+    box-sizing: border-box !important;
+    page-break-after: always;
+  }
+  body.shell-deck.print-square .deck-slide:last-child { page-break-after: avoid; }
+  body.shell-deck.print-square .deck-inner {
+    height: auto !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0.6in 0.7in !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
   }
 }
 

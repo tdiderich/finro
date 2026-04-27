@@ -322,10 +322,7 @@ mod tests {
         // the current page, so the depth base must NOT be prepended.
         assert_eq!(resolve_href("index.html", ""), "index.html");
         assert_eq!(resolve_href("index.html", "../"), "index.html");
-        assert_eq!(
-            resolve_href("sub/page.html", "../../"),
-            "sub/page.html"
-        );
+        assert_eq!(resolve_href("sub/page.html", "../../"), "sub/page.html");
     }
 
     #[test]
