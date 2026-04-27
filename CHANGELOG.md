@@ -6,29 +6,11 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Changed
-- **Href resolution** now follows standard HTML/Markdown semantics. Bare
-  names (`content.html`, `assets/og.svg`) are page-relative and pass
-  through to the browser; leading-`/` paths (`/index.html`,
-  `/components/grids.html`) are site-root and the renderer prepends the
-  depth base for subpath-deployment portability. Previously bare names
-  were silently rewritten as site-root, which broke sibling links from
-  any nested directory (e.g. the components index card's "Open →"
-  buttons routed to `/kazam/content.html` instead of
-  `/kazam/components/content.html`). The link analyzer already used the
-  HTML/Markdown convention; the renderer now matches it.
-
-### Fixed
-- Docs `Content components` page no longer advertises a `kbd` section in
-  its subtitle — `kbd` lives on the Indicators page. The component
-  count badge on the index card is now `7`.
-- Docs `kazam.yaml` nav, favicon, and og_image switched to `/`-prefixed
-  site-root paths so they remain portable from any page depth.
-
 ## [1.2.0] — 2026-04-25
 
 Second wish drop in the 8-week series — `kazam wish brief` — plus a
-shared MCP-aware yolo posture across every wish.
+shared MCP-aware yolo posture across every wish, and an href-resolution
+fix that aligns the renderer with HTML/Markdown semantics.
 
 ### Added
 - `kazam wish brief` — generates a short, print-optimized `shell: document`
@@ -60,10 +42,27 @@ shared MCP-aware yolo posture across every wish.
   example linked from the docs site.
 
 ### Changed
+- **Href resolution** now follows standard HTML/Markdown semantics. Bare
+  names (`content.html`, `assets/og.svg`) are page-relative and pass
+  through to the browser; leading-`/` paths (`/index.html`,
+  `/components/grids.html`) are site-root and the renderer prepends the
+  depth base for subpath-deployment portability. Previously bare names
+  were silently rewritten as site-root, which broke sibling links from
+  any nested directory (e.g. the components index card's "Open →"
+  buttons routed to `/kazam/content.html` instead of
+  `/kazam/components/content.html`). The link analyzer already used the
+  HTML/Markdown convention; the renderer now matches it.
 - `docs/wishes.yaml` — `kazam wish brief` flipped from `planned` to
   `shipped` and now links to its rendered example.
 - `docs/index.yaml` — the meeting-agendas use-case card surfaces both
   the agenda and brief examples.
+
+### Fixed
+- Docs `Content components` page no longer advertises a `kbd` section in
+  its subtitle — `kbd` lives on the Indicators page. The component
+  count badge on the index card is now `7`.
+- Docs `kazam.yaml` nav, favicon, and og_image switched to `/`-prefixed
+  site-root paths so they remain portable from any page depth.
 
 ## [1.0.1] — 2026-04-22
 
