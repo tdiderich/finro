@@ -1211,6 +1211,44 @@ components:
     );
 }
 
+#[test]
+fn deck_print_flow_square_emits_print_square_class_and_page() {
+    // `print_flow: square` is the LinkedIn-carousel-friendly mode — one
+    // 8.5×8.5in page per slide, content centered, no letterbox. Verify the
+    // body class and the @page rule both land in the rendered output.
+    let dir = tmp_dir("deck-square");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Sq\ntheme: dark\n").unwrap();
+    let page = r##"title: Square Demo
+shell: deck
+print_flow: square
+slides:
+  - label: Cover
+    components:
+      - type: header
+        title: Square Print
+"##;
+    std::fs::write(dir.join("index.yaml"), page).unwrap();
+
+    let out = tmp_dir("deck-square-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success(), "build failed");
+
+    let html = read(&out.join("index.html"));
+    assert_contains(&html, "print-square");
+    assert_contains(&html, "@page deck-page-square");
+    assert_contains(&html, "size: 8.5in 8.5in");
+    // The transform-reset that lets vertical centering actually work in
+    // print mode should always be present on the deck shell.
+    assert_contains(&html, "transform: none !important");
+}
+
 // ── Link report ──────────────────────────────────────────────────────
 
 fn plain_build(dir: &Path, out: &Path) -> String {

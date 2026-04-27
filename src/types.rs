@@ -43,10 +43,12 @@ pub struct Page {
     /// above: unset = inherit, any Some value wins over the site config.
     #[serde(default)]
     pub glow: Option<Glow>,
-    /// How `shell: deck` pages export to PDF. Default `slides`: one slide per
+    /// How `shell: deck` pages export to PDF. `slides` (default): one slide per
     /// landscape page, Keynote-style. `continuous`: all slides flow on a single
     /// scrolling document with a thin separator between them — nicer for
-    /// sharing as a readable artifact rather than a presentation.
+    /// sharing as a readable artifact rather than a presentation. `square`:
+    /// one slide per square page, sized for LinkedIn-style document carousels
+    /// where the viewport is near-square and landscape PDFs letterbox badly.
     #[serde(default)]
     pub print_flow: Option<PrintFlow>,
     /// Optional freshness metadata: owner, last content update, review cadence,
@@ -108,6 +110,7 @@ pub enum PrintFlow {
     #[default]
     Slides,
     Continuous,
+    Square,
 }
 
 #[derive(Deserialize)]

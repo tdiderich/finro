@@ -532,6 +532,7 @@ pub mod deck {
         let flow_class = match page.print_flow.unwrap_or_default() {
             crate::types::PrintFlow::Slides => "print-slides",
             crate::types::PrintFlow::Continuous => "print-continuous",
+            crate::types::PrintFlow::Square => "print-square",
         };
 
         format!(

@@ -6,6 +6,29 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.2.1] — 2026-04-27
+
+A patch release that exists almost entirely so the v1.2 launch carousel
+could be built with kazam itself. The punchline writes itself.
+
+### Added
+- **`print_flow: square` for `shell: deck` pages** — one slide per
+  8.5in × 8.5in page, content vertically centered, no letterbox. Built
+  for LinkedIn document carousels and other near-square viewports where
+  the existing 4:3 landscape mode shrinks each slide into wasted space.
+  Set it in the deck's frontmatter, print to PDF, drag the file into a
+  LinkedIn "Add a document" post — no other tweaks required.
+
+### Fixed
+- **Deck slides no longer top-anchor when printed.** The deck shell's
+  fit-to-screen JS sets `transform: scale(k)` with `transform-origin:
+  top center` to keep oversized content from overflowing on screen.
+  That transform persisted into print mode, leaving content stuck in
+  the upper third of every printed page. Print CSS now resets the
+  transform with `!important` so flex centering inside `.deck-inner`
+  actually works against the print page. Affects all print modes
+  (`slides`, `continuous`, and the new `square`).
+
 ## [1.2.0] — 2026-04-25
 
 Second wish drop in the 8-week series — `kazam wish brief` — plus a
