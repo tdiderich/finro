@@ -555,6 +555,38 @@ Every colored component accepts the same 5-value palette:
 - **Markdown body scalars**: use the `|` literal block style in YAML to preserve
   newlines — `body: |` followed by indented content.
 
+## 404 page
+
+Every `kazam build` generates `404.html` at the site root. Hosting platforms
+(GitHub Pages, Netlify, Vercel, etc.) serve this page automatically when a
+visitor hits a URL that doesn't exist. The default page shows a themed "Page
+not found" empty state with a "Go home" button.
+
+All internal links in the 404 page are absolute (root-relative or, if the
+site has a `url:` configured, full canonical URLs) because the hosting
+platform serves the page at whatever path the browser tried — relative links
+would break.
+
+To customize, create `404.yaml` in the source directory. It renders through
+the same pipeline as any other page (with the same absolute-link treatment),
+so you can use any shell and any components. Use site-root paths (leading `/`)
+for all hrefs so they work from any URL depth.
+
+```yaml
+title: Not found
+shell: standard
+components:
+  - type: callout
+    variant: danger
+    title: Page not found
+    body: This page doesn't exist yet.
+  - type: button_group
+    buttons:
+      - label: Go home
+        href: /index.html
+        variant: primary
+```
+
 ## Running
 
 ```bash

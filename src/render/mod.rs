@@ -199,6 +199,47 @@ fn human_date(iso: &str) -> String {
     }
 }
 
+/// Render the site-wide 404 page. Uses a special base so all internal links
+/// are absolute (the 404 page may be served at any URL by the hosting platform).
+/// If `custom_page` is provided (from `404.yaml`), that page is rendered instead
+/// of the default "Page not found" empty state.
+pub fn render_404_page(custom_page: Option<Page>, config: &SiteConfig, release: bool) -> String {
+    let base = config
+        .url
+        .as_deref()
+        .map(|u| format!("{}/", u.trim_end_matches('/')))
+        .unwrap_or_else(|| "/".to_string());
+
+    let page = custom_page.unwrap_or_else(default_404_page);
+
+    render_page(&page, config, &base, "", "404.html", release)
+}
+
+fn default_404_page() -> Page {
+    use crate::types::{EmptyStateAction, Shell};
+    Page {
+        title: "Page not found".to_string(),
+        shell: Shell::Standard,
+        eyebrow: None,
+        subtitle: None,
+        components: Some(vec![Component::EmptyState {
+            title: "Page not found".to_string(),
+            body: Some("This page hasn't been created yet, or the link may be broken.".to_string()),
+            action: Some(EmptyStateAction {
+                label: "Go home".to_string(),
+                href: "/index.html".to_string(),
+            }),
+            icon: Some("file".to_string()),
+        }]),
+        slides: None,
+        unlisted: true,
+        texture: None,
+        glow: None,
+        print_flow: None,
+        freshness: None,
+    }
+}
+
 /// Rewrite an `href:` value for emission inside a page at `base` depth.
 ///
 /// - Bare names (`content.html`, `assets/og.svg`) are **page-relative** —

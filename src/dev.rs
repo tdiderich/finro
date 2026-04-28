@@ -177,9 +177,27 @@ fn handle(req: tiny_http::Request, root: &Path, version: &AtomicU64) -> Result<(
             req.respond(resp).context("respond")
         }
         Err(_) => {
-            let body = format!("404 — not found: {rel}");
-            let resp = Response::from_string(body).with_status_code(404);
-            req.respond(resp).context("respond")
+            let not_found_path = root.join("404.html");
+            if not_found_path.exists() {
+                match std::fs::read(&not_found_path) {
+                    Ok(data) => {
+                        let resp = Response::from_data(data)
+                            .with_header(hdr("Content-Type", "text/html; charset=utf-8"))
+                            .with_header(hdr("Cache-Control", "no-store"))
+                            .with_status_code(404);
+                        req.respond(resp).context("respond")
+                    }
+                    Err(_) => {
+                        let body = format!("404 — not found: {rel}");
+                        let resp = Response::from_string(body).with_status_code(404);
+                        req.respond(resp).context("respond")
+                    }
+                }
+            } else {
+                let body = format!("404 — not found: {rel}");
+                let resp = Response::from_string(body).with_status_code(404);
+                req.respond(resp).context("respond")
+            }
         }
     }
 }
