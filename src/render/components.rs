@@ -58,7 +58,8 @@ pub fn render(c: &Component, base: &str) -> Rendered {
             events,
             default_filter,
             show_filter_toggle,
-        } => event_timeline(events, *default_filter, *show_filter_toggle, base),
+            limit,
+        } => event_timeline(events, *default_filter, *show_filter_toggle, *limit, base),
         Component::Tree {
             nodes,
             default_filter,
@@ -723,9 +724,38 @@ fn event_timeline(
     events: &[EventItem],
     default_filter: EventFilter,
     show_filter_toggle: bool,
+    limit: Option<u32>,
     base: &str,
 ) -> Rendered {
     let mut r = Rendered::default();
+
+    // When the toggle is hidden, only render events matching the default
+    // filter at build time (instead of rendering all and CSS-hiding some).
+    // When the toggle is shown, all events must be in the DOM so JS can
+    // switch between filters.
+    let render_all = show_filter_toggle || matches!(default_filter, EventFilter::All);
+    let filtered: Vec<&EventItem> = if render_all {
+        events.iter().collect()
+    } else {
+        events
+            .iter()
+            .filter(|ev| matches!(ev.severity, EventSeverity::Major))
+            .collect()
+    };
+
+    // Apply limit — take the last N events from the (possibly filtered) set.
+    let limited: Vec<&EventItem> = match limit {
+        Some(n) if (n as usize) < filtered.len() => filtered
+            .into_iter()
+            .rev()
+            .take(n as usize)
+            .collect::<Vec<_>>()
+            .into_iter()
+            .rev()
+            .collect(),
+        _ => filtered,
+    };
+
     r.html.push_str(&format!(
         r#"<div class="c-event-timeline {}" data-filter="{}">"#,
         default_filter.class(),
@@ -755,7 +785,7 @@ fn event_timeline(
     }
 
     r.html.push_str(r#"<ol class="c-event-list">"#);
-    for ev in events {
+    for ev in &limited {
         let has_summary = ev
             .summary
             .as_deref()
@@ -840,12 +870,18 @@ fn tree(nodes: &[TreeNode], default_filter: TreeFilter, show_filter_toggle: bool
     if show_filter_toggle {
         r.html
             .push_str(r#"<div class="c-tree-filter-toggle" data-tree-filter-toggle>"#);
-        for f in &[TreeFilter::All, TreeFilter::Incomplete, TreeFilter::Blocked] {
+        for f in &[
+            TreeFilter::All,
+            TreeFilter::Incomplete,
+            TreeFilter::Blocked,
+            TreeFilter::Priority,
+        ] {
             let active = *f == default_filter;
             let label = match f {
                 TreeFilter::All => "All",
                 TreeFilter::Incomplete => "Incomplete only",
                 TreeFilter::Blocked => "Blocked only",
+                TreeFilter::Priority => "Priority only",
             };
             r.html.push_str(&format!(
                 r#"<button type="button" data-filter="{val}"{active}>{label}</button>"#,
@@ -857,7 +893,17 @@ fn tree(nodes: &[TreeNode], default_filter: TreeFilter, show_filter_toggle: bool
         r.html.push_str("</div>");
     }
 
-    render_tree_level(nodes, &mut r.html, "c-tree-root");
+    // When the toggle is hidden and filter is non-All, prune the tree at
+    // build time — only render nodes matching the filter plus their ancestor
+    // chain. When the toggle is shown, all nodes must be in the DOM so JS
+    // can switch between filters.
+    let render_nodes: Vec<TreeNode> = if show_filter_toggle || default_filter == TreeFilter::All {
+        nodes.to_vec()
+    } else {
+        prune_tree(nodes, default_filter)
+    };
+
+    render_tree_level(&render_nodes, &mut r.html, "c-tree-root");
     r.html.push_str("</div>");
 
     if show_filter_toggle {
@@ -876,11 +922,62 @@ fn tree_has_blocked(node: &TreeNode) -> bool {
     node.children.iter().any(tree_has_blocked)
 }
 
+/// Walk the tree and return whether `node` (or any descendant) is priority.
+fn tree_has_priority(node: &TreeNode) -> bool {
+    if matches!(node.status, TreeStatus::Priority) {
+        return true;
+    }
+    node.children.iter().any(tree_has_priority)
+}
+
+/// Prune a tree so only nodes matching the filter (plus their ancestor chain)
+/// survive. Used when `show_filter_toggle: false` and a non-All filter is set,
+/// so only relevant nodes are emitted at build time.
+fn prune_tree(nodes: &[TreeNode], filter: TreeFilter) -> Vec<TreeNode> {
+    nodes
+        .iter()
+        .filter_map(|node| prune_tree_node(node, filter))
+        .collect()
+}
+
+fn prune_tree_node(node: &TreeNode, filter: TreeFilter) -> Option<TreeNode> {
+    let child_matches = node.children.iter().any(|c| node_matches_filter(c, filter));
+    let self_matches = node_matches_filter(node, filter);
+
+    if !self_matches && !child_matches {
+        return None;
+    }
+
+    let pruned_children: Vec<TreeNode> = node
+        .children
+        .iter()
+        .filter_map(|c| prune_tree_node(c, filter))
+        .collect();
+
+    Some(TreeNode {
+        label: node.label.clone(),
+        status: node.status,
+        note: node.note.clone(),
+        children: pruned_children,
+    })
+}
+
+fn node_matches_filter(node: &TreeNode, filter: TreeFilter) -> bool {
+    match filter {
+        TreeFilter::All => true,
+        TreeFilter::Incomplete => !matches!(node.status, TreeStatus::Completed),
+        TreeFilter::Blocked => matches!(node.status, TreeStatus::Blocked),
+        TreeFilter::Priority => matches!(node.status, TreeStatus::Priority),
+    }
+}
+
 fn render_tree_level(nodes: &[TreeNode], h: &mut String, list_class: &str) {
     h.push_str(&format!(r#"<ul class="{}">"#, list_class));
     for node in nodes {
         let has_blocked_desc = !matches!(node.status, TreeStatus::Blocked)
             && node.children.iter().any(tree_has_blocked);
+        let has_priority_desc = !matches!(node.status, TreeStatus::Priority)
+            && node.children.iter().any(tree_has_priority);
         let leaf_attr = if node.children.is_empty() {
             r#" data-leaf="true""#
         } else {
@@ -891,12 +988,18 @@ fn render_tree_level(nodes: &[TreeNode], h: &mut String, list_class: &str) {
         } else {
             ""
         };
+        let priority_desc_attr = if has_priority_desc {
+            r#" data-has-priority-descendant="true""#
+        } else {
+            ""
+        };
         h.push_str(&format!(
-            r#"<li class="c-tree-node {status}" data-status="{status_label}"{leaf}{blocked_desc}>"#,
+            r#"<li class="c-tree-node {status}" data-status="{status_label}"{leaf}{blocked_desc}{priority_desc}>"#,
             status = node.status.class(),
             status_label = node.status.label(),
             leaf = leaf_attr,
             blocked_desc = blocked_desc_attr,
+            priority_desc = priority_desc_attr,
         ));
         h.push_str(r#"<div class="c-tree-row">"#);
         h.push_str(&format!(

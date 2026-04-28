@@ -201,7 +201,7 @@ document.querySelectorAll('[data-tree-filter-toggle]').forEach(function (toggle)
   toggle.querySelectorAll('button[data-filter]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var val = btn.getAttribute('data-filter');
-      tree.classList.remove('filter-all', 'filter-incomplete', 'filter-blocked');
+      tree.classList.remove('filter-all', 'filter-incomplete', 'filter-blocked', 'filter-priority');
       tree.classList.add('filter-' + val);
       tree.setAttribute('data-filter', val);
       toggle.querySelectorAll('button[data-filter]').forEach(function (b) {
