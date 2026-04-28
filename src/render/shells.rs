@@ -291,7 +291,7 @@ fn sidebar_html(config: &SiteConfig, base: &str) -> String {
 }
 
 fn site_bar(page: &Page, config: &SiteConfig, base: &str, right_html: &str) -> String {
-    let home_href = resolve_href("index.html", base);
+    let home_href = resolve_href("/index.html", base);
     let eyebrow_html = page.eyebrow.as_deref()
         .filter(|s| !s.is_empty())
         .map(|e| format!(
