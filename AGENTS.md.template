@@ -442,6 +442,41 @@ consistent (2 spaces). Quote any string that looks like a number (e.g. `"47"`).
   event collapses behind a `<details>` toggle. Sort order is rendered as given;
   the component does not re-sort.
 
+- **tree** — nested status tree (deployment plans, project breakdowns)
+  ```yaml
+  - type: tree
+    nodes:
+      - label: "Phase 1 — Planning"
+        status: completed         # default | completed | active | blocked | upcoming
+        children:
+          - label: Identify stakeholders
+            status: completed
+          - label: Deploy Maze stack
+            status: blocked
+            note: "Waiting on change-window approval"
+  ```
+  Recursive — each node can have `children:`. Status drives the glyph (✓ / ▸ / ⚠ / ○)
+  and color. Optional inline `note:` renders on the same row as the label; for
+  blocked nodes it gets red emphasis. No JS — pure semantic `<ul>`/`<li>`.
+
+- **venn** — two- or three-set venn diagram (inline SVG)
+  ```yaml
+  - type: venn
+    title: "Team overlap"          # optional
+    sets:
+      - label: Frontend
+        color: teal                # default | green | yellow | red | teal
+      - label: Backend
+        color: red
+    overlaps:                      # optional intersection labels
+      - sets: [0, 1]               # indices into sets[]
+        label: APIs
+  ```
+  Native SVG, no charting library. Two-set or three-set; circles are positioned
+  automatically. Per-set color uses the standard `color:` enum. `overlaps[].sets`
+  takes 2 or 3 indices and places its `label` at the centroid of the involved
+  circles. Inherits theme tokens — light/dark theme swap just works.
+
 - **steps** — numbered or bulleted ordered list
   ```yaml
   - type: steps

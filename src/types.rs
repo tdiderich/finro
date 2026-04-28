@@ -226,6 +226,16 @@ pub enum Component {
         #[serde(default)]
         show_filter_toggle: bool,
     },
+    Tree {
+        nodes: Vec<TreeNode>,
+    },
+    Venn {
+        sets: Vec<VennSet>,
+        #[serde(default)]
+        overlaps: Vec<VennOverlap>,
+        #[serde(default)]
+        title: Option<String>,
+    },
     Image {
         src: String,
         alt: Option<String>,
@@ -586,6 +596,75 @@ impl EventFilter {
             EventFilter::Major => "major",
         }
     }
+}
+
+#[derive(Deserialize)]
+pub struct TreeNode {
+    pub label: String,
+    #[serde(default)]
+    pub status: TreeStatus,
+    #[serde(default)]
+    pub note: Option<String>,
+    #[serde(default)]
+    pub children: Vec<TreeNode>,
+}
+
+#[derive(Deserialize, Default, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum TreeStatus {
+    #[default]
+    Default,
+    Completed,
+    Active,
+    Blocked,
+    Upcoming,
+}
+
+impl TreeStatus {
+    pub fn class(&self) -> &'static str {
+        match self {
+            TreeStatus::Default => "status-default",
+            TreeStatus::Completed => "status-completed",
+            TreeStatus::Active => "status-active",
+            TreeStatus::Blocked => "status-blocked",
+            TreeStatus::Upcoming => "status-upcoming",
+        }
+    }
+
+    pub fn glyph(&self) -> &'static str {
+        match self {
+            TreeStatus::Default => "•",
+            TreeStatus::Completed => "✓",
+            TreeStatus::Active => "▸",
+            TreeStatus::Blocked => "⚠",
+            TreeStatus::Upcoming => "○",
+        }
+    }
+
+    pub fn label(&self) -> &'static str {
+        match self {
+            TreeStatus::Default => "default",
+            TreeStatus::Completed => "completed",
+            TreeStatus::Active => "active",
+            TreeStatus::Blocked => "blocked",
+            TreeStatus::Upcoming => "upcoming",
+        }
+    }
+}
+
+#[derive(Deserialize)]
+pub struct VennSet {
+    pub label: String,
+    #[serde(default)]
+    pub color: SemColor,
+}
+
+#[derive(Deserialize)]
+pub struct VennOverlap {
+    /// Indices into `sets[]`. Length 2 or 3.
+    pub sets: Vec<usize>,
+    #[serde(default)]
+    pub label: Option<String>,
 }
 
 // ── New component supporting types ───────────────────

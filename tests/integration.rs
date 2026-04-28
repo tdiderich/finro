@@ -1687,3 +1687,157 @@ components:
     // Default severity is minor when omitted
     assert_contains(&html, r#"data-severity="minor""#);
 }
+
+#[test]
+fn tree_renders_nested_status_with_branch_lines() {
+    let dir = tmp_dir("tree");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Test\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        r#"title: Test
+shell: standard
+components:
+  - type: tree
+    nodes:
+      - label: "Phase 1"
+        status: completed
+        children:
+          - label: Identify stakeholders
+            status: completed
+          - label: Deploy stack
+            status: blocked
+            note: "Waiting on change-window"
+      - label: "Phase 2"
+        status: active
+        children:
+          - label: Generate External ID
+            status: upcoming
+"#,
+    )
+    .unwrap();
+
+    let out = tmp_dir("tree-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success(), "kazam build failed");
+
+    let html = read(&out.join("index.html"));
+    // Container + nested ul classes
+    assert_contains(&html, r#"class="c-tree""#);
+    assert_contains(&html, r#"class="c-tree-root""#);
+    assert_contains(&html, r#"class="c-tree-children""#);
+    // Status classes per node
+    assert_contains(&html, r#"c-tree-node status-completed"#);
+    assert_contains(&html, r#"c-tree-node status-blocked"#);
+    assert_contains(&html, r#"c-tree-node status-active"#);
+    assert_contains(&html, r#"c-tree-node status-upcoming"#);
+    // data-status for downstream styling/inspection
+    assert_contains(&html, r#"data-status="completed""#);
+    assert_contains(&html, r#"data-status="blocked""#);
+    // Glyphs land
+    assert_contains(&html, r#"✓"#);
+    assert_contains(&html, r#"⚠"#);
+    // Note renders on the blocked node
+    assert_contains(&html, r#"class="c-tree-note""#);
+    assert_contains(&html, "Waiting on change-window");
+}
+
+#[test]
+fn venn_two_set_renders_circles_and_overlap_label() {
+    let dir = tmp_dir("venn-2");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Test\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        r#"title: Test
+shell: standard
+components:
+  - type: venn
+    title: "Two-set"
+    sets:
+      - label: Frontend
+        color: teal
+      - label: Backend
+        color: red
+    overlaps:
+      - sets: [0, 1]
+        label: APIs
+"#,
+    )
+    .unwrap();
+
+    let out = tmp_dir("venn-2-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success(), "kazam build failed");
+
+    let html = read(&out.join("index.html"));
+    // SVG container + two themed circles
+    assert_contains(&html, r#"class="c-venn""#);
+    assert_contains(&html, r#"<svg class="c-venn-svg""#);
+    assert_contains(&html, r#"c-venn-circle c-venn-circle-teal"#);
+    assert_contains(&html, r#"c-venn-circle c-venn-circle-red"#);
+    // Set labels
+    assert_contains(&html, "Frontend");
+    assert_contains(&html, "Backend");
+    // Overlap label
+    assert_contains(&html, r#"class="c-venn-overlap-label""#);
+    assert_contains(&html, ">APIs</text>");
+    // Title
+    assert_contains(&html, r#"class="c-venn-title""#);
+}
+
+#[test]
+fn venn_three_set_places_three_circles() {
+    let dir = tmp_dir("venn-3");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Test\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        r#"title: Test
+shell: standard
+components:
+  - type: venn
+    sets:
+      - label: A
+      - label: B
+      - label: C
+    overlaps:
+      - sets: [0, 1, 2]
+        label: All three
+"#,
+    )
+    .unwrap();
+
+    let out = tmp_dir("venn-3-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success(), "kazam build failed");
+
+    let html = read(&out.join("index.html"));
+    // Three circles
+    let circle_count = html.matches(r#"<circle class="c-venn-circle"#).count();
+    assert_eq!(
+        circle_count, 3,
+        "expected 3 venn circles, found {}",
+        circle_count
+    );
+    // 3-way overlap label centered at centroid
+    assert_contains(&html, ">All three</text>");
+}

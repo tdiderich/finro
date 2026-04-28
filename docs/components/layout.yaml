@@ -215,6 +215,108 @@ components:
                 source: linear
                 link: https://example.com/issue
 
+  # ── tree ──────────────────────────────────
+  - type: section
+    eyebrow: tree
+    heading: Nested status tree
+    components:
+      - type: markdown
+        body: "Recursive nested list with per-node status (`completed` / `active` / `blocked` / `upcoming` / default). Each node renders a status glyph + label, an optional inline note, and any number of children. Useful for deployment plans, project breakdowns, or any hierarchy where each leaf has a state."
+
+      - type: tree
+        nodes:
+          - label: "Phase 1 — Planning"
+            status: completed
+            children:
+              - label: Identify stakeholders
+                status: completed
+              - label: Determine deployment method (CFN or Terraform)
+                status: completed
+              - label: Identify scanner integrations
+                status: completed
+          - label: "Phase 2 — Initial Configuration"
+            status: active
+            children:
+              - label: Generate External ID
+                status: completed
+              - label: Deploy Maze stack
+                status: blocked
+                note: "Waiting on production change-window approval"
+              - label: Connect vulnerability scanner
+                status: upcoming
+              - label: Add initial admin users
+                status: upcoming
+          - label: "Phase 3 — Review and Validate"
+            status: upcoming
+
+      - type: code
+        language: yaml
+        code: |
+          - type: tree
+            nodes:
+              - label: "Phase 1 — Planning"
+                status: completed       # default | completed | active | blocked | upcoming
+                children:
+                  - label: Identify stakeholders
+                    status: completed
+                  - label: Deploy Maze stack
+                    status: blocked
+                    note: "Waiting on change-window approval"
+
+  # ── venn ──────────────────────────────────
+  - type: section
+    eyebrow: venn
+    heading: Two- or three-set venn (inline SVG)
+    components:
+      - type: markdown
+        body: "Native inline SVG — no JS, no charting library. Two-set or three-set diagrams supported; per-set color flows through the same `color:` field as cards/badges. Optional `overlaps:` adds intersection labels at the centroid of the involved circles. Renders crisp at any size and inherits theme tokens, so a light/dark theme swap just works."
+
+      - type: columns
+        equal_heights: true
+        columns:
+          - - type: venn
+              title: "Two-set"
+              sets:
+                - label: Frontend
+                  color: teal
+                - label: Backend
+                  color: red
+              overlaps:
+                - sets: [0, 1]
+                  label: APIs
+          - - type: venn
+              title: "Three-set"
+              sets:
+                - label: Eng
+                  color: teal
+                - label: Product
+                  color: green
+                - label: Design
+                  color: yellow
+              overlaps:
+                - sets: [0, 1]
+                  label: Specs
+                - sets: [0, 2]
+                  label: UX bugs
+                - sets: [1, 2]
+                  label: Mockups
+                - sets: [0, 1, 2]
+                  label: Roadmap
+
+      - type: code
+        language: yaml
+        code: |
+          - type: venn
+            title: "Team overlap"
+            sets:
+              - label: Frontend
+                color: teal       # default | green | yellow | red | teal
+              - label: Backend
+                color: red
+            overlaps:
+              - sets: [0, 1]      # indices into sets[]
+                label: APIs
+
   # ── steps ─────────────────────────────────
   - type: section
     eyebrow: steps

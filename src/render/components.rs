@@ -59,6 +59,12 @@ pub fn render(c: &Component, base: &str) -> Rendered {
             default_filter,
             show_filter_toggle,
         } => event_timeline(events, *default_filter, *show_filter_toggle, base),
+        Component::Tree { nodes } => tree(nodes),
+        Component::Venn {
+            sets,
+            overlaps,
+            title,
+        } => venn(sets, overlaps, title.as_deref()),
         Component::Image {
             src,
             alt,
@@ -815,6 +821,158 @@ fn event_timeline(
         r.scripts.push("event_timeline");
     }
     r
+}
+
+// ── Tree ──────────────────────────────────────────
+
+fn tree(nodes: &[TreeNode]) -> Rendered {
+    let mut h = String::from(r#"<div class="c-tree">"#);
+    render_tree_level(nodes, &mut h, "c-tree-root");
+    h.push_str("</div>");
+    Rendered::new(h)
+}
+
+fn render_tree_level(nodes: &[TreeNode], h: &mut String, list_class: &str) {
+    h.push_str(&format!(r#"<ul class="{}">"#, list_class));
+    for node in nodes {
+        h.push_str(&format!(
+            r#"<li class="c-tree-node {status}" data-status="{status_label}">"#,
+            status = node.status.class(),
+            status_label = node.status.label(),
+        ));
+        h.push_str(r#"<div class="c-tree-row">"#);
+        h.push_str(&format!(
+            r#"<span class="c-tree-glyph" aria-hidden="true">{}</span>"#,
+            node.status.glyph()
+        ));
+        h.push_str(&format!(
+            r#"<span class="c-tree-label">{}</span>"#,
+            esc(&node.label)
+        ));
+        if let Some(note) = &node.note {
+            if !note.trim().is_empty() {
+                h.push_str(&format!(
+                    r#"<span class="c-tree-note">{}</span>"#,
+                    esc(note)
+                ));
+            }
+        }
+        h.push_str("</div>");
+        if !node.children.is_empty() {
+            render_tree_level(&node.children, h, "c-tree-children");
+        }
+        h.push_str("</li>");
+    }
+    h.push_str("</ul>");
+}
+
+// ── Venn ──────────────────────────────────────────
+
+fn venn(sets: &[VennSet], overlaps: &[VennOverlap], title: Option<&str>) -> Rendered {
+    // Supported: 2-set or 3-set venn. Anything else degrades to a single-set
+    // diagram with a warning note, so a malformed YAML doesn't break the page.
+    let n = sets.len();
+    let mut h = String::from(r#"<div class="c-venn">"#);
+    if let Some(t) = title {
+        h.push_str(&format!(r#"<div class="c-venn-title">{}</div>"#, esc(t)));
+    }
+
+    if n == 0 {
+        h.push_str(r#"<div class="c-venn-empty">No sets provided.</div></div>"#);
+        return Rendered::new(h);
+    }
+
+    // Geometry constants — viewBox is fixed; circles are sized so the diagram
+    // fills the box with a small margin for stroke + labels.
+    let (vb_w, vb_h) = (400.0, 280.0);
+    let r = 90.0_f64;
+
+    h.push_str(&format!(
+        r#"<svg class="c-venn-svg" viewBox="0 0 {vb_w} {vb_h}" role="img" aria-label="{}">"#,
+        title.map(esc).unwrap_or_default()
+    ));
+
+    // Compute per-set centers based on layout.
+    let centers: Vec<(f64, f64)> = match n {
+        1 => vec![(vb_w / 2.0, vb_h / 2.0)],
+        2 => vec![
+            (vb_w / 2.0 - r * 0.55, vb_h / 2.0),
+            (vb_w / 2.0 + r * 0.55, vb_h / 2.0),
+        ],
+        _ => {
+            // 3 sets: vertices of an upward-pointing triangle, recentered.
+            // Distance from centroid to each vertex = r * 0.62 for healthy overlap.
+            let d = r * 0.62;
+            let cx = vb_w / 2.0;
+            let cy = vb_h / 2.0 + d * 0.3; // slight nudge so labels fit
+            vec![
+                (cx, cy - d),                   // top
+                (cx - d * 0.866, cy + d * 0.5), // bottom-left
+                (cx + d * 0.866, cy + d * 0.5), // bottom-right
+            ]
+        }
+    };
+
+    // Render circles. Each set gets its theme-aware color via inline style on
+    // a CSS custom property so themes can swap accents without touching here.
+    for (i, set) in sets.iter().take(centers.len()).enumerate() {
+        let (cx, cy) = centers[i];
+        h.push_str(&format!(
+            r#"<circle class="c-venn-circle c-venn-circle-{color}" cx="{cx:.1}" cy="{cy:.1}" r="{r:.1}"/>"#,
+            color = set.color.class_suffix(),
+        ));
+    }
+
+    // Set labels — placed outside the central overlap so they read cleanly.
+    for (i, set) in sets.iter().take(centers.len()).enumerate() {
+        let (cx, cy) = centers[i];
+        // Offset away from the diagram centroid, then label that point.
+        let centroid_x = centers.iter().map(|c| c.0).sum::<f64>() / centers.len() as f64;
+        let centroid_y = centers.iter().map(|c| c.1).sum::<f64>() / centers.len() as f64;
+        let dx = cx - centroid_x;
+        let dy = cy - centroid_y;
+        let mag = (dx * dx + dy * dy).sqrt().max(1.0);
+        let push = if n == 1 { 0.0 } else { r * 0.55 };
+        let lx = cx + dx / mag * push;
+        let ly = cy + dy / mag * push;
+        h.push_str(&format!(
+            r#"<text class="c-venn-label c-venn-label-{color}" x="{lx:.1}" y="{ly:.1}" text-anchor="middle" dominant-baseline="middle">{label}</text>"#,
+            color = set.color.class_suffix(),
+            label = esc(&set.label),
+        ));
+    }
+
+    // Overlap labels — placed at the centroid of the involved circles.
+    for ov in overlaps {
+        if ov.sets.is_empty() {
+            continue;
+        }
+        let mut sum_x = 0.0;
+        let mut sum_y = 0.0;
+        let mut count = 0;
+        for &idx in &ov.sets {
+            if let Some(c) = centers.get(idx) {
+                sum_x += c.0;
+                sum_y += c.1;
+                count += 1;
+            }
+        }
+        if count == 0 {
+            continue;
+        }
+        let lx = sum_x / count as f64;
+        let ly = sum_y / count as f64;
+        let label = ov.label.as_deref().unwrap_or("");
+        if !label.is_empty() {
+            h.push_str(&format!(
+                r#"<text class="c-venn-overlap-label" x="{lx:.1}" y="{ly:.1}" text-anchor="middle" dominant-baseline="middle">{label}</text>"#,
+                label = esc(label),
+            ));
+        }
+    }
+
+    h.push_str("</svg></div>");
+    Rendered::new(h)
 }
 
 // ── Image ─────────────────────────────────────────

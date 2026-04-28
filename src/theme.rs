@@ -1357,7 +1357,7 @@ body.shell-document .doc-body strong { color: #fff; }
   background: var(--teal);
   box-shadow: 0 0 6px rgba(var(--accent-rgb),0.5);
 }
-.c-event.severity-info .c-event-dot { background: var(--blue); }
+.c-event.severity-info .c-event-dot { background: var(--muted); }
 .c-event-body {
   min-width: 0;
   padding-bottom: 4px;
@@ -1387,7 +1387,7 @@ body.shell-document .doc-body strong { color: #fff; }
 }
 .c-event.severity-info .c-event-severity {
   background: rgba(var(--text-rgb),0.08);
-  color: var(--blue);
+  color: var(--muted);
 }
 .c-event-source {
   font-size: 11px;
@@ -1439,6 +1439,134 @@ body.shell-document .doc-body strong { color: #fff; }
 }
 .c-event-summary > :first-child { margin-top: 0; }
 .c-event-summary > :last-child { margin-bottom: 0; }
+
+/* Tree */
+.c-tree { font-size: 14px; line-height: 1.5; }
+.c-tree ul { list-style: none; margin: 0; padding: 0; }
+.c-tree-root { padding: 4px 0; }
+.c-tree-children {
+  margin-left: 14px;
+  padding-left: 14px;
+  border-left: 1.5px solid rgba(var(--text-rgb),0.12);
+}
+.c-tree-node {
+  position: relative;
+  padding: 3px 0;
+}
+.c-tree-children > .c-tree-node::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  left: -14px;
+  width: 12px;
+  height: 1.5px;
+  background: rgba(var(--text-rgb),0.12);
+}
+.c-tree-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.c-tree-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  font-size: 12px;
+  border-radius: 4px;
+  color: rgba(var(--text-rgb),0.5);
+  background: rgba(var(--text-rgb),0.05);
+}
+.c-tree-node.status-completed > .c-tree-row > .c-tree-glyph {
+  color: var(--green);
+  background: rgba(126,217,87,0.12);
+}
+.c-tree-node.status-active > .c-tree-row > .c-tree-glyph {
+  color: var(--teal);
+  background: rgba(var(--accent-rgb),0.15);
+  box-shadow: 0 0 6px rgba(var(--accent-rgb),0.4);
+}
+.c-tree-node.status-blocked > .c-tree-row > .c-tree-glyph {
+  color: var(--red);
+  background: rgba(255,107,107,0.12);
+}
+.c-tree-node.status-upcoming > .c-tree-row > .c-tree-glyph {
+  color: rgba(var(--text-rgb),0.4);
+  background: transparent;
+  border: 1px dashed rgba(var(--text-rgb),0.2);
+}
+.c-tree-label {
+  color: var(--snow);
+  font-weight: 500;
+}
+.c-tree-node.status-upcoming > .c-tree-row > .c-tree-label {
+  color: rgba(var(--text-rgb),0.6);
+  font-weight: 400;
+}
+.c-tree-node.status-completed > .c-tree-row > .c-tree-label {
+  color: rgba(var(--text-rgb),0.75);
+}
+.c-tree-note {
+  font-size: 12px;
+  color: rgba(var(--text-rgb),0.6);
+  font-style: italic;
+}
+.c-tree-node.status-blocked > .c-tree-row > .c-tree-note {
+  color: var(--red);
+  font-style: normal;
+  font-weight: 500;
+}
+
+/* Venn */
+.c-venn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.c-venn-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--snow);
+}
+.c-venn-svg {
+  width: 100%;
+  max-width: 480px;
+  height: auto;
+}
+.c-venn-circle {
+  fill-opacity: 0.18;
+  stroke-width: 2;
+}
+.c-venn-circle-default { fill: rgba(var(--text-rgb),0.6); stroke: rgba(var(--text-rgb),0.7); }
+.c-venn-circle-teal    { fill: var(--teal); stroke: var(--teal); }
+.c-venn-circle-green   { fill: var(--green); stroke: var(--green); }
+.c-venn-circle-yellow  { fill: var(--yellow); stroke: var(--yellow); }
+.c-venn-circle-red     { fill: var(--red); stroke: var(--red); }
+.c-venn-label {
+  font-size: 13px;
+  font-weight: 600;
+  pointer-events: none;
+}
+.c-venn-label-default { fill: rgba(var(--text-rgb),0.85); }
+.c-venn-label-teal    { fill: var(--teal); }
+.c-venn-label-green   { fill: var(--green); }
+.c-venn-label-yellow  { fill: var(--yellow); }
+.c-venn-label-red     { fill: var(--red); }
+.c-venn-overlap-label {
+  font-size: 12px;
+  font-weight: 500;
+  fill: rgba(var(--text-rgb),0.85);
+  pointer-events: none;
+}
+.c-venn-empty {
+  font-size: 13px;
+  color: rgba(var(--text-rgb),0.5);
+  font-style: italic;
+}
 
 /* Image */
 .c-image { margin: 0; }
