@@ -1728,8 +1728,9 @@ components:
     assert!(status.success(), "kazam build failed");
 
     let html = read(&out.join("index.html"));
-    // Container + nested ul classes
-    assert_contains(&html, r#"class="c-tree""#);
+    // Container (default filter renders as a class) + nested ul classes
+    assert_contains(&html, r#"class="c-tree filter-all""#);
+    assert_contains(&html, r#"data-filter="all""#);
     assert_contains(&html, r#"class="c-tree-root""#);
     assert_contains(&html, r#"class="c-tree-children""#);
     // Status classes per node
@@ -1746,6 +1747,77 @@ components:
     // Note renders on the blocked node
     assert_contains(&html, r#"class="c-tree-note""#);
     assert_contains(&html, "Waiting on change-window");
+}
+
+#[test]
+fn tree_filter_toggle_marks_blocked_ancestors() {
+    let dir = tmp_dir("tree-filter");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Test\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        r#"title: Test
+shell: standard
+components:
+  - type: tree
+    default_filter: blocked
+    show_filter_toggle: true
+    nodes:
+      - label: "Phase 1"
+        status: completed
+      - label: "Phase 2"
+        status: active
+        children:
+          - label: "Sub A"
+            status: active
+            children:
+              - label: "Leaf 1"
+                status: blocked
+              - label: "Leaf 2"
+                status: completed
+          - label: "Sub B"
+            status: active
+"#,
+    )
+    .unwrap();
+
+    let out = tmp_dir("tree-filter-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+
+    let html = read(&out.join("index.html"));
+    // Default-filter class + toggle markup
+    assert_contains(&html, r#"class="c-tree filter-blocked""#);
+    assert_contains(&html, r#"data-tree-filter-toggle"#);
+    assert_contains(&html, r#"data-filter="all""#);
+    assert_contains(&html, r#"data-filter="incomplete""#);
+    assert_contains(&html, r#"data-filter="blocked""#);
+    // Phase 2 + Sub A both have a blocked descendant — both must be marked
+    // so the filter-blocked CSS keeps the path-to-root visible.
+    let blocked_anc_count = html
+        .matches(r#"data-has-blocked-descendant="true""#)
+        .count();
+    assert!(
+        blocked_anc_count >= 2,
+        "expected ≥2 ancestors marked, got {}",
+        blocked_anc_count
+    );
+    // The blocked node itself must NOT carry the descendant attr — only ancestors.
+    assert!(
+        html.contains(r#"class="c-tree-node status-blocked""#)
+            && !html.contains(
+                r#"class="c-tree-node status-blocked" data-status="blocked" data-leaf="true" data-has-blocked-descendant"#
+            ),
+        "blocked leaf shouldn't be flagged as a blocked-ancestor"
+    );
+    // Leaves get data-leaf so the incomplete-filter CSS can target them.
+    assert_contains(&html, r#"data-leaf="true""#);
 }
 
 #[test]

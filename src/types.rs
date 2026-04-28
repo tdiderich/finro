@@ -228,6 +228,10 @@ pub enum Component {
     },
     Tree {
         nodes: Vec<TreeNode>,
+        #[serde(default)]
+        default_filter: TreeFilter,
+        #[serde(default)]
+        show_filter_toggle: bool,
     },
     Venn {
         sets: Vec<VennSet>,
@@ -618,6 +622,33 @@ pub enum TreeStatus {
     Active,
     Blocked,
     Upcoming,
+}
+
+#[derive(Deserialize, Default, Clone, Copy, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum TreeFilter {
+    #[default]
+    All,
+    Incomplete,
+    Blocked,
+}
+
+impl TreeFilter {
+    pub fn class(&self) -> &'static str {
+        match self {
+            TreeFilter::All => "filter-all",
+            TreeFilter::Incomplete => "filter-incomplete",
+            TreeFilter::Blocked => "filter-blocked",
+        }
+    }
+
+    pub fn label(&self) -> &'static str {
+        match self {
+            TreeFilter::All => "all",
+            TreeFilter::Incomplete => "incomplete",
+            TreeFilter::Blocked => "blocked",
+        }
+    }
 }
 
 impl TreeStatus {

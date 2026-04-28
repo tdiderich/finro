@@ -5,6 +5,7 @@ pub fn get(name: &str) -> Option<&'static str> {
         "tabs" => Some(TABS),
         "accordion" => Some(ACCORDION),
         "event_timeline" => Some(EVENT_TIMELINE),
+        "tree" => Some(TREE),
         "deck" => Some(DECK),
         "nav" => Some(NAV),
         "reload" => Some(RELOAD),
@@ -185,6 +186,24 @@ document.querySelectorAll('[data-event-filter-toggle]').forEach(function (toggle
       timeline.classList.remove('filter-major', 'filter-all');
       timeline.classList.add('filter-' + val);
       timeline.setAttribute('data-filter', val);
+      toggle.querySelectorAll('button[data-filter]').forEach(function (b) {
+        b.classList.toggle('active', b === btn);
+      });
+    });
+  });
+});
+"#;
+
+const TREE: &str = r#"
+document.querySelectorAll('[data-tree-filter-toggle]').forEach(function (toggle) {
+  var tree = toggle.closest('.c-tree');
+  if (!tree) return;
+  toggle.querySelectorAll('button[data-filter]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var val = btn.getAttribute('data-filter');
+      tree.classList.remove('filter-all', 'filter-incomplete', 'filter-blocked');
+      tree.classList.add('filter-' + val);
+      tree.setAttribute('data-filter', val);
       toggle.querySelectorAll('button[data-filter]').forEach(function (b) {
         b.classList.toggle('active', b === btn);
       });

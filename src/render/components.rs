@@ -59,7 +59,11 @@ pub fn render(c: &Component, base: &str) -> Rendered {
             default_filter,
             show_filter_toggle,
         } => event_timeline(events, *default_filter, *show_filter_toggle, base),
-        Component::Tree { nodes } => tree(nodes),
+        Component::Tree {
+            nodes,
+            default_filter,
+            show_filter_toggle,
+        } => tree(nodes, *default_filter, *show_filter_toggle),
         Component::Venn {
             sets,
             overlaps,
@@ -567,7 +571,7 @@ fn callout(
         h.push_str(&format!(r#"<div class="c-callout-title">{}</div>"#, esc(t)));
     }
     h.push_str(&format!(
-        r#"<div class="c-callout-body">{}</div>"#,
+        r#"<div class="c-callout-body c-markdown">{}</div>"#,
         parse_markdown(body, base)
     ));
     if let Some(ls) = links {
@@ -825,20 +829,74 @@ fn event_timeline(
 
 // ── Tree ──────────────────────────────────────────
 
-fn tree(nodes: &[TreeNode]) -> Rendered {
-    let mut h = String::from(r#"<div class="c-tree">"#);
-    render_tree_level(nodes, &mut h, "c-tree-root");
-    h.push_str("</div>");
-    Rendered::new(h)
+fn tree(nodes: &[TreeNode], default_filter: TreeFilter, show_filter_toggle: bool) -> Rendered {
+    let mut r = Rendered::default();
+    r.html.push_str(&format!(
+        r#"<div class="c-tree {}" data-filter="{}">"#,
+        default_filter.class(),
+        default_filter.label(),
+    ));
+
+    if show_filter_toggle {
+        r.html
+            .push_str(r#"<div class="c-tree-filter-toggle" data-tree-filter-toggle>"#);
+        for f in &[TreeFilter::All, TreeFilter::Incomplete, TreeFilter::Blocked] {
+            let active = *f == default_filter;
+            let label = match f {
+                TreeFilter::All => "All",
+                TreeFilter::Incomplete => "Incomplete only",
+                TreeFilter::Blocked => "Blocked only",
+            };
+            r.html.push_str(&format!(
+                r#"<button type="button" data-filter="{val}"{active}>{label}</button>"#,
+                val = f.label(),
+                active = if active { r#" class="active""# } else { "" },
+                label = label,
+            ));
+        }
+        r.html.push_str("</div>");
+    }
+
+    render_tree_level(nodes, &mut r.html, "c-tree-root");
+    r.html.push_str("</div>");
+
+    if show_filter_toggle {
+        r.scripts.push("tree");
+    }
+    r
+}
+
+/// Walk the tree and return whether `node` (or any descendant) is blocked.
+/// Used by `render_tree_level` to mark ancestors of blocked nodes so the
+/// "blocked-only" filter can keep the path-to-root visible.
+fn tree_has_blocked(node: &TreeNode) -> bool {
+    if matches!(node.status, TreeStatus::Blocked) {
+        return true;
+    }
+    node.children.iter().any(tree_has_blocked)
 }
 
 fn render_tree_level(nodes: &[TreeNode], h: &mut String, list_class: &str) {
     h.push_str(&format!(r#"<ul class="{}">"#, list_class));
     for node in nodes {
+        let has_blocked_desc = !matches!(node.status, TreeStatus::Blocked)
+            && node.children.iter().any(tree_has_blocked);
+        let leaf_attr = if node.children.is_empty() {
+            r#" data-leaf="true""#
+        } else {
+            ""
+        };
+        let blocked_desc_attr = if has_blocked_desc {
+            r#" data-has-blocked-descendant="true""#
+        } else {
+            ""
+        };
         h.push_str(&format!(
-            r#"<li class="c-tree-node {status}" data-status="{status_label}">"#,
+            r#"<li class="c-tree-node {status}" data-status="{status_label}"{leaf}{blocked_desc}>"#,
             status = node.status.class(),
             status_label = node.status.label(),
+            leaf = leaf_attr,
+            blocked_desc = blocked_desc_attr,
         ));
         h.push_str(r#"<div class="c-tree-row">"#);
         h.push_str(&format!(
@@ -882,9 +940,11 @@ fn venn(sets: &[VennSet], overlaps: &[VennOverlap], title: Option<&str>) -> Rend
         return Rendered::new(h);
     }
 
-    // Geometry constants — viewBox is fixed; circles are sized so the diagram
-    // fills the box with a small margin for stroke + labels.
-    let (vb_w, vb_h) = (400.0, 280.0);
+    // Geometry constants — viewBox is sized so the 3-set bounding box leaves
+    // ~30-40px of breathing room on every side at default radius. Circles
+    // stay at r=90 regardless of layout so 2-set and 3-set look at the same
+    // visual scale.
+    let (vb_w, vb_h) = (480.0, 340.0);
     let r = 90.0_f64;
 
     h.push_str(&format!(
@@ -942,11 +1002,17 @@ fn venn(sets: &[VennSet], overlaps: &[VennOverlap], title: Option<&str>) -> Rend
         ));
     }
 
-    // Overlap labels — placed at the centroid of the involved circles.
+    // Overlap labels. For pairwise overlaps in a 3-set venn the naïve centroid
+    // of the two circles lands too close to the triangle centroid — every
+    // pairwise label collides with the 3-way overlap label in the middle. Push
+    // pairwise labels outward from the un-included set's center so they land
+    // in the actual lune (the part of the overlap that excludes the third set).
     for ov in overlaps {
         if ov.sets.is_empty() {
             continue;
         }
+
+        // Default: centroid of the involved circles.
         let mut sum_x = 0.0;
         let mut sum_y = 0.0;
         let mut count = 0;
@@ -960,8 +1026,23 @@ fn venn(sets: &[VennSet], overlaps: &[VennOverlap], title: Option<&str>) -> Rend
         if count == 0 {
             continue;
         }
-        let lx = sum_x / count as f64;
-        let ly = sum_y / count as f64;
+        let mut lx = sum_x / count as f64;
+        let mut ly = sum_y / count as f64;
+
+        // Pairwise overlap inside a 3-set venn: nudge outward from the
+        // unincluded set's center so the label sits in the pairwise lune.
+        if n == 3 && count == 2 {
+            if let Some(third_idx) = (0..3).find(|i| !ov.sets.contains(i)) {
+                let (tx, ty) = centers[third_idx];
+                let dx = lx - tx;
+                let dy = ly - ty;
+                let mag = (dx * dx + dy * dy).sqrt().max(1.0);
+                let push = r * 0.45;
+                lx += dx / mag * push;
+                ly += dy / mag * push;
+            }
+        }
+
         let label = ov.label.as_deref().unwrap_or("");
         if !label.is_empty() {
             h.push_str(&format!(

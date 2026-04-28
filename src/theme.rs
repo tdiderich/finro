@@ -1321,8 +1321,14 @@ body.shell-document .doc-body strong { color: #fff; }
   display: grid;
   grid-template-columns: 24px 1fr;
   gap: 12px;
-  padding: 8px 0;
+  padding: 12px 0;
 }
+.c-event + .c-event { border-top: 1px solid rgba(var(--text-rgb),0.06); }
+/* The dot sits 6px from the top of the rail; with 12px row padding the rail
+   line needs to start at the dot center (~18px from rail top) and end at
+   the dot bottom (~30px from rail top). */
+.c-event:first-child .c-event-rail::before { top: 18px; }
+.c-event:last-child .c-event-rail::before { bottom: calc(100% - 30px); }
 /* Filter visibility — when filter=major, hide non-major events */
 .c-event-timeline.filter-major .c-event[data-severity="minor"],
 .c-event-timeline.filter-major .c-event[data-severity="info"] { display: none; }
@@ -1341,8 +1347,6 @@ body.shell-document .doc-body strong { color: #fff; }
   background: rgba(var(--text-rgb),0.1);
   transform: translateX(-50%);
 }
-.c-event:first-child .c-event-rail::before { top: 12px; }
-.c-event:last-child .c-event-rail::before { bottom: calc(100% - 18px); }
 .c-event-dot {
   position: relative;
   z-index: 1;
@@ -1442,21 +1446,21 @@ body.shell-document .doc-body strong { color: #fff; }
 
 /* Tree */
 .c-tree { font-size: 14px; line-height: 1.5; }
-.c-tree ul { list-style: none; margin: 0; padding: 0; }
-.c-tree-root { padding: 4px 0; }
+.c-tree-root, .c-tree-children { list-style: none; }
+.c-tree-root { margin: 0; padding: 4px 0; }
 .c-tree-children {
-  margin-left: 14px;
-  padding-left: 14px;
+  margin: 0 0 0 14px;
+  padding: 0 0 0 14px;
   border-left: 1.5px solid rgba(var(--text-rgb),0.12);
 }
 .c-tree-node {
   position: relative;
-  padding: 3px 0;
+  padding: 6px 0;
 }
 .c-tree-children > .c-tree-node::before {
   content: "";
   position: absolute;
-  top: 14px;
+  top: 17px;
   left: -14px;
   width: 12px;
   height: 1.5px;
@@ -1519,6 +1523,45 @@ body.shell-document .doc-body strong { color: #fff; }
   font-style: normal;
   font-weight: 500;
 }
+.c-tree-filter-toggle {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 12px;
+  background: rgba(var(--text-rgb),0.05);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+}
+.c-tree-filter-toggle button {
+  appearance: none;
+  background: none;
+  border: none;
+  color: rgba(var(--text-rgb),0.6);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.c-tree-filter-toggle button:hover { color: var(--snow); }
+.c-tree-filter-toggle button.active {
+  background: rgba(var(--accent-rgb),0.15);
+  color: var(--teal);
+}
+/* filter-incomplete: hide every node whose status is `completed`.
+   A `completed` branch correctly hides its descendants — they're "done",
+   the user didn't ask for them. The non-completed siblings stay visible. */
+.c-tree.filter-incomplete .c-tree-node.status-completed { display: none; }
+/* filter-blocked: show only blocked nodes + their ancestor chain.
+   Server-side renders `data-has-blocked-descendant` on each ancestor of a
+   blocked node, so the path-to-root keeps full context while non-relevant
+   branches collapse. */
+.c-tree.filter-blocked .c-tree-node:not(.status-blocked):not([data-has-blocked-descendant="true"]) {
+  display: none;
+}
 
 /* Venn */
 .c-venn {
@@ -1534,7 +1577,7 @@ body.shell-document .doc-body strong { color: #fff; }
 }
 .c-venn-svg {
   width: 100%;
-  max-width: 480px;
+  max-width: 560px;
   height: auto;
 }
 .c-venn-circle {
@@ -1603,10 +1646,11 @@ body.shell-document .doc-body strong { color: #fff; }
   border: none;
   border-top: 1px solid var(--card-border);
   width: 100%;
-  margin: 0;
+  margin: 32px 0;
 }
 .c-divider-labeled {
   display: flex; align-items: center; gap: 16px;
+  margin: 32px 0;
 }
 .c-divider-labeled .c-divider-line {
   flex: 1;

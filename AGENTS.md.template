@@ -445,6 +445,8 @@ consistent (2 spaces). Quote any string that looks like a number (e.g. `"47"`).
 - **tree** — nested status tree (deployment plans, project breakdowns)
   ```yaml
   - type: tree
+    default_filter: all          # all (default) | incomplete | blocked
+    show_filter_toggle: true     # default: false; renders an All / Incomplete / Blocked toggle
     nodes:
       - label: "Phase 1 — Planning"
         status: completed         # default | completed | active | blocked | upcoming
@@ -457,7 +459,10 @@ consistent (2 spaces). Quote any string that looks like a number (e.g. `"47"`).
   ```
   Recursive — each node can have `children:`. Status drives the glyph (✓ / ▸ / ⚠ / ○)
   and color. Optional inline `note:` renders on the same row as the label; for
-  blocked nodes it gets red emphasis. No JS — pure semantic `<ul>`/`<li>`.
+  blocked nodes it gets red emphasis. With `show_filter_toggle: true` the user
+  can flip between **All** (everything), **Incomplete** (hide completed nodes),
+  and **Blocked** (show only blocked nodes plus their ancestor chain). Tiny inline
+  JS for the toggle; semantic `<ul>`/`<li>` underneath.
 
 - **venn** — two- or three-set venn diagram (inline SVG)
   ```yaml

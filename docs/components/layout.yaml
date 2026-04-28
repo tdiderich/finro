@@ -221,9 +221,11 @@ components:
     heading: Nested status tree
     components:
       - type: markdown
-        body: "Recursive nested list with per-node status (`completed` / `active` / `blocked` / `upcoming` / default). Each node renders a status glyph + label, an optional inline note, and any number of children. Useful for deployment plans, project breakdowns, or any hierarchy where each leaf has a state."
+        body: "Recursive nested list with per-node status (`completed` / `active` / `blocked` / `upcoming` / default). Each node renders a status glyph + label, an optional inline note, and any number of children. The optional filter toggle lets the reader cut the view to **Incomplete only** (hides completed nodes) or **Blocked only** (shows blocked nodes plus their ancestor chain so the path-to-root keeps context)."
 
       - type: tree
+        show_filter_toggle: true
+        default_filter: all
         nodes:
           - label: "Phase 1 — Planning"
             status: completed
@@ -253,6 +255,8 @@ components:
         language: yaml
         code: |
           - type: tree
+            default_filter: all          # all (default) | incomplete | blocked
+            show_filter_toggle: true     # default: false
             nodes:
               - label: "Phase 1 — Planning"
                 status: completed       # default | completed | active | blocked | upcoming
