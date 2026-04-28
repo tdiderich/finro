@@ -54,6 +54,21 @@ pub fn render(c: &Component, base: &str) -> Rendered {
             equal_heights,
         } => columns_component(columns, *equal_heights, base),
         Component::Accordion { items } => accordion(items, base),
+        Component::EventTimeline {
+            events,
+            default_filter,
+            show_filter_toggle,
+        } => event_timeline(events, *default_filter, *show_filter_toggle, base),
+        Component::Tree {
+            nodes,
+            default_filter,
+            show_filter_toggle,
+        } => tree(nodes, *default_filter, *show_filter_toggle),
+        Component::Venn {
+            sets,
+            overlaps,
+            title,
+        } => venn(sets, overlaps, title.as_deref()),
         Component::Image {
             src,
             alt,
@@ -556,7 +571,7 @@ fn callout(
         h.push_str(&format!(r#"<div class="c-callout-title">{}</div>"#, esc(t)));
     }
     h.push_str(&format!(
-        r#"<div class="c-callout-body">{}</div>"#,
+        r#"<div class="c-callout-body c-markdown">{}</div>"#,
         parse_markdown(body, base)
     ));
     if let Some(ls) = links {
@@ -700,6 +715,345 @@ fn accordion(items: &[AccordionItem], base: &str) -> Rendered {
     r.html.push_str("</div>");
     r.scripts.push("accordion");
     r
+}
+
+// ── Event Timeline ────────────────────────────────
+
+fn event_timeline(
+    events: &[EventItem],
+    default_filter: EventFilter,
+    show_filter_toggle: bool,
+    base: &str,
+) -> Rendered {
+    let mut r = Rendered::default();
+    r.html.push_str(&format!(
+        r#"<div class="c-event-timeline {}" data-filter="{}">"#,
+        default_filter.class(),
+        default_filter.label()
+    ));
+
+    if show_filter_toggle {
+        r.html
+            .push_str(r#"<div class="c-event-filter-toggle" data-event-filter-toggle>"#);
+        for f in &[EventFilter::Major, EventFilter::All] {
+            let active = matches!(
+                (f, default_filter),
+                (EventFilter::Major, EventFilter::Major) | (EventFilter::All, EventFilter::All)
+            );
+            let label = match f {
+                EventFilter::Major => "Major only",
+                EventFilter::All => "All events",
+            };
+            r.html.push_str(&format!(
+                r#"<button type="button" data-filter="{val}"{active}>{label}</button>"#,
+                val = f.label(),
+                active = if active { r#" class="active""# } else { "" },
+                label = label,
+            ));
+        }
+        r.html.push_str("</div>");
+    }
+
+    r.html.push_str(r#"<ol class="c-event-list">"#);
+    for ev in events {
+        let has_summary = ev
+            .summary
+            .as_deref()
+            .map(|s| !s.trim().is_empty())
+            .unwrap_or(false);
+
+        r.html.push_str(&format!(
+            r#"<li class="c-event {sev}" data-severity="{sev_label}">"#,
+            sev = ev.severity.class(),
+            sev_label = ev.severity.label(),
+        ));
+        r.html
+            .push_str(r#"<div class="c-event-rail"><span class="c-event-dot"></span></div>"#);
+        r.html.push_str(r#"<div class="c-event-body">"#);
+
+        // Meta row: date · severity · source · link
+        r.html.push_str(r#"<div class="c-event-meta">"#);
+        r.html.push_str(&format!(
+            r#"<time class="c-event-date">{}</time>"#,
+            esc(&ev.date)
+        ));
+        r.html.push_str(&format!(
+            r#"<span class="c-event-severity">{}</span>"#,
+            esc(ev.severity.label())
+        ));
+        if let Some(src) = &ev.source {
+            if !src.trim().is_empty() {
+                r.html.push_str(&format!(
+                    r#"<span class="c-event-source">{}</span>"#,
+                    esc(src)
+                ));
+            }
+        }
+        if let Some(href) = &ev.link {
+            if !href.trim().is_empty() {
+                let resolved = resolve_href(href, base);
+                r.html.push_str(&format!(
+                    r#"<a class="c-event-link" href="{}" target="_blank" rel="noopener" aria-label="Open event source">↗</a>"#,
+                    esc(&resolved)
+                ));
+            }
+        }
+        r.html.push_str("</div>");
+
+        // Title (+ optional details if there's a summary body)
+        if has_summary {
+            r.html.push_str(r#"<details class="c-event-details">"#);
+            r.html.push_str(&format!(
+                r#"<summary class="c-event-title">{}</summary>"#,
+                esc(&ev.title)
+            ));
+            r.html.push_str(r#"<div class="c-event-summary">"#);
+            r.extend(markdown(ev.summary.as_deref().unwrap_or(""), base));
+            r.html.push_str("</div></details>");
+        } else {
+            r.html.push_str(&format!(
+                r#"<div class="c-event-title">{}</div>"#,
+                esc(&ev.title)
+            ));
+        }
+
+        r.html.push_str("</div></li>");
+    }
+    r.html.push_str("</ol></div>");
+
+    if show_filter_toggle {
+        r.scripts.push("event_timeline");
+    }
+    r
+}
+
+// ── Tree ──────────────────────────────────────────
+
+fn tree(nodes: &[TreeNode], default_filter: TreeFilter, show_filter_toggle: bool) -> Rendered {
+    let mut r = Rendered::default();
+    r.html.push_str(&format!(
+        r#"<div class="c-tree {}" data-filter="{}">"#,
+        default_filter.class(),
+        default_filter.label(),
+    ));
+
+    if show_filter_toggle {
+        r.html
+            .push_str(r#"<div class="c-tree-filter-toggle" data-tree-filter-toggle>"#);
+        for f in &[TreeFilter::All, TreeFilter::Incomplete, TreeFilter::Blocked] {
+            let active = *f == default_filter;
+            let label = match f {
+                TreeFilter::All => "All",
+                TreeFilter::Incomplete => "Incomplete only",
+                TreeFilter::Blocked => "Blocked only",
+            };
+            r.html.push_str(&format!(
+                r#"<button type="button" data-filter="{val}"{active}>{label}</button>"#,
+                val = f.label(),
+                active = if active { r#" class="active""# } else { "" },
+                label = label,
+            ));
+        }
+        r.html.push_str("</div>");
+    }
+
+    render_tree_level(nodes, &mut r.html, "c-tree-root");
+    r.html.push_str("</div>");
+
+    if show_filter_toggle {
+        r.scripts.push("tree");
+    }
+    r
+}
+
+/// Walk the tree and return whether `node` (or any descendant) is blocked.
+/// Used by `render_tree_level` to mark ancestors of blocked nodes so the
+/// "blocked-only" filter can keep the path-to-root visible.
+fn tree_has_blocked(node: &TreeNode) -> bool {
+    if matches!(node.status, TreeStatus::Blocked) {
+        return true;
+    }
+    node.children.iter().any(tree_has_blocked)
+}
+
+fn render_tree_level(nodes: &[TreeNode], h: &mut String, list_class: &str) {
+    h.push_str(&format!(r#"<ul class="{}">"#, list_class));
+    for node in nodes {
+        let has_blocked_desc = !matches!(node.status, TreeStatus::Blocked)
+            && node.children.iter().any(tree_has_blocked);
+        let leaf_attr = if node.children.is_empty() {
+            r#" data-leaf="true""#
+        } else {
+            ""
+        };
+        let blocked_desc_attr = if has_blocked_desc {
+            r#" data-has-blocked-descendant="true""#
+        } else {
+            ""
+        };
+        h.push_str(&format!(
+            r#"<li class="c-tree-node {status}" data-status="{status_label}"{leaf}{blocked_desc}>"#,
+            status = node.status.class(),
+            status_label = node.status.label(),
+            leaf = leaf_attr,
+            blocked_desc = blocked_desc_attr,
+        ));
+        h.push_str(r#"<div class="c-tree-row">"#);
+        h.push_str(&format!(
+            r#"<span class="c-tree-glyph" aria-hidden="true">{}</span>"#,
+            node.status.glyph()
+        ));
+        h.push_str(&format!(
+            r#"<span class="c-tree-label">{}</span>"#,
+            esc(&node.label)
+        ));
+        if let Some(note) = &node.note {
+            if !note.trim().is_empty() {
+                h.push_str(&format!(
+                    r#"<span class="c-tree-note">{}</span>"#,
+                    esc(note)
+                ));
+            }
+        }
+        h.push_str("</div>");
+        if !node.children.is_empty() {
+            render_tree_level(&node.children, h, "c-tree-children");
+        }
+        h.push_str("</li>");
+    }
+    h.push_str("</ul>");
+}
+
+// ── Venn ──────────────────────────────────────────
+
+fn venn(sets: &[VennSet], overlaps: &[VennOverlap], title: Option<&str>) -> Rendered {
+    // Supported: 2-set or 3-set venn. Anything else degrades to a single-set
+    // diagram with a warning note, so a malformed YAML doesn't break the page.
+    let n = sets.len();
+    let mut h = String::from(r#"<div class="c-venn">"#);
+    if let Some(t) = title {
+        h.push_str(&format!(r#"<div class="c-venn-title">{}</div>"#, esc(t)));
+    }
+
+    if n == 0 {
+        h.push_str(r#"<div class="c-venn-empty">No sets provided.</div></div>"#);
+        return Rendered::new(h);
+    }
+
+    // Geometry constants — viewBox is sized so the 3-set bounding box leaves
+    // ~30-40px of breathing room on every side at default radius. Circles
+    // stay at r=90 regardless of layout so 2-set and 3-set look at the same
+    // visual scale.
+    let (vb_w, vb_h) = (480.0, 340.0);
+    let r = 90.0_f64;
+
+    h.push_str(&format!(
+        r#"<svg class="c-venn-svg" viewBox="0 0 {vb_w} {vb_h}" role="img" aria-label="{}">"#,
+        title.map(esc).unwrap_or_default()
+    ));
+
+    // Compute per-set centers based on layout.
+    let centers: Vec<(f64, f64)> = match n {
+        1 => vec![(vb_w / 2.0, vb_h / 2.0)],
+        2 => vec![
+            (vb_w / 2.0 - r * 0.55, vb_h / 2.0),
+            (vb_w / 2.0 + r * 0.55, vb_h / 2.0),
+        ],
+        _ => {
+            // 3 sets: vertices of an upward-pointing triangle, recentered.
+            // Distance from centroid to each vertex = r * 0.62 for healthy overlap.
+            let d = r * 0.62;
+            let cx = vb_w / 2.0;
+            let cy = vb_h / 2.0 + d * 0.3; // slight nudge so labels fit
+            vec![
+                (cx, cy - d),                   // top
+                (cx - d * 0.866, cy + d * 0.5), // bottom-left
+                (cx + d * 0.866, cy + d * 0.5), // bottom-right
+            ]
+        }
+    };
+
+    // Render circles. Each set gets its theme-aware color via inline style on
+    // a CSS custom property so themes can swap accents without touching here.
+    for (i, set) in sets.iter().take(centers.len()).enumerate() {
+        let (cx, cy) = centers[i];
+        h.push_str(&format!(
+            r#"<circle class="c-venn-circle c-venn-circle-{color}" cx="{cx:.1}" cy="{cy:.1}" r="{r:.1}"/>"#,
+            color = set.color.class_suffix(),
+        ));
+    }
+
+    // Set labels — placed outside the central overlap so they read cleanly.
+    for (i, set) in sets.iter().take(centers.len()).enumerate() {
+        let (cx, cy) = centers[i];
+        // Offset away from the diagram centroid, then label that point.
+        let centroid_x = centers.iter().map(|c| c.0).sum::<f64>() / centers.len() as f64;
+        let centroid_y = centers.iter().map(|c| c.1).sum::<f64>() / centers.len() as f64;
+        let dx = cx - centroid_x;
+        let dy = cy - centroid_y;
+        let mag = (dx * dx + dy * dy).sqrt().max(1.0);
+        let push = if n == 1 { 0.0 } else { r * 0.55 };
+        let lx = cx + dx / mag * push;
+        let ly = cy + dy / mag * push;
+        h.push_str(&format!(
+            r#"<text class="c-venn-label c-venn-label-{color}" x="{lx:.1}" y="{ly:.1}" text-anchor="middle" dominant-baseline="middle">{label}</text>"#,
+            color = set.color.class_suffix(),
+            label = esc(&set.label),
+        ));
+    }
+
+    // Overlap labels. For pairwise overlaps in a 3-set venn the naïve centroid
+    // of the two circles lands too close to the triangle centroid — every
+    // pairwise label collides with the 3-way overlap label in the middle. Push
+    // pairwise labels outward from the un-included set's center so they land
+    // in the actual lune (the part of the overlap that excludes the third set).
+    for ov in overlaps {
+        if ov.sets.is_empty() {
+            continue;
+        }
+
+        // Default: centroid of the involved circles.
+        let mut sum_x = 0.0;
+        let mut sum_y = 0.0;
+        let mut count = 0;
+        for &idx in &ov.sets {
+            if let Some(c) = centers.get(idx) {
+                sum_x += c.0;
+                sum_y += c.1;
+                count += 1;
+            }
+        }
+        if count == 0 {
+            continue;
+        }
+        let mut lx = sum_x / count as f64;
+        let mut ly = sum_y / count as f64;
+
+        // Pairwise overlap inside a 3-set venn: nudge outward from the
+        // unincluded set's center so the label sits in the pairwise lune.
+        if n == 3 && count == 2 {
+            if let Some(third_idx) = (0..3).find(|i| !ov.sets.contains(i)) {
+                let (tx, ty) = centers[third_idx];
+                let dx = lx - tx;
+                let dy = ly - ty;
+                let mag = (dx * dx + dy * dy).sqrt().max(1.0);
+                let push = r * 0.45;
+                lx += dx / mag * push;
+                ly += dy / mag * push;
+            }
+        }
+
+        let label = ov.label.as_deref().unwrap_or("");
+        if !label.is_empty() {
+            h.push_str(&format!(
+                r#"<text class="c-venn-overlap-label" x="{lx:.1}" y="{ly:.1}" text-anchor="middle" dominant-baseline="middle">{label}</text>"#,
+                label = esc(label),
+            ));
+        }
+    }
+
+    h.push_str("</svg></div>");
+    Rendered::new(h)
 }
 
 // ── Image ─────────────────────────────────────────

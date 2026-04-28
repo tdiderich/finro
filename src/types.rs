@@ -219,6 +219,27 @@ pub enum Component {
     Accordion {
         items: Vec<AccordionItem>,
     },
+    EventTimeline {
+        events: Vec<EventItem>,
+        #[serde(default)]
+        default_filter: EventFilter,
+        #[serde(default)]
+        show_filter_toggle: bool,
+    },
+    Tree {
+        nodes: Vec<TreeNode>,
+        #[serde(default)]
+        default_filter: TreeFilter,
+        #[serde(default)]
+        show_filter_toggle: bool,
+    },
+    Venn {
+        sets: Vec<VennSet>,
+        #[serde(default)]
+        overlaps: Vec<VennOverlap>,
+        #[serde(default)]
+        title: Option<String>,
+    },
     Image {
         src: String,
         alt: Option<String>,
@@ -514,6 +535,167 @@ pub struct Tab {
 pub struct AccordionItem {
     pub title: String,
     pub components: Vec<Component>,
+}
+
+#[derive(Deserialize)]
+pub struct EventItem {
+    pub date: String,
+    pub title: String,
+    #[serde(default)]
+    pub summary: Option<String>,
+    #[serde(default)]
+    pub severity: EventSeverity,
+    #[serde(default)]
+    pub source: Option<String>,
+    #[serde(default)]
+    pub link: Option<String>,
+}
+
+#[derive(Deserialize, Default, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum EventSeverity {
+    Major,
+    #[default]
+    Minor,
+    Info,
+}
+
+impl EventSeverity {
+    pub fn class(&self) -> &'static str {
+        match self {
+            EventSeverity::Major => "severity-major",
+            EventSeverity::Minor => "severity-minor",
+            EventSeverity::Info => "severity-info",
+        }
+    }
+
+    pub fn label(&self) -> &'static str {
+        match self {
+            EventSeverity::Major => "major",
+            EventSeverity::Minor => "minor",
+            EventSeverity::Info => "info",
+        }
+    }
+}
+
+#[derive(Deserialize, Default, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum EventFilter {
+    #[default]
+    All,
+    Major,
+}
+
+impl EventFilter {
+    pub fn class(&self) -> &'static str {
+        match self {
+            EventFilter::All => "filter-all",
+            EventFilter::Major => "filter-major",
+        }
+    }
+
+    pub fn label(&self) -> &'static str {
+        match self {
+            EventFilter::All => "all",
+            EventFilter::Major => "major",
+        }
+    }
+}
+
+#[derive(Deserialize)]
+pub struct TreeNode {
+    pub label: String,
+    #[serde(default)]
+    pub status: TreeStatus,
+    #[serde(default)]
+    pub note: Option<String>,
+    #[serde(default)]
+    pub children: Vec<TreeNode>,
+}
+
+#[derive(Deserialize, Default, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum TreeStatus {
+    #[default]
+    Default,
+    Completed,
+    Active,
+    Blocked,
+    Upcoming,
+}
+
+#[derive(Deserialize, Default, Clone, Copy, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum TreeFilter {
+    #[default]
+    All,
+    Incomplete,
+    Blocked,
+}
+
+impl TreeFilter {
+    pub fn class(&self) -> &'static str {
+        match self {
+            TreeFilter::All => "filter-all",
+            TreeFilter::Incomplete => "filter-incomplete",
+            TreeFilter::Blocked => "filter-blocked",
+        }
+    }
+
+    pub fn label(&self) -> &'static str {
+        match self {
+            TreeFilter::All => "all",
+            TreeFilter::Incomplete => "incomplete",
+            TreeFilter::Blocked => "blocked",
+        }
+    }
+}
+
+impl TreeStatus {
+    pub fn class(&self) -> &'static str {
+        match self {
+            TreeStatus::Default => "status-default",
+            TreeStatus::Completed => "status-completed",
+            TreeStatus::Active => "status-active",
+            TreeStatus::Blocked => "status-blocked",
+            TreeStatus::Upcoming => "status-upcoming",
+        }
+    }
+
+    pub fn glyph(&self) -> &'static str {
+        match self {
+            TreeStatus::Default => "•",
+            TreeStatus::Completed => "✓",
+            TreeStatus::Active => "▸",
+            TreeStatus::Blocked => "⚠",
+            TreeStatus::Upcoming => "○",
+        }
+    }
+
+    pub fn label(&self) -> &'static str {
+        match self {
+            TreeStatus::Default => "default",
+            TreeStatus::Completed => "completed",
+            TreeStatus::Active => "active",
+            TreeStatus::Blocked => "blocked",
+            TreeStatus::Upcoming => "upcoming",
+        }
+    }
+}
+
+#[derive(Deserialize)]
+pub struct VennSet {
+    pub label: String,
+    #[serde(default)]
+    pub color: SemColor,
+}
+
+#[derive(Deserialize)]
+pub struct VennOverlap {
+    /// Indices into `sets[]`. Length 2 or 3.
+    pub sets: Vec<usize>,
+    #[serde(default)]
+    pub label: Option<String>,
 }
 
 // ── New component supporting types ───────────────────

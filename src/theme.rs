@@ -1281,6 +1281,336 @@ body.shell-document .doc-body strong { color: #fff; }
   padding-top: 16px;
 }
 
+/* Event Timeline */
+.c-event-timeline { display: flex; flex-direction: column; gap: 12px; }
+.c-event-filter-toggle {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(var(--text-rgb),0.05);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+}
+.c-event-filter-toggle button {
+  appearance: none;
+  background: none;
+  border: none;
+  color: rgba(var(--text-rgb),0.6);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.c-event-filter-toggle button:hover { color: var(--snow); }
+.c-event-filter-toggle button.active {
+  background: rgba(var(--accent-rgb),0.15);
+  color: var(--teal);
+}
+.c-event-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.c-event {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 12px;
+  padding: 12px 0;
+}
+.c-event + .c-event { border-top: 1px solid rgba(var(--text-rgb),0.06); }
+/* The dot sits 6px from the top of the rail; with 12px row padding the rail
+   line needs to start at the dot center (~18px from rail top) and end at
+   the dot bottom (~30px from rail top). */
+.c-event:first-child .c-event-rail::before { top: 18px; }
+.c-event:last-child .c-event-rail::before { bottom: calc(100% - 30px); }
+/* Filter visibility — when filter=major, hide non-major events */
+.c-event-timeline.filter-major .c-event[data-severity="minor"],
+.c-event-timeline.filter-major .c-event[data-severity="info"] { display: none; }
+.c-event-rail {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+.c-event-rail::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background: rgba(var(--text-rgb),0.1);
+  transform: translateX(-50%);
+}
+.c-event-dot {
+  position: relative;
+  z-index: 1;
+  width: 12px;
+  height: 12px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: rgba(var(--text-rgb),0.3);
+  border: 2px solid var(--card-bg);
+}
+.c-event.severity-major .c-event-dot {
+  background: var(--teal);
+  box-shadow: 0 0 6px rgba(var(--accent-rgb),0.5);
+}
+.c-event.severity-info .c-event-dot { background: var(--muted); }
+.c-event-body {
+  min-width: 0;
+  padding-bottom: 4px;
+}
+.c-event-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: rgba(var(--text-rgb),0.6);
+  margin-bottom: 4px;
+}
+.c-event-date { font-variant-numeric: tabular-nums; }
+.c-event-severity {
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(var(--text-rgb),0.08);
+  color: rgba(var(--text-rgb),0.7);
+}
+.c-event.severity-major .c-event-severity {
+  background: rgba(var(--accent-rgb),0.15);
+  color: var(--teal);
+}
+.c-event.severity-info .c-event-severity {
+  background: rgba(var(--text-rgb),0.08);
+  color: var(--muted);
+}
+.c-event-source {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(var(--text-rgb),0.05);
+  color: rgba(var(--text-rgb),0.55);
+}
+.c-event-link {
+  margin-left: auto;
+  color: rgba(var(--text-rgb),0.5);
+  text-decoration: none;
+  font-size: 14px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.c-event-link:hover { color: var(--teal); }
+.c-event-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--snow);
+  line-height: 1.4;
+}
+.c-event-details > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.c-event-details > summary::-webkit-details-marker { display: none; }
+.c-event-details > summary::before {
+  content: "›";
+  display: inline-block;
+  width: 10px;
+  color: rgba(var(--text-rgb),0.4);
+  transition: transform 0.15s;
+}
+.c-event-details[open] > summary::before {
+  transform: rotate(90deg);
+  color: var(--teal);
+}
+.c-event-summary {
+  margin-top: 6px;
+  margin-left: 16px;
+  font-size: 13px;
+  color: rgba(var(--text-rgb),0.75);
+  line-height: 1.5;
+}
+.c-event-summary > :first-child { margin-top: 0; }
+.c-event-summary > :last-child { margin-bottom: 0; }
+
+/* Tree */
+.c-tree { font-size: 14px; line-height: 1.5; }
+.c-tree-root, .c-tree-children { list-style: none; }
+.c-tree-root { margin: 0; padding: 4px 0; }
+.c-tree-children {
+  margin: 0 0 0 14px;
+  padding: 0 0 0 14px;
+  border-left: 1.5px solid rgba(var(--text-rgb),0.12);
+}
+.c-tree-node {
+  position: relative;
+  padding: 6px 0;
+}
+.c-tree-children > .c-tree-node::before {
+  content: "";
+  position: absolute;
+  top: 17px;
+  left: -14px;
+  width: 12px;
+  height: 1.5px;
+  background: rgba(var(--text-rgb),0.12);
+}
+.c-tree-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.c-tree-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  font-size: 12px;
+  border-radius: 4px;
+  color: rgba(var(--text-rgb),0.5);
+  background: rgba(var(--text-rgb),0.05);
+}
+.c-tree-node.status-completed > .c-tree-row > .c-tree-glyph {
+  color: var(--green);
+  background: rgba(126,217,87,0.12);
+}
+.c-tree-node.status-active > .c-tree-row > .c-tree-glyph {
+  color: var(--teal);
+  background: rgba(var(--accent-rgb),0.15);
+  box-shadow: 0 0 6px rgba(var(--accent-rgb),0.4);
+}
+.c-tree-node.status-blocked > .c-tree-row > .c-tree-glyph {
+  color: var(--red);
+  background: rgba(255,107,107,0.12);
+}
+.c-tree-node.status-upcoming > .c-tree-row > .c-tree-glyph {
+  color: rgba(var(--text-rgb),0.4);
+  background: transparent;
+  border: 1px dashed rgba(var(--text-rgb),0.2);
+}
+.c-tree-label {
+  color: var(--snow);
+  font-weight: 500;
+}
+.c-tree-node.status-upcoming > .c-tree-row > .c-tree-label {
+  color: rgba(var(--text-rgb),0.6);
+  font-weight: 400;
+}
+.c-tree-node.status-completed > .c-tree-row > .c-tree-label {
+  color: rgba(var(--text-rgb),0.75);
+}
+.c-tree-note {
+  font-size: 12px;
+  color: rgba(var(--text-rgb),0.6);
+  font-style: italic;
+}
+.c-tree-node.status-blocked > .c-tree-row > .c-tree-note {
+  color: var(--red);
+  font-style: normal;
+  font-weight: 500;
+}
+.c-tree-filter-toggle {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 12px;
+  background: rgba(var(--text-rgb),0.05);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+}
+.c-tree-filter-toggle button {
+  appearance: none;
+  background: none;
+  border: none;
+  color: rgba(var(--text-rgb),0.6);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.c-tree-filter-toggle button:hover { color: var(--snow); }
+.c-tree-filter-toggle button.active {
+  background: rgba(var(--accent-rgb),0.15);
+  color: var(--teal);
+}
+/* filter-incomplete: hide every node whose status is `completed`.
+   A `completed` branch correctly hides its descendants — they're "done",
+   the user didn't ask for them. The non-completed siblings stay visible. */
+.c-tree.filter-incomplete .c-tree-node.status-completed { display: none; }
+/* filter-blocked: show only blocked nodes + their ancestor chain.
+   Server-side renders `data-has-blocked-descendant` on each ancestor of a
+   blocked node, so the path-to-root keeps full context while non-relevant
+   branches collapse. */
+.c-tree.filter-blocked .c-tree-node:not(.status-blocked):not([data-has-blocked-descendant="true"]) {
+  display: none;
+}
+
+/* Venn */
+.c-venn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.c-venn-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--snow);
+}
+.c-venn-svg {
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+}
+.c-venn-circle {
+  fill-opacity: 0.18;
+  stroke-width: 2;
+}
+.c-venn-circle-default { fill: rgba(var(--text-rgb),0.6); stroke: rgba(var(--text-rgb),0.7); }
+.c-venn-circle-teal    { fill: var(--teal); stroke: var(--teal); }
+.c-venn-circle-green   { fill: var(--green); stroke: var(--green); }
+.c-venn-circle-yellow  { fill: var(--yellow); stroke: var(--yellow); }
+.c-venn-circle-red     { fill: var(--red); stroke: var(--red); }
+.c-venn-label {
+  font-size: 13px;
+  font-weight: 600;
+  pointer-events: none;
+}
+.c-venn-label-default { fill: rgba(var(--text-rgb),0.85); }
+.c-venn-label-teal    { fill: var(--teal); }
+.c-venn-label-green   { fill: var(--green); }
+.c-venn-label-yellow  { fill: var(--yellow); }
+.c-venn-label-red     { fill: var(--red); }
+.c-venn-overlap-label {
+  font-size: 12px;
+  font-weight: 500;
+  fill: rgba(var(--text-rgb),0.85);
+  pointer-events: none;
+}
+.c-venn-empty {
+  font-size: 13px;
+  color: rgba(var(--text-rgb),0.5);
+  font-style: italic;
+}
+
 /* Image */
 .c-image { margin: 0; }
 .c-image.align-center { margin-left: auto; margin-right: auto; align-self: center; }
@@ -1316,10 +1646,11 @@ body.shell-document .doc-body strong { color: #fff; }
   border: none;
   border-top: 1px solid var(--card-border);
   width: 100%;
-  margin: 0;
+  margin: 32px 0;
 }
 .c-divider-labeled {
   display: flex; align-items: center; gap: 16px;
+  margin: 32px 0;
 }
 .c-divider-labeled .c-divider-line {
   flex: 1;

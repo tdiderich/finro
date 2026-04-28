@@ -1580,3 +1580,336 @@ fn init_refuses_existing_dir() {
         .expect("run kazam init");
     assert!(!status.success(), "init should fail on existing dir");
 }
+
+#[test]
+fn event_timeline_renders_with_filter_toggle() {
+    let dir = tmp_dir("event-timeline");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Test\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        r#"title: Test
+shell: standard
+components:
+  - type: event_timeline
+    default_filter: major
+    show_filter_toggle: true
+    events:
+      - date: 2026-04-27
+        severity: major
+        title: Weekly sync
+        summary: |
+          Working session booked.
+        source: granola
+        link: https://example.com/notes
+      - date: 2026-04-26
+        severity: minor
+        title: ANSYS-322 done
+        source: linear
+      - date: 2026-04-25
+        severity: info
+        title: Cadence moved to Thursdays
+"#,
+    )
+    .unwrap();
+
+    let out = tmp_dir("event-timeline-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success(), "kazam build failed");
+
+    let html = read(&out.join("index.html"));
+    // Container + default filter class
+    assert_contains(&html, r#"class="c-event-timeline filter-major""#);
+    // Filter toggle markup + active button
+    assert_contains(&html, r#"data-event-filter-toggle"#);
+    assert_contains(&html, r#"data-filter="major""#);
+    assert_contains(&html, r#"data-filter="all""#);
+    // Severity classes per event
+    assert_contains(&html, r#"class="c-event severity-major""#);
+    assert_contains(&html, r#"class="c-event severity-minor""#);
+    assert_contains(&html, r#"class="c-event severity-info""#);
+    // Severity data attributes drive the CSS filter
+    assert_contains(&html, r#"data-severity="major""#);
+    assert_contains(&html, r#"data-severity="minor""#);
+    // Event with summary collapses into <details>
+    assert_contains(&html, r#"<details class="c-event-details">"#);
+    // Event without summary stays as plain title div
+    assert_contains(&html, r#"ANSYS-322 done"#);
+    // Source chip + external link
+    assert_contains(&html, r#"class="c-event-source""#);
+    assert_contains(&html, r#"href="https://example.com/notes""#);
+    // Filter toggle JS got registered
+    assert_contains(&html, "data-event-filter-toggle");
+    assert_contains(&html, "filter-major");
+}
+
+#[test]
+fn event_timeline_without_toggle_skips_script() {
+    let dir = tmp_dir("event-timeline-no-toggle");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Test\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        r#"title: Test
+shell: standard
+components:
+  - type: event_timeline
+    events:
+      - date: 2026-04-27
+        title: A thing happened
+"#,
+    )
+    .unwrap();
+
+    let out = tmp_dir("event-timeline-no-toggle-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+
+    let html = read(&out.join("index.html"));
+    // Default filter = all; no toggle markup
+    assert_contains(&html, r#"class="c-event-timeline filter-all""#);
+    assert!(
+        !html.contains("data-event-filter-toggle"),
+        "toggle should be absent when show_filter_toggle is false"
+    );
+    // Default severity is minor when omitted
+    assert_contains(&html, r#"data-severity="minor""#);
+}
+
+#[test]
+fn tree_renders_nested_status_with_branch_lines() {
+    let dir = tmp_dir("tree");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Test\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        r#"title: Test
+shell: standard
+components:
+  - type: tree
+    nodes:
+      - label: "Phase 1"
+        status: completed
+        children:
+          - label: Identify stakeholders
+            status: completed
+          - label: Deploy stack
+            status: blocked
+            note: "Waiting on change-window"
+      - label: "Phase 2"
+        status: active
+        children:
+          - label: Generate External ID
+            status: upcoming
+"#,
+    )
+    .unwrap();
+
+    let out = tmp_dir("tree-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success(), "kazam build failed");
+
+    let html = read(&out.join("index.html"));
+    // Container (default filter renders as a class) + nested ul classes
+    assert_contains(&html, r#"class="c-tree filter-all""#);
+    assert_contains(&html, r#"data-filter="all""#);
+    assert_contains(&html, r#"class="c-tree-root""#);
+    assert_contains(&html, r#"class="c-tree-children""#);
+    // Status classes per node
+    assert_contains(&html, r#"c-tree-node status-completed"#);
+    assert_contains(&html, r#"c-tree-node status-blocked"#);
+    assert_contains(&html, r#"c-tree-node status-active"#);
+    assert_contains(&html, r#"c-tree-node status-upcoming"#);
+    // data-status for downstream styling/inspection
+    assert_contains(&html, r#"data-status="completed""#);
+    assert_contains(&html, r#"data-status="blocked""#);
+    // Glyphs land
+    assert_contains(&html, r#"✓"#);
+    assert_contains(&html, r#"⚠"#);
+    // Note renders on the blocked node
+    assert_contains(&html, r#"class="c-tree-note""#);
+    assert_contains(&html, "Waiting on change-window");
+}
+
+#[test]
+fn tree_filter_toggle_marks_blocked_ancestors() {
+    let dir = tmp_dir("tree-filter");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Test\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        r#"title: Test
+shell: standard
+components:
+  - type: tree
+    default_filter: blocked
+    show_filter_toggle: true
+    nodes:
+      - label: "Phase 1"
+        status: completed
+      - label: "Phase 2"
+        status: active
+        children:
+          - label: "Sub A"
+            status: active
+            children:
+              - label: "Leaf 1"
+                status: blocked
+              - label: "Leaf 2"
+                status: completed
+          - label: "Sub B"
+            status: active
+"#,
+    )
+    .unwrap();
+
+    let out = tmp_dir("tree-filter-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+
+    let html = read(&out.join("index.html"));
+    // Default-filter class + toggle markup
+    assert_contains(&html, r#"class="c-tree filter-blocked""#);
+    assert_contains(&html, r#"data-tree-filter-toggle"#);
+    assert_contains(&html, r#"data-filter="all""#);
+    assert_contains(&html, r#"data-filter="incomplete""#);
+    assert_contains(&html, r#"data-filter="blocked""#);
+    // Phase 2 + Sub A both have a blocked descendant — both must be marked
+    // so the filter-blocked CSS keeps the path-to-root visible.
+    let blocked_anc_count = html
+        .matches(r#"data-has-blocked-descendant="true""#)
+        .count();
+    assert!(
+        blocked_anc_count >= 2,
+        "expected ≥2 ancestors marked, got {}",
+        blocked_anc_count
+    );
+    // The blocked node itself must NOT carry the descendant attr — only ancestors.
+    assert!(
+        html.contains(r#"class="c-tree-node status-blocked""#)
+            && !html.contains(
+                r#"class="c-tree-node status-blocked" data-status="blocked" data-leaf="true" data-has-blocked-descendant"#
+            ),
+        "blocked leaf shouldn't be flagged as a blocked-ancestor"
+    );
+    // Leaves get data-leaf so the incomplete-filter CSS can target them.
+    assert_contains(&html, r#"data-leaf="true""#);
+}
+
+#[test]
+fn venn_two_set_renders_circles_and_overlap_label() {
+    let dir = tmp_dir("venn-2");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Test\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        r#"title: Test
+shell: standard
+components:
+  - type: venn
+    title: "Two-set"
+    sets:
+      - label: Frontend
+        color: teal
+      - label: Backend
+        color: red
+    overlaps:
+      - sets: [0, 1]
+        label: APIs
+"#,
+    )
+    .unwrap();
+
+    let out = tmp_dir("venn-2-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success(), "kazam build failed");
+
+    let html = read(&out.join("index.html"));
+    // SVG container + two themed circles
+    assert_contains(&html, r#"class="c-venn""#);
+    assert_contains(&html, r#"<svg class="c-venn-svg""#);
+    assert_contains(&html, r#"c-venn-circle c-venn-circle-teal"#);
+    assert_contains(&html, r#"c-venn-circle c-venn-circle-red"#);
+    // Set labels
+    assert_contains(&html, "Frontend");
+    assert_contains(&html, "Backend");
+    // Overlap label
+    assert_contains(&html, r#"class="c-venn-overlap-label""#);
+    assert_contains(&html, ">APIs</text>");
+    // Title
+    assert_contains(&html, r#"class="c-venn-title""#);
+}
+
+#[test]
+fn venn_three_set_places_three_circles() {
+    let dir = tmp_dir("venn-3");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Test\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        r#"title: Test
+shell: standard
+components:
+  - type: venn
+    sets:
+      - label: A
+      - label: B
+      - label: C
+    overlaps:
+      - sets: [0, 1, 2]
+        label: All three
+"#,
+    )
+    .unwrap();
+
+    let out = tmp_dir("venn-3-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success(), "kazam build failed");
+
+    let html = read(&out.join("index.html"));
+    // Three circles
+    let circle_count = html.matches(r#"<circle class="c-venn-circle"#).count();
+    assert_eq!(
+        circle_count, 3,
+        "expected 3 venn circles, found {}",
+        circle_count
+    );
+    // 3-way overlap label centered at centroid
+    assert_contains(&html, ">All three</text>");
+}
