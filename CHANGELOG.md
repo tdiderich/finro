@@ -6,6 +6,43 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.2.2] — 2026-04-28
+
+Three new components plus a small set of polish fixes that surfaced
+during a real-data review against a live customer page.
+
+### Added
+- **`event_timeline`** — vertical event history with optional Major/All
+  filter toggle. Per-event date, severity (`major | minor | info`),
+  optional source chip, and external link. When a `summary` is provided
+  the event collapses behind a native `<details>` toggle (no JS for
+  expand/collapse). Filter toggle is a tiny class-swap script.
+- **`tree`** — recursive nested status tree. Each node has a label,
+  optional inline note, and per-node status (`default | completed |
+  active | blocked | upcoming`). Status drives glyph + color. Optional
+  filter toggle with three modes:
+  - `all` — everything visible
+  - `incomplete` — hides completed nodes (a completed branch correctly
+    hides its descendants)
+  - `blocked` — shows only blocked nodes plus their ancestor chain;
+    server walks the tree and marks ancestors with
+    `data-has-blocked-descendant` so the path-to-root keeps context.
+- **`venn`** — two- or three-set venn diagram, native inline SVG. Per-set
+  color flows through the `SemColor` enum; optional `overlaps[].sets`
+  (length 2 or 3) place intersection labels. For pairwise overlaps in a
+  3-set venn the label is pushed away from the un-included set's center
+  so it lands in the actual lune, not piled up at the centroid.
+
+### Fixed
+- **Callout body now inherits markdown styling.** Bullets inside a
+  `callout` were rendering flush left, mashed against the colored
+  border. The body wrapper is now dual-classed `c-callout-body
+  c-markdown` so list padding, code styles, and paragraph margins
+  propagate from the existing `.c-markdown` rules.
+- **`divider` had `margin: 0`.** Sat flush against neighboring section
+  headers with zero breathing room. Bumped to `margin: 32px 0` for both
+  labeled and unlabeled variants.
+
 ## [1.2.1] — 2026-04-27
 
 A patch release that exists almost entirely so the v1.2 launch carousel
