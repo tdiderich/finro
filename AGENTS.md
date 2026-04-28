@@ -1,665 +1,85 @@
-# AGENTS.md — kazam authoring guide for LLMs
+# AGENTS.md — developing kazam
 
-This file tells LLMs (Claude, GPT, etc.) how to author pages in a kazam site.
-Read this before generating or editing any `.yaml` file.
+For the YAML authoring guide (what `kazam agents` prints), see `AGENTS.md.template`.
 
-## What kazam is
-
-kazam is a Rust CLI that turns YAML files into themed static HTML. Every `.yaml`
-file in the source directory becomes one page of output. The format is designed
-for you — the machine — to generate easily: consistent `type:` tags, no nested
-conditionals, no templating logic.
-
-## File structure
-
-```
-my-site/
-  kazam.yaml         # site-wide config (name, theme, nav, favicon)
-  index.yaml         # → _site/index.html
-  guide.yaml         # → _site/guide.html
-  reference/
-    api.yaml         # → _site/reference/api.html
-```
-
-Any non-`.yaml` file (images, SVGs, fonts) is copied verbatim into the output.
-
-## kazam.yaml — site config
-
-```yaml
-name: Site Name
-theme: dark              # dark | light | red | orange | yellow | green | blue | indigo | violet
-mode: dark               # optional: dark (default) | light — flips rainbow themes onto the light base
-colors:                  # optional per-token overrides
-  accent: '#14b8b8'
-favicon: favicon.svg
-logo: /assets/logo.svg   # optional — replaces the text `name:` in the site bar with an <img>.
-                         # Expanded form: logo: { src, height, alt }. height caps rendered px;
-                         # alt defaults to `name`. Rendered height is bounded by the site-bar
-                         # content area (never pushes the bar taller); width flows from aspect
-                         # ratio and caps at 240px. SVG recommended; raster sources should be
-                         # 2× target height for retina. Lead with `/` for site-root paths so
-                         # the depth-aware rewriter keeps them portable on nested pages.
-texture: dots            # optional: none | dots | grid | grain | topography | diagonal
-glow: accent             # optional: none | accent | corner
-nav_layout: top          # optional: top (default) | sidebar
-nav:
-  - label: Home
-    href: /index.html
-  - label: Guide
-    href: /guide.html
-  - label: Components     # parent with a dropdown / sidebar section
-    href: /components/index.html   # optional — acts as default link when clicked
-    children:
-      - label: Content
-        href: /components/content.html
-      - label: Grids
-        href: components/grids.html
-```
-
-`nav_layout: top` (default) renders the nav in the sticky top bar. Parent
-entries with `children:` render as a hover/focus dropdown. `nav_layout:
-sidebar` moves the full nav into a fixed 240px left sidebar; parent entries
-with children become labeled sections, their leaves become indented links.
-Sidebar layout is only applied to `shell: standard` pages.
-
-`theme` picks a built-in palette. The seven rainbow themes share the
-neutral dark base by default and only swap the accent color — safe to use
-with any `texture`/`glow` combination. Set `mode: light` to flip any
-rainbow theme onto the light base (#F7F7F2 paper + near-black text).
-`theme: dark` and `theme: light` are self-contained and ignore `mode`.
-Use `colors:` to override individual tokens on top.
-
-`texture` paints a subtle pattern behind every page (tinted via the active
-theme's text color, so dark/light just work). `glow` paints a soft
-accent-colored radial behind the header area. Both are off by default;
-both are stripped under `@media print`.
-
-## Page structure
-
-Every page has a `title`, a `shell`, and EITHER `components:` (for most shells)
-OR `slides:` (for deck). Nothing else is required.
-
-```yaml
-title: Page Title           # required
-shell: standard             # standard | document | deck
-eyebrow: Reference          # optional — small label in document/deck headers
-subtitle: Q4 2026           # optional — date / context in document/deck
-texture: none               # optional — override site-wide texture on this page
-glow: corner                # optional — override site-wide glow on this page
-components:                 # for standard + document shells
-  - type: header
-    title: Hello
-slides:                     # for deck shell only
-  - label: Slide One
-    components: [...]
-```
-
-`texture:` and `glow:` at the page level override the site-wide values in
-`kazam.yaml`. Setting either to `none` turns that layer off on this page;
-setting it to any other preset swaps it in. Omit to inherit the site-wide
-value.
-
-### Freshness (optional)
-
-Pages can declare review cadence + sources of truth. At build time, kazam
-computes staleness against today's date and injects a banner at the top
-of the page — **yellow** if the review comes due within the next 7 days,
-**red** if it's already overdue. No runtime JS; staleness is a pure
-date compare. A build-time report also prints every stale page, grouped
-by overdue vs due-soon, sorted most-urgent first. Silent when nothing
-is stale.
-
-```yaml
-freshness:
-  updated: 2026-01-15              # ISO date of last content change
-  review_every: 90d                # Nd | Nw | Nm | Ny | weekly | monthly | quarterly | yearly
-  owner: owner@example.com         # free-form — email, handle, team name
-  sources_of_truth:                # bare URL or { label, href }
-    - https://notion.so/abc123
-    - label: "#ts-hub"
-      href: https://company.slack.com/archives/C012345
-    - label: "Linear: TSH"
-      href: https://linear.app/co/project/tsh
-```
-
-All fields are optional. A page with only `updated:` and `review_every:`
-still computes the banner; missing either field means the page is never
-stale (nothing to compare against). To simulate "today" for tests or
-snapshot builds, set `KAZAM_TODAY=YYYY-MM-DD` in the environment.
-
-kazam does not fetch the sources — it just renders the labels as links.
-Refreshing the content is the agent's job: when a reader (or an agent
-working on the page) clicks through, they read the source and propose
-updates.
-
-### Link graph (automatic)
-
-Every `kazam build` also runs a link-graph pass. Two things surface in the
-build summary and in `_site/links.md`:
-
-- **Orphan pages** — built pages not reachable from `index.html` via nav or
-  any in-page href. Either link them from somewhere reachable, delete them,
-  or set `unlisted: true` on the page (same flag `llms.txt` uses).
-- **Broken internal links** — `.html` hrefs that don't match any built page.
-
-Silent on clean builds; `links.md` is removed when there's nothing to
-report. `kazam dev` and `kazam build --allow-orphans` silence orphan
-detection (useful for drafts); broken links always surface.
-
-## Shells
-
-- **standard** — sticky site header + nav + 1200px container. Default. Use for
-  dashboards, reference pages, wikis, blog-style content.
-- **document** — centered 720px card, teal-bordered header (driven by `eyebrow` +
-  `subtitle`), print-optimized. Use for meeting agendas, one-pagers, briefs.
-- **deck** — full-viewport slides. Arrow keys to navigate. Print/PDF exports all
-  slides paginated. Use for QBRs, pitch decks, strategy reviews.
-
-## Component catalog
-
-Every component has `type:` (snake_case name) + props. Keep YAML indentation
-consistent (2 spaces). Quote any string that looks like a number (e.g. `"47"`).
-
-### Content
-
-- **header** — page title block. Auto-emits `id` from the `title` slug
-  so `/page.html#my-title` works; override with explicit `id:` for a
-  stable anchor that survives copy edits.
-  ```yaml
-  - type: header
-    title: Required
-    subtitle: Optional subtitle
-    eyebrow: Optional label
-    id: optional-stable-anchor   # else auto-slugged from title
-  ```
-
-- **meta** — key-value strip (author, date, status, version)
-  ```yaml
-  - type: meta
-    fields:
-      - key: Author
-        value: Someone
-      - key: Updated
-        value: '2026-04-17'
-  ```
-
-- **markdown** — rich prose (CommonMark + tables + strikethrough)
-  ```yaml
-  - type: markdown
-    body: |
-      ## Heading
-      Paragraph with **bold** and [link](/path).
-
-      | a | b |
-      |---|---|
-      | 1 | 2 |
-  ```
-
-- **code** — syntax-styled code block
-  ```yaml
-  - type: code
-    language: rust
-    code: |
-      fn main() { println!("hi"); }
-  ```
-
-- **callout** — info/warn/success/danger box
-  ```yaml
-  - type: callout
-    variant: warn            # info | warn | success | danger
-    title: Heads up
-    body: Body can include **markdown**.
-  ```
-
-- **blockquote** — testimonial with optional attribution
-  ```yaml
-  - type: blockquote
-    body: The best product we've shipped.
-    attribution: Jane Doe, CTO
-  ```
-
-- **image** — figure with caption + max_width
-  ```yaml
-  - type: image
-    src: /dashboard.png
-    alt: Dashboard screenshot
-    caption: Optional caption.
-    max_width: 600
-  ```
-
-- **kbd** — keyboard keys joined by `+`
-  ```yaml
-  - type: kbd
-    keys: [Cmd, K]
-  ```
-
-### Indicators
-
-- **badge** — small colored label. Colors: default, green, yellow, red, teal.
-- **tag** — monospace pill label. Same color palette as badge.
-- **status** — dot + label (operational / degraded / down). Same colors.
-- **progress_bar** — horizontal fill
-  ```yaml
-  - type: progress_bar
-    value: 72                # 0-100
-    label: Scan coverage
-    color: green
-    detail: 72 of 100 accounts
-  ```
-- **divider** — horizontal rule, optionally with a center label
-  ```yaml
-  - type: divider
-    label: Operational data  # optional
-  ```
-
-### Grids
-
-- **card_grid** — responsive cards with optional badge, description, links
-  ```yaml
-  - type: card_grid
-    min_width: 320           # optional; default 320
-    cards:
-      - title: Acme Corp
-        badge:
-          label: Healthy
-          color: green
-        description: Enterprise — AWS
-        links:
-          - label: Open
-            href: /acme
-  ```
-
-- **stat_grid** — big-number metric tiles
-  ```yaml
-  - type: stat_grid
-    columns: 3
-    stats:
-      - label: Users
-        value: '1,284'
-        detail: Up 12% MoM
-        color: green
-  ```
-
-- **selectable_grid** — interactive phase tracker / click-to-focus cards
-  ```yaml
-  - type: selectable_grid
-    interaction: single_select   # single_select | multi_select | none
-    connector: dots_line         # none | dots_line
-    cards:
-      - eyebrow: Phase 1
-        title: Planning
-        bullets:
-          - Use cases defined
-  ```
-
-- **before_after** — transformation storytelling (QBR-style)
-  ```yaml
-  - type: before_after
-    items:
-      - title: Deployment time
-        before: Manual, 2 weeks
-        after: 4 hours
-        after_context: fully automated
-  ```
-
-- **avatar** — profile circle with initials fallback
-  ```yaml
-  - type: avatar
-    name: Sarah M.
-    src: /sarah.png            # optional
-    size: md                   # sm | md | lg | xl
-    subtitle: VP Engineering   # optional inline text
-  ```
-
-- **avatar_group** — overlapping avatar stack
-  ```yaml
-  - type: avatar_group
-    size: md
-    max: 4
-    avatars:
-      - name: Sarah M.
-      - name: Marcus T.
-  ```
-
-- **definition_list** — term/definition pairs
-  ```yaml
-  - type: definition_list
-    items:
-      - term: ACV
-        definition: Annual contract value.
-  ```
-
-### Interactive
-
-- **table** — sortable + filterable
-  ```yaml
-  - type: table
-    filterable: true
-    columns:
-      - key: name
-        label: Name
-        sortable: true
-        align: left              # left | right | center
-    rows:
-      - name: Acme Corp
-  ```
-
-- **tabs** — tabbed panels with arbitrary content
-  ```yaml
-  - type: tabs
-    tabs:
-      - label: Overview
-        components: [...]
-      - label: Details
-        components: [...]
-  ```
-
-- **accordion** — collapsible sections
-  ```yaml
-  - type: accordion
-    items:
-      - title: Question 1
-        components: [...]
-  ```
-
-### Navigation
-
-- **breadcrumb** — multi-hop trail (last item = current, no href)
-  ```yaml
-  - type: breadcrumb
-    items:
-      - label: Home
-        href: /
-      - label: Reference
-        href: /reference
-      - label: Components       # current page — no href
-  ```
-
-- **button_group** — CTA button row
-  ```yaml
-  - type: button_group
-    buttons:
-      - label: Get started
-        href: /guide
-        variant: primary         # primary | secondary | ghost
-      - label: GitHub
-        href: https://github.com/...
-        variant: secondary
-        external: true           # adds ↗ and target=_blank
-        icon: github             # any bundled lucide icon
-  ```
-
-### Layout
-
-- **section** — grouping with eyebrow + heading + nested components.
-  Auto-emits `id` from the `heading` slug (no heading → no id); override
-  with explicit `id:` for a stable anchor. Duplicate slugs on a page
-  dedupe with `-2`, `-3`, etc.
-  ```yaml
-  - type: section
-    eyebrow: Category
-    heading: Section Title
-    id: optional-stable-anchor   # else auto-slugged from heading
-    components: [...]
-  ```
-
-- **columns** — multi-column row
-  ```yaml
-  - type: columns
-    equal_heights: true          # optional; makes children fill column height
-    columns:
-      - - type: callout
-          ...
-      - - type: callout
-          ...
-  ```
-  Note the `- -` pattern: each column is itself a list of components.
-
-- **timeline** — horizontal phase tracker
-  ```yaml
-  - type: timeline
-    items:
-      - name: Planning
-        status: completed        # completed | active | upcoming
-  ```
-
-- **steps** — numbered or bulleted ordered list
-  ```yaml
-  - type: steps
-    numbered: true               # default; false for bullets
-    items:
-      - title: Install
-        detail: Optional detail.
-  ```
-
-- **empty_state** — zero-data placeholder with optional action
-  ```yaml
-  - type: empty_state
-    icon: inbox                  # any bundled lucide icon
-    title: No items yet
-    body: Add your first item.
-    action:
-      label: Add item
-      href: /new
-  ```
-
-- **icon** — standalone inline SVG
-  ```yaml
-  - type: icon
-    name: github                 # any bundled lucide icon
-    size: md                     # xs | sm | md | lg | xl
-    color: teal                  # same palette as badge/tag/status
-  ```
-
-## Bundled icons
-
-~30 lucide icons: `arrow-left`, `arrow-right`, `arrow-up-right`,
-`chevron-left`, `chevron-right`, `chevron-down`, `check`, `x`, `plus`,
-`search`, `info`, `alert-triangle`, `alert-circle`, `check-circle`,
-`x-circle`, `file`, `folder`, `link`, `mail`, `inbox`, `lock`, `bell`,
-`calendar`, `clock`, `user`, `users`, `home`, `menu`, `settings`,
-`github`.
-
-## Colors (semantic palette)
-
-Every colored component accepts the same 5-value palette:
-
-- `default` — teal accent (brand)
-- `green` — success, healthy
-- `yellow` — warning, at-risk
-- `red` — danger, critical
-- `teal` — explicit teal (same as default)
-
-## Common gotchas
-
-- **YAML number-parsing**: `"47"`, `"1.2"` — quote anything that should stay a
-  string. Unquoted `47` is an integer, which will fail `label: expected string`.
-- **Columns pattern**: each column is a list of components, so you get `- -` at
-  the start of each inner list. This is correct YAML.
-- **nav_back was removed**. Use `breadcrumb` instead (first component on the page).
-- **Hrefs** follow standard HTML/Markdown semantics:
-  - **Bare names** (`content.html`, `assets/foo.svg`) are page-relative — the
-    browser resolves them against the current page. Use these for siblings
-    and same-directory references.
-  - **Leading `/`** (`/index.html`, `/components/grids.html`) is site-root.
-    The renderer prepends the depth base (`../`) per page so the link works
-    on subpath deployments like GitHub Pages `/kazam/`. Use these in
-    `kazam.yaml` nav, site favicon/og_image/logo, and anywhere you need a
-    link that has to work from any page depth.
-  - `../`, `./`, `http(s)://`, `#`, `mailto:`, `tel:` are emitted verbatim.
-- **deck shell** expects `slides:` not `components:` at the page root. Each
-  slide has its own `label:` + `components:` list. Optional top-level
-  `print_flow: slides | continuous` controls PDF export shape. `slides`
-  (default) = one slide per landscape page (Keynote-style). `continuous`
-  = all slides flow as one portrait document with thin separators — nicer
-  for sharing as a readable artifact.
-- **Markdown body scalars**: use the `|` literal block style in YAML to preserve
-  newlines — `body: |` followed by indented content.
-
-## Running
+## Commands
 
 ```bash
-kazam dev .              # watch + serve at localhost:3000 (live reload)
-kazam build .            # one-shot build to _site/
-kazam build . --release  # minified production build
+cargo test --release --all-targets   # CI gate (always --release)
+cargo fmt --all --check              # CI gate
+cargo clippy --release --all-targets -- -D warnings  # CI gate; warnings = error
+cargo build --release                # full build
+./target/release/kazam dev docs --port 3002  # live-edit the docs site
 ```
 
-## If you hit a kazam bug
+CI runs these four jobs in parallel: test, fmt, clippy, cargo-audit.
 
-Agents using this guide are on the front line of catching kazam bugs. If you
-reproduce one (parser error on valid YAML, surprising rendering, flag that
-doesn't work as documented), please file it upstream so the next agent hits a
-fixed version. Follow this protocol in order — do not skip the dedup step.
+## Architecture
 
-1. **Confirm `gh` is authenticated.** Run `gh auth status`. If it errors, skip
-   to step 4 and tell the user how to file by hand.
+Single Rust binary. No workspace, no features, no build script. ~7 direct crates.
 
-2. **Search for duplicates before filing.** Covers both open and closed —
-   a closed issue may mean the fix already landed and the user just needs to
-   upgrade.
+```
+src/
+  main.rs              CLI entry (clap derive): build, dev, init, agents, wish
+  types.rs             All YAML-facing serde structs (SiteConfig, Page, Component, …)
+  theme.rs             Theme tokens + STATIC_CSS (giant const string)
+  render/
+    mod.rs             Page render orchestration
+    components.rs      Per-component render fns + dispatch match at top
+    shells.rs          Shell chrome (standard, document, deck)
+    scripts.rs         Bundled inline JS (deck nav, tabs, accordion, auto-fit)
+    charts.rs          SVG chart rendering (pie, bar, timeseries)
+    slug.rs            Anchor slug generation (used by section + header)
+  build.rs             Batch build (yaml → html, copy assets)
+  dev.rs               Watch + serve (notify + tiny_http)
+  init.rs              kazam init scaffolding (KAZAM_YAML / INDEX_YAML / AGENTS_MD consts)
+  agents.rs            kazam agents subcommand
+  freshness.rs         Staleness computation (freshness: → banner + stale.md)
+  links.rs             Link graph (orphan pages + broken internal hrefs)
+  llms.rs              llms.txt emission
+  minify.rs            Release-mode HTML/CSS/JS minification
+  icons.rs             Bundled lucide icon SVGs
+  wish/
+    mod.rs             kazam wish dispatch (list, scaffold, grant, yolo)
+    deck.rs            Deck wish (workspace + prompt generation)
+    brief.rs           Brief wish
+docs/                  The hosted docs site (itself a kazam site)
+examples/kb/           Example site used by integration tests
+tests/integration.rs   E2e: invokes the binary, builds sites, asserts on HTML output
+AGENTS.md.template     Authoring guide bundled via include_str! → kazam agents / kazam init
+```
 
-   ```bash
-   gh issue list --repo tdiderich/kazam --state all \
-     --search "<2-4 keywords describing the symptom>"
-   ```
+## Adding a new component
 
-   Skim the titles. If anything looks like a match:
+1. Add the struct + `Component` enum variant in `src/types.rs` (with `#[serde(default)]` where sensible)
+2. Add the render fn in `src/render/components.rs` + wire it into the `Component` dispatch `match` at the top of the file
+3. Add styles in `src/theme.rs` `STATIC_CSS` using theme tokens — never hardcoded rgba
+4. Add an example in `docs/components/*.yaml` (pick the right category page)
+5. Update `AGENTS.md.template` so LLM authors know about it
+6. Optionally add a test in `tests/integration.rs`
 
-   - Show the user the URL and ask whether to add a reproducer comment on the
-     existing issue instead of opening a new one.
-   - If it's closed and fixed, tell the user which version the fix shipped in
-     and suggest upgrading (`brew upgrade kazam` or
-     `cargo install kazam --force`). Don't file a duplicate.
+## Tripwires
 
-3. **If no duplicate, file a new issue.** Tell the user what you're about to
-   do before running the command — file-and-surprise is rude. Use this
-   template:
+- **Hardcoded colors** — `rgba(60, 206, 206, X)` is teal and must be `rgba(var(--accent-rgb), X)`. Same for `rgba(9, 13, 24, X)` → `rgba(var(--bg-rgb), X)` and `rgba(255, 255, 255, X)` → `rgba(var(--text-rgb), X)`. If you find one, fix it.
+- **Cargo.lock is committed** — don't gitignore it. Supply-chain posture per SECURITY.md.
+- **`kazam init` raw strings** — templates contain `#` in hex colors (e.g. `"#3CCECE"`). Must use `r##"..."##` delimiters because `"#` would terminate a single-hash raw string.
+- **Version** — keep `Cargo.toml` version authoritative. `src/main.rs` clap uses `version` (no literal) so `kazam --version` auto-matches.
+- **Release builds** strip the dev hot-reload poller (`__kazam_version__`). Test `build_release_minifies` guards this.
+- **Build skips `_site/` dirs** — nested previously-built output must not be re-ingested as source. Test `build_skips_nested_site_directories` guards this.
+- **404 page** — `build.rs` skips `404.yaml` in the normal walk and renders it separately with a special base (`/` or the site URL) so all links are absolute. The default 404 page (no `404.yaml`) uses an EmptyState component. `dev.rs` serves `404.html` for missing pages instead of plain text.
 
-   ```bash
-   gh issue create --repo tdiderich/kazam \
-     --title "<short imperative — what breaks>" \
-     --label bug \
-     --body "$(cat <<'EOF'
-   ## What happened
-   <one sentence>
+## Code style
 
-   ## Minimal repro
-   <smallest YAML + command that reproduces the bug>
+- Small well-named functions over macros or generics.
+- Components are self-contained: one render fn in `components.rs`, matching styles in `theme.rs`, type in `types.rs`.
+- No new runtime dependencies without strong reason — the value proposition includes shipping as one tiny binary.
+- Inline scripts for interactivity go in `src/render/scripts.rs`. No JS build system.
+- Commit messages: imperative mood ("add X", not "added X").
 
-   ## Expected
-   <what the docs say should happen>
+## Testing
 
-   ## Actual
-   <what kazam does — paste the error message or wrong HTML snippet>
+All tests are e2e in `tests/integration.rs` — they invoke the compiled binary, build sites from scratch YAML, and assert on the rendered HTML. There are no unit tests in `src/`. Use `CARGO_BIN_EXE_kazam` env var (set by cargo test runner) to locate the binary. `KAZAM_TODAY=YYYY-MM-DD` env var simulates "today" for freshness tests.
 
-   ## Version
-   <paste `kazam --version`>
-   EOF
-   )"
-   ```
+## Docs site
 
-4. **Fallback when `gh` isn't available.** Show the user:
-
-   > Couldn't auto-file this — open
-   > https://github.com/tdiderich/kazam/issues/new and paste:
-   > [then show the filled-out template body]
-
-Rules of thumb:
-
-- File only reproducible bugs here. Feature requests use the protocol below.
-- Keep the repro minimal — smallest YAML + command that triggers it.
-- Never open duplicates. When in doubt, comment on the closest existing issue
-  instead.
-
-## If you have a feature idea for kazam
-
-Agents often bump into "kazam would be more useful if it could do X" while
-authoring a site. Great — that signal is valuable, but the filing bar is
-higher than for bugs because the maintainer has to weigh scope. Follow this
-protocol in order.
-
-1. **Confirm `gh` is authenticated.** Same check as bug filing (step 1 above).
-   If not, drop to step 5 and tell the user how to file by hand.
-
-2. **Search for duplicates — both issues and open PRs.** Feature ideas get
-   proposed and deferred more than bugs do; the same idea may be open, closed
-   as wontfix, or already in flight as a PR.
-
-   ```bash
-   gh issue list --repo tdiderich/kazam --state all \
-     --search "<2-4 keywords> in:title,body"
-   gh pr list --repo tdiderich/kazam --state all \
-     --search "<2-4 keywords>"
-   ```
-
-   If anything looks like a match:
-
-   - Show the user the URL. If the discussion is active, suggest adding your
-     use case as a comment rather than opening a new issue.
-   - If it's closed as wontfix, respect the decision. Tell the user the
-     outcome and why (read the close comment), and suggest a userland
-     workaround (a `sync.sh` script, a custom component recipe, etc.).
-
-3. **Check the direction of the project first.** Before filing, confirm the
-   feature fits kazam's stated scope:
-
-   - kazam ships as a single Rust binary with no network at build time. A
-     feature that pulls data from a live API at build time is out of scope
-     — it belongs in the user's own `sync.sh` that emits YAML.
-   - kazam does NOT ship third-party connectors (HubSpot, Linear, Slack,
-     etc.). Same reason: user owns the fetcher.
-   - The YAML schema stays narrow on purpose — the goal is LLMs producing it
-     correctly on the first try, which gets harder with every new component.
-     "Nice-to-have" components are a high bar.
-
-   If the idea looks out-of-scope, tell the user and stop. Don't file a
-   request that will be closed as wontfix — that's noise.
-
-4. **If it fits, file a well-shaped feature request.** Tell the user what
-   you're about to do before running the command. Use this template:
-
-   ```bash
-   gh issue create --repo tdiderich/kazam \
-     --title "<short imperative — what to add or change>" \
-     --label enhancement \
-     --body "$(cat <<'EOF'
-   ## What I'm trying to do
-   <the user-level goal — "I want to render a sortable table of customers
-   with per-row health badges" — not the implementation)
-
-   ## Why kazam's current primitives don't fit
-   <specific components / flags you tried, and where they fell short>
-
-   ## Proposed shape
-   <what the YAML would look like if this existed — be concrete>
-
-   ```yaml
-   - type: <whatever>
-     ...
-   ```
-
-   ## Alternatives considered
-   <userland workaround, existing component combos, other tools>
-
-   ## Version
-   <paste `kazam --version`>
-   EOF
-   )"
-   ```
-
-5. **Fallback when `gh` isn't available.** Show the user:
-
-   > Couldn't auto-file this — open
-   > https://github.com/tdiderich/kazam/issues/new and paste:
-   > [then show the filled-out template body]
-
-Rules of thumb for feature requests:
-
-- Lead with the user-level goal, not the implementation. "I want to render
-  sortable customer rows" beats "add a `sortable_table` component."
-- Show a concrete proposed YAML shape. Handwaving is the most common reason
-  a request stalls.
-- Always mention the workaround you already tried. If the answer is
-  "userland script + existing components already works," the maintainer
-  (or another agent reading the issue) will suggest that.
-- Never open duplicates. Comment on the closest existing thread instead.
+`docs/` is a kazam site itself. Changes to component rendering should be visually verified by running `./target/release/kazam dev docs --port 3002`.

@@ -1913,3 +1913,208 @@ components:
     // 3-way overlap label centered at centroid
     assert_contains(&html, ">All three</text>");
 }
+
+// ── 404 page ──────────────────────────────────────────
+
+#[test]
+fn build_generates_default_404_page() {
+    let dir = tmp_dir("404-default");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Test\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+
+    let out = tmp_dir("404-default-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success(), "kazam build failed");
+
+    let not_found = out.join("404.html");
+    assert!(not_found.exists(), "404.html should be generated");
+
+    let html = read(&not_found);
+    // Uses the site's theme
+    assert_contains(&html, "shell-standard");
+    // Shows the site name in the site bar
+    assert_contains(&html, r#"class="site-bar-name""#);
+    assert_contains(&html, ">Test</a>");
+    // Has the "not found" empty state
+    assert_contains(&html, "c-empty-state");
+    assert_contains(&html, "Page not found");
+    // Home link is absolute (root-relative) so it works from any URL
+    assert_contains(&html, r#"href="/index.html""#);
+    // "Go home" button
+    assert_contains(&html, "Go home");
+}
+
+#[test]
+fn build_404_page_with_site_url_uses_absolute_urls() {
+    let dir = tmp_dir("404-url");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("kazam.yaml"),
+        "name: UrlTest\ntheme: dark\nurl: https://example.com/kazam\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+
+    let out = tmp_dir("404-url-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success(), "kazam build failed");
+
+    let html = read(&out.join("404.html"));
+    // When site URL is configured, the 404 page uses full absolute URLs
+    assert_contains(&html, r#"href="https://example.com/kazam/index.html""#);
+}
+
+#[test]
+fn build_404_yaml_customizes_404_page() {
+    let dir = tmp_dir("404-custom");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Custom404\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("404.yaml"),
+        r#"title: Oops
+shell: standard
+components:
+  - type: callout
+    variant: danger
+    title: Something went wrong
+    body: We couldn't find that page.
+  - type: button_group
+    buttons:
+      - label: Back to safety
+        href: /index.html
+        variant: primary
+"#,
+    )
+    .unwrap();
+
+    let out = tmp_dir("404-custom-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success(), "kazam build failed");
+
+    let html = read(&out.join("404.html"));
+    // Custom content from 404.yaml is rendered
+    assert_contains(&html, "Something went wrong");
+    assert_contains(&html, "Back to safety");
+    // Internal links are absolute (root-relative) so they work from any URL
+    assert_contains(&html, r#"href="/index.html""#);
+}
+
+#[test]
+fn build_404_page_not_listed_in_llms_txt() {
+    let dir = tmp_dir("404-llms");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Test\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+
+    let out = tmp_dir("404-llms-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success(), "kazam build failed");
+
+    let llms = read(&out.join("llms.txt"));
+    assert!(
+        !llms.contains("404"),
+        "404 page should not appear in llms.txt"
+    );
+}
+
+#[test]
+fn build_404_page_not_flagged_as_orphan() {
+    let dir = tmp_dir("404-orphan");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Test\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+
+    let out = tmp_dir("404-orphan-out");
+    let output = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .output()
+        .expect("run kazam build");
+    assert!(output.status.success(), "kazam build failed");
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        !stdout.contains("orphan page(s)"),
+        "404 page should not be flagged as orphan"
+    );
+}
+
+#[test]
+fn build_404_page_with_nav_uses_absolute_links() {
+    let dir = tmp_dir("404-nav");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("kazam.yaml"),
+        "name: Nav404\ntheme: dark\nnav:\n  - label: Home\n    href: /index.html\n  - label: Guide\n    href: /guide.html\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        "title: Home\nshell: standard\ncomponents:\n  - type: header\n    title: Home\n",
+    )
+    .unwrap();
+
+    let out = tmp_dir("404-nav-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success(), "kazam build failed");
+
+    let html = read(&out.join("404.html"));
+    // Nav links in the 404 page are root-relative so they work from any URL
+    assert_contains(&html, r#"href="/index.html""#);
+    assert_contains(&html, r#"href="/guide.html""#);
+    // Site bar brand link is also absolute
+    assert_contains(&html, r#"class="site-bar-name" href="/index.html""#);
+}

@@ -67,7 +67,7 @@ pub fn run(dir: &Path, out: &Path, release: bool, allow_orphans: bool) -> Result
         }
 
         let fname = path.file_name().unwrap_or_default();
-        if fname == "kazam.yaml" {
+        if fname == "kazam.yaml" || fname == "404.yaml" {
             continue;
         }
 
@@ -223,6 +223,23 @@ pub fn run(dir: &Path, out: &Path, release: bool, allow_orphans: bool) -> Result
             if release { " (minified)" } else { "" }
         );
     }
+
+    // Generate 404.html. If the source dir contains 404.yaml, render that
+    // as the 404 page; otherwise use the built-in "Page not found" page.
+    // The 404 page uses a special base so all internal links are absolute —
+    // hosting platforms serve 404.html at whatever URL the browser tried.
+    let custom_404 = if dir.join("404.yaml").exists() {
+        let content =
+            fs::read_to_string(dir.join("404.yaml")).with_context(|| "reading 404.yaml")?;
+        Some(serde_yaml::from_str::<Page>(&content).with_context(|| "parsing 404.yaml")?)
+    } else {
+        None
+    };
+    let mut html_404 = render::render_404_page(custom_404, &config, release);
+    if release {
+        html_404 = minify::minify_html(&html_404);
+    }
+    fs::write(out.join("404.html"), html_404)?;
 
     print_freshness_report(&stale_pages);
     write_freshness_report_md(out, &stale_pages, &today)?;
