@@ -1580,3 +1580,110 @@ fn init_refuses_existing_dir() {
         .expect("run kazam init");
     assert!(!status.success(), "init should fail on existing dir");
 }
+
+#[test]
+fn event_timeline_renders_with_filter_toggle() {
+    let dir = tmp_dir("event-timeline");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Test\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        r#"title: Test
+shell: standard
+components:
+  - type: event_timeline
+    default_filter: major
+    show_filter_toggle: true
+    events:
+      - date: 2026-04-27
+        severity: major
+        title: Weekly sync
+        summary: |
+          Working session booked.
+        source: granola
+        link: https://example.com/notes
+      - date: 2026-04-26
+        severity: minor
+        title: ANSYS-322 done
+        source: linear
+      - date: 2026-04-25
+        severity: info
+        title: Cadence moved to Thursdays
+"#,
+    )
+    .unwrap();
+
+    let out = tmp_dir("event-timeline-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success(), "kazam build failed");
+
+    let html = read(&out.join("index.html"));
+    // Container + default filter class
+    assert_contains(&html, r#"class="c-event-timeline filter-major""#);
+    // Filter toggle markup + active button
+    assert_contains(&html, r#"data-event-filter-toggle"#);
+    assert_contains(&html, r#"data-filter="major""#);
+    assert_contains(&html, r#"data-filter="all""#);
+    // Severity classes per event
+    assert_contains(&html, r#"class="c-event severity-major""#);
+    assert_contains(&html, r#"class="c-event severity-minor""#);
+    assert_contains(&html, r#"class="c-event severity-info""#);
+    // Severity data attributes drive the CSS filter
+    assert_contains(&html, r#"data-severity="major""#);
+    assert_contains(&html, r#"data-severity="minor""#);
+    // Event with summary collapses into <details>
+    assert_contains(&html, r#"<details class="c-event-details">"#);
+    // Event without summary stays as plain title div
+    assert_contains(&html, r#"ANSYS-322 done"#);
+    // Source chip + external link
+    assert_contains(&html, r#"class="c-event-source""#);
+    assert_contains(&html, r#"href="https://example.com/notes""#);
+    // Filter toggle JS got registered
+    assert_contains(&html, "data-event-filter-toggle");
+    assert_contains(&html, "filter-major");
+}
+
+#[test]
+fn event_timeline_without_toggle_skips_script() {
+    let dir = tmp_dir("event-timeline-no-toggle");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Test\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        r#"title: Test
+shell: standard
+components:
+  - type: event_timeline
+    events:
+      - date: 2026-04-27
+        title: A thing happened
+"#,
+    )
+    .unwrap();
+
+    let out = tmp_dir("event-timeline-no-toggle-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success());
+
+    let html = read(&out.join("index.html"));
+    // Default filter = all; no toggle markup
+    assert_contains(&html, r#"class="c-event-timeline filter-all""#);
+    assert!(
+        !html.contains("data-event-filter-toggle"),
+        "toggle should be absent when show_filter_toggle is false"
+    );
+    // Default severity is minor when omitted
+    assert_contains(&html, r#"data-severity="minor""#);
+}

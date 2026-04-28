@@ -54,6 +54,11 @@ pub fn render(c: &Component, base: &str) -> Rendered {
             equal_heights,
         } => columns_component(columns, *equal_heights, base),
         Component::Accordion { items } => accordion(items, base),
+        Component::EventTimeline {
+            events,
+            default_filter,
+            show_filter_toggle,
+        } => event_timeline(events, *default_filter, *show_filter_toggle, base),
         Component::Image {
             src,
             alt,
@@ -699,6 +704,116 @@ fn accordion(items: &[AccordionItem], base: &str) -> Rendered {
     }
     r.html.push_str("</div>");
     r.scripts.push("accordion");
+    r
+}
+
+// ── Event Timeline ────────────────────────────────
+
+fn event_timeline(
+    events: &[EventItem],
+    default_filter: EventFilter,
+    show_filter_toggle: bool,
+    base: &str,
+) -> Rendered {
+    let mut r = Rendered::default();
+    r.html.push_str(&format!(
+        r#"<div class="c-event-timeline {}" data-filter="{}">"#,
+        default_filter.class(),
+        default_filter.label()
+    ));
+
+    if show_filter_toggle {
+        r.html
+            .push_str(r#"<div class="c-event-filter-toggle" data-event-filter-toggle>"#);
+        for f in &[EventFilter::Major, EventFilter::All] {
+            let active = matches!(
+                (f, default_filter),
+                (EventFilter::Major, EventFilter::Major) | (EventFilter::All, EventFilter::All)
+            );
+            let label = match f {
+                EventFilter::Major => "Major only",
+                EventFilter::All => "All events",
+            };
+            r.html.push_str(&format!(
+                r#"<button type="button" data-filter="{val}"{active}>{label}</button>"#,
+                val = f.label(),
+                active = if active { r#" class="active""# } else { "" },
+                label = label,
+            ));
+        }
+        r.html.push_str("</div>");
+    }
+
+    r.html.push_str(r#"<ol class="c-event-list">"#);
+    for ev in events {
+        let has_summary = ev
+            .summary
+            .as_deref()
+            .map(|s| !s.trim().is_empty())
+            .unwrap_or(false);
+
+        r.html.push_str(&format!(
+            r#"<li class="c-event {sev}" data-severity="{sev_label}">"#,
+            sev = ev.severity.class(),
+            sev_label = ev.severity.label(),
+        ));
+        r.html
+            .push_str(r#"<div class="c-event-rail"><span class="c-event-dot"></span></div>"#);
+        r.html.push_str(r#"<div class="c-event-body">"#);
+
+        // Meta row: date · severity · source · link
+        r.html.push_str(r#"<div class="c-event-meta">"#);
+        r.html.push_str(&format!(
+            r#"<time class="c-event-date">{}</time>"#,
+            esc(&ev.date)
+        ));
+        r.html.push_str(&format!(
+            r#"<span class="c-event-severity">{}</span>"#,
+            esc(ev.severity.label())
+        ));
+        if let Some(src) = &ev.source {
+            if !src.trim().is_empty() {
+                r.html.push_str(&format!(
+                    r#"<span class="c-event-source">{}</span>"#,
+                    esc(src)
+                ));
+            }
+        }
+        if let Some(href) = &ev.link {
+            if !href.trim().is_empty() {
+                let resolved = resolve_href(href, base);
+                r.html.push_str(&format!(
+                    r#"<a class="c-event-link" href="{}" target="_blank" rel="noopener" aria-label="Open event source">↗</a>"#,
+                    esc(&resolved)
+                ));
+            }
+        }
+        r.html.push_str("</div>");
+
+        // Title (+ optional details if there's a summary body)
+        if has_summary {
+            r.html.push_str(r#"<details class="c-event-details">"#);
+            r.html.push_str(&format!(
+                r#"<summary class="c-event-title">{}</summary>"#,
+                esc(&ev.title)
+            ));
+            r.html.push_str(r#"<div class="c-event-summary">"#);
+            r.extend(markdown(ev.summary.as_deref().unwrap_or(""), base));
+            r.html.push_str("</div></details>");
+        } else {
+            r.html.push_str(&format!(
+                r#"<div class="c-event-title">{}</div>"#,
+                esc(&ev.title)
+            ));
+        }
+
+        r.html.push_str("</div></li>");
+    }
+    r.html.push_str("</ol></div>");
+
+    if show_filter_toggle {
+        r.scripts.push("event_timeline");
+    }
     r
 }
 

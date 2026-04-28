@@ -219,6 +219,13 @@ pub enum Component {
     Accordion {
         items: Vec<AccordionItem>,
     },
+    EventTimeline {
+        events: Vec<EventItem>,
+        #[serde(default)]
+        default_filter: EventFilter,
+        #[serde(default)]
+        show_filter_toggle: bool,
+    },
     Image {
         src: String,
         alt: Option<String>,
@@ -514,6 +521,71 @@ pub struct Tab {
 pub struct AccordionItem {
     pub title: String,
     pub components: Vec<Component>,
+}
+
+#[derive(Deserialize)]
+pub struct EventItem {
+    pub date: String,
+    pub title: String,
+    #[serde(default)]
+    pub summary: Option<String>,
+    #[serde(default)]
+    pub severity: EventSeverity,
+    #[serde(default)]
+    pub source: Option<String>,
+    #[serde(default)]
+    pub link: Option<String>,
+}
+
+#[derive(Deserialize, Default, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum EventSeverity {
+    Major,
+    #[default]
+    Minor,
+    Info,
+}
+
+impl EventSeverity {
+    pub fn class(&self) -> &'static str {
+        match self {
+            EventSeverity::Major => "severity-major",
+            EventSeverity::Minor => "severity-minor",
+            EventSeverity::Info => "severity-info",
+        }
+    }
+
+    pub fn label(&self) -> &'static str {
+        match self {
+            EventSeverity::Major => "major",
+            EventSeverity::Minor => "minor",
+            EventSeverity::Info => "info",
+        }
+    }
+}
+
+#[derive(Deserialize, Default, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum EventFilter {
+    #[default]
+    All,
+    Major,
+}
+
+impl EventFilter {
+    pub fn class(&self) -> &'static str {
+        match self {
+            EventFilter::All => "filter-all",
+            EventFilter::Major => "filter-major",
+        }
+    }
+
+    pub fn label(&self) -> &'static str {
+        match self {
+            EventFilter::All => "all",
+            EventFilter::Major => "major",
+        }
+    }
 }
 
 // ── New component supporting types ───────────────────

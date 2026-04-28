@@ -1281,6 +1281,165 @@ body.shell-document .doc-body strong { color: #fff; }
   padding-top: 16px;
 }
 
+/* Event Timeline */
+.c-event-timeline { display: flex; flex-direction: column; gap: 12px; }
+.c-event-filter-toggle {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(var(--text-rgb),0.05);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+}
+.c-event-filter-toggle button {
+  appearance: none;
+  background: none;
+  border: none;
+  color: rgba(var(--text-rgb),0.6);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.c-event-filter-toggle button:hover { color: var(--snow); }
+.c-event-filter-toggle button.active {
+  background: rgba(var(--accent-rgb),0.15);
+  color: var(--teal);
+}
+.c-event-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.c-event {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 12px;
+  padding: 8px 0;
+}
+/* Filter visibility — when filter=major, hide non-major events */
+.c-event-timeline.filter-major .c-event[data-severity="minor"],
+.c-event-timeline.filter-major .c-event[data-severity="info"] { display: none; }
+.c-event-rail {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+.c-event-rail::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background: rgba(var(--text-rgb),0.1);
+  transform: translateX(-50%);
+}
+.c-event:first-child .c-event-rail::before { top: 12px; }
+.c-event:last-child .c-event-rail::before { bottom: calc(100% - 18px); }
+.c-event-dot {
+  position: relative;
+  z-index: 1;
+  width: 12px;
+  height: 12px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: rgba(var(--text-rgb),0.3);
+  border: 2px solid var(--card-bg);
+}
+.c-event.severity-major .c-event-dot {
+  background: var(--teal);
+  box-shadow: 0 0 6px rgba(var(--accent-rgb),0.5);
+}
+.c-event.severity-info .c-event-dot { background: var(--blue); }
+.c-event-body {
+  min-width: 0;
+  padding-bottom: 4px;
+}
+.c-event-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: rgba(var(--text-rgb),0.6);
+  margin-bottom: 4px;
+}
+.c-event-date { font-variant-numeric: tabular-nums; }
+.c-event-severity {
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(var(--text-rgb),0.08);
+  color: rgba(var(--text-rgb),0.7);
+}
+.c-event.severity-major .c-event-severity {
+  background: rgba(var(--accent-rgb),0.15);
+  color: var(--teal);
+}
+.c-event.severity-info .c-event-severity {
+  background: rgba(var(--text-rgb),0.08);
+  color: var(--blue);
+}
+.c-event-source {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(var(--text-rgb),0.05);
+  color: rgba(var(--text-rgb),0.55);
+}
+.c-event-link {
+  margin-left: auto;
+  color: rgba(var(--text-rgb),0.5);
+  text-decoration: none;
+  font-size: 14px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.c-event-link:hover { color: var(--teal); }
+.c-event-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--snow);
+  line-height: 1.4;
+}
+.c-event-details > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.c-event-details > summary::-webkit-details-marker { display: none; }
+.c-event-details > summary::before {
+  content: "›";
+  display: inline-block;
+  width: 10px;
+  color: rgba(var(--text-rgb),0.4);
+  transition: transform 0.15s;
+}
+.c-event-details[open] > summary::before {
+  transform: rotate(90deg);
+  color: var(--teal);
+}
+.c-event-summary {
+  margin-top: 6px;
+  margin-left: 16px;
+  font-size: 13px;
+  color: rgba(var(--text-rgb),0.75);
+  line-height: 1.5;
+}
+.c-event-summary > :first-child { margin-top: 0; }
+.c-event-summary > :last-child { margin-bottom: 0; }
+
 /* Image */
 .c-image { margin: 0; }
 .c-image.align-center { margin-left: auto; margin-right: auto; align-self: center; }

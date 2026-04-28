@@ -4,6 +4,7 @@ pub fn get(name: &str) -> Option<&'static str> {
         "table" => Some(TABLE),
         "tabs" => Some(TABS),
         "accordion" => Some(ACCORDION),
+        "event_timeline" => Some(EVENT_TIMELINE),
         "deck" => Some(DECK),
         "nav" => Some(NAV),
         "reload" => Some(RELOAD),
@@ -170,6 +171,24 @@ document.querySelectorAll('[data-accordion-item]').forEach(function (item) {
     var open = body.style.display !== 'none';
     body.style.display = open ? 'none' : '';
     item.classList.toggle('accordion-open', !open);
+  });
+});
+"#;
+
+const EVENT_TIMELINE: &str = r#"
+document.querySelectorAll('[data-event-filter-toggle]').forEach(function (toggle) {
+  var timeline = toggle.closest('.c-event-timeline');
+  if (!timeline) return;
+  toggle.querySelectorAll('button[data-filter]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var val = btn.getAttribute('data-filter');
+      timeline.classList.remove('filter-major', 'filter-all');
+      timeline.classList.add('filter-' + val);
+      timeline.setAttribute('data-filter', val);
+      toggle.querySelectorAll('button[data-filter]').forEach(function (b) {
+        b.classList.toggle('active', b === btn);
+      });
+    });
   });
 });
 "#;

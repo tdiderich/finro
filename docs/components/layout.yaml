@@ -157,6 +157,64 @@ components:
               - name: Ongoing
                 status: upcoming
 
+  # ── event_timeline ────────────────────────
+  - type: section
+    eyebrow: event_timeline
+    heading: Vertical event history with severity filter
+    components:
+      - type: markdown
+        body: "Vertical chronology with date, severity badge, and optional source/link per event. Each event collapses into a `<details>` body when a `summary` is provided. With `show_filter_toggle: true` a Major-only / All toggle appears at the top — useful for noisy histories where the reader wants the big picture first."
+
+      - type: event_timeline
+        default_filter: major
+        show_filter_toggle: true
+        events:
+          - date: 2026-04-27
+            severity: major
+            title: "Weekly sync — Jira asset model confirmed"
+            summary: "Working session booked Tuesday 3 PM CT. Two automation rules: create-new + append-to-existing."
+            source: granola
+            link: https://example.com/notes
+          - date: 2026-04-27
+            severity: minor
+            title: "ANSYS-322 → Done"
+            source: linear
+            link: https://example.com/issue
+          - date: 2026-04-25
+            severity: major
+            title: "First production run — 76.5% noise reduction"
+            summary: |
+              2,316 investigations across the EKS cluster. High-severity findings dropped from 3,000 to 222.
+            source: portal
+          - date: 2026-04-22
+            severity: info
+            title: "Cadence moved to Thursdays at 1 PM CT"
+            source: calendar
+          - date: 2026-04-20
+            severity: minor
+            title: "GitHub app installed for the org"
+            source: slack
+
+      - type: code
+        language: yaml
+        code: |
+          - type: event_timeline
+            default_filter: major     # major | all (default: all)
+            show_filter_toggle: true  # default: false
+            events:
+              - date: 2026-04-27
+                severity: major       # major | minor | info (default: minor)
+                title: "Weekly sync — Jira asset model confirmed"
+                summary: |
+                  Working session booked Tuesday 3 PM CT.
+                source: granola
+                link: https://example.com/notes
+              - date: 2026-04-27
+                severity: minor
+                title: "ANSYS-322 → Done"
+                source: linear
+                link: https://example.com/issue
+
   # ── steps ─────────────────────────────────
   - type: section
     eyebrow: steps

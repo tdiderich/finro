@@ -423,6 +423,25 @@ consistent (2 spaces). Quote any string that looks like a number (e.g. `"47"`).
         status: completed        # completed | active | upcoming
   ```
 
+- **event_timeline** — vertical event history with severity filter
+  ```yaml
+  - type: event_timeline
+    default_filter: major        # major | all (default: all)
+    show_filter_toggle: true     # default: false; renders an in-page Major/All toggle
+    events:
+      - date: 2026-04-27
+        severity: major          # major | minor | info (default: minor)
+        title: Weekly sync — Jira asset model confirmed
+        summary: |               # optional markdown body; renders inside <details>
+          Working session booked Tuesday 3 PM CT.
+        source: granola          # optional small chip
+        link: https://...        # optional; renders an "open source" arrow icon
+  ```
+  Use for chronological event lists where the reader wants the big picture first
+  but full history on demand. The `summary` field is markdown — when present, the
+  event collapses behind a `<details>` toggle. Sort order is rendered as given;
+  the component does not re-sort.
+
 - **steps** — numbered or bulleted ordered list
   ```yaml
   - type: steps
