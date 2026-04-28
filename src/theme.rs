@@ -1497,6 +1497,10 @@ body.shell-document .doc-body strong { color: #fff; }
   color: var(--red);
   background: rgba(255,107,107,0.12);
 }
+.c-tree-node.status-priority > .c-tree-row > .c-tree-glyph {
+  color: var(--yellow);
+  background: rgba(251,191,36,0.12);
+}
 .c-tree-node.status-upcoming > .c-tree-row > .c-tree-glyph {
   color: rgba(var(--text-rgb),0.4);
   background: transparent;
@@ -1520,6 +1524,11 @@ body.shell-document .doc-body strong { color: #fff; }
 }
 .c-tree-node.status-blocked > .c-tree-row > .c-tree-note {
   color: var(--red);
+  font-style: normal;
+  font-weight: 500;
+}
+.c-tree-node.status-priority > .c-tree-row > .c-tree-note {
+  color: var(--yellow);
   font-style: normal;
   font-weight: 500;
 }
@@ -1560,6 +1569,10 @@ body.shell-document .doc-body strong { color: #fff; }
    blocked node, so the path-to-root keeps full context while non-relevant
    branches collapse. */
 .c-tree.filter-blocked .c-tree-node:not(.status-blocked):not([data-has-blocked-descendant="true"]) {
+  display: none;
+}
+/* filter-priority: show only priority nodes + their ancestor chain. */
+.c-tree.filter-priority .c-tree-node:not(.status-priority):not([data-has-priority-descendant="true"]) {
   display: none;
 }
 

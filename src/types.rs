@@ -225,6 +225,8 @@ pub enum Component {
         default_filter: EventFilter,
         #[serde(default)]
         show_filter_toggle: bool,
+        #[serde(default)]
+        limit: Option<u32>,
     },
     Tree {
         nodes: Vec<TreeNode>,
@@ -602,7 +604,7 @@ impl EventFilter {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct TreeNode {
     pub label: String,
     #[serde(default)]
@@ -621,6 +623,7 @@ pub enum TreeStatus {
     Completed,
     Active,
     Blocked,
+    Priority,
     Upcoming,
 }
 
@@ -631,6 +634,7 @@ pub enum TreeFilter {
     All,
     Incomplete,
     Blocked,
+    Priority,
 }
 
 impl TreeFilter {
@@ -639,6 +643,7 @@ impl TreeFilter {
             TreeFilter::All => "filter-all",
             TreeFilter::Incomplete => "filter-incomplete",
             TreeFilter::Blocked => "filter-blocked",
+            TreeFilter::Priority => "filter-priority",
         }
     }
 
@@ -647,6 +652,7 @@ impl TreeFilter {
             TreeFilter::All => "all",
             TreeFilter::Incomplete => "incomplete",
             TreeFilter::Blocked => "blocked",
+            TreeFilter::Priority => "priority",
         }
     }
 }
@@ -658,6 +664,7 @@ impl TreeStatus {
             TreeStatus::Completed => "status-completed",
             TreeStatus::Active => "status-active",
             TreeStatus::Blocked => "status-blocked",
+            TreeStatus::Priority => "status-priority",
             TreeStatus::Upcoming => "status-upcoming",
         }
     }
@@ -668,6 +675,7 @@ impl TreeStatus {
             TreeStatus::Completed => "✓",
             TreeStatus::Active => "▸",
             TreeStatus::Blocked => "⚠",
+            TreeStatus::Priority => "★",
             TreeStatus::Upcoming => "○",
         }
     }
@@ -678,6 +686,7 @@ impl TreeStatus {
             TreeStatus::Completed => "completed",
             TreeStatus::Active => "active",
             TreeStatus::Blocked => "blocked",
+            TreeStatus::Priority => "priority",
             TreeStatus::Upcoming => "upcoming",
         }
     }

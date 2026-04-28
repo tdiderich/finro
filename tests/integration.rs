@@ -2118,3 +2118,299 @@ fn build_404_page_with_nav_uses_absolute_links() {
     // Site bar brand link is also absolute
     assert_contains(&html, r#"class="site-bar-name" href="/index.html""#);
 }
+
+// ── Event timeline: limit + filter-at-render ────────
+
+#[test]
+fn event_timeline_limit_only_renders_last_n_events() {
+    let dir = tmp_dir("timeline-limit");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Test\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        r#"title: Test
+shell: standard
+components:
+  - type: event_timeline
+    limit: 2
+    events:
+      - date: 2026-04-27
+        severity: major
+        title: First
+      - date: 2026-04-26
+        severity: minor
+        title: Second
+      - date: 2026-04-25
+        severity: major
+        title: Third
+      - date: 2026-04-24
+        severity: info
+        title: Fourth
+"#,
+    )
+    .unwrap();
+
+    let out = tmp_dir("timeline-limit-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success(), "kazam build failed");
+
+    let html = read(&out.join("index.html"));
+    // Only the last 2 events should be rendered
+    assert_contains(&html, "Third");
+    assert_contains(&html, "Fourth");
+    // The first two should NOT be in the DOM at all
+    assert!(!html.contains("First"), "limited events should not render");
+    assert!(!html.contains("Second"), "limited events should not render");
+}
+
+#[test]
+fn event_timeline_without_toggle_filters_at_build_time() {
+    let dir = tmp_dir("timeline-filter-render");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Test\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        r#"title: Test
+shell: standard
+components:
+  - type: event_timeline
+    default_filter: major
+    show_filter_toggle: false
+    events:
+      - date: 2026-04-27
+        severity: major
+        title: Major event
+      - date: 2026-04-26
+        severity: minor
+        title: Minor event
+      - date: 2026-04-25
+        severity: info
+        title: Info event
+"#,
+    )
+    .unwrap();
+
+    let out = tmp_dir("timeline-filter-render-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success(), "kazam build failed");
+
+    let html = read(&out.join("index.html"));
+    // Major event should be rendered
+    assert_contains(&html, "Major event");
+    // Minor/info events should NOT be in the DOM at all (no toggle = build-time filter)
+    assert!(
+        !html.contains("Minor event"),
+        "non-major events should not render when toggle is hidden"
+    );
+    assert!(
+        !html.contains("Info event"),
+        "non-major events should not render when toggle is hidden"
+    );
+}
+
+#[test]
+fn event_timeline_with_toggle_renders_all_events() {
+    let dir = tmp_dir("timeline-toggle-all");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Test\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        r#"title: Test
+shell: standard
+components:
+  - type: event_timeline
+    default_filter: major
+    show_filter_toggle: true
+    events:
+      - date: 2026-04-27
+        severity: major
+        title: Major event
+      - date: 2026-04-26
+        severity: minor
+        title: Minor event
+"#,
+    )
+    .unwrap();
+
+    let out = tmp_dir("timeline-toggle-all-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success(), "kazam build failed");
+
+    let html = read(&out.join("index.html"));
+    // When toggle is shown, ALL events must be in the DOM for JS switching
+    assert_contains(&html, "Major event");
+    assert_contains(&html, "Minor event");
+}
+
+// ── Tree: priority status + filter-at-render ────────
+
+#[test]
+fn tree_priority_status_renders() {
+    let dir = tmp_dir("tree-priority");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Test\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        r#"title: Test
+shell: standard
+components:
+  - type: tree
+    nodes:
+      - label: "Phase 1"
+        status: completed
+      - label: "Critical path item"
+        status: priority
+        note: "Must ship before Q3"
+      - label: "Phase 2"
+        status: active
+"#,
+    )
+    .unwrap();
+
+    let out = tmp_dir("tree-priority-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success(), "kazam build failed");
+
+    let html = read(&out.join("index.html"));
+    // Priority status class + data attribute
+    assert_contains(&html, r#"c-tree-node status-priority"#);
+    assert_contains(&html, r#"data-status="priority""#);
+    // Star glyph
+    assert_contains(&html, "★");
+    // Note renders with priority emphasis
+    assert_contains(&html, r#"class="c-tree-note""#);
+    assert_contains(&html, "Must ship before Q3");
+}
+
+#[test]
+fn tree_priority_filter_shows_priority_and_ancestors() {
+    let dir = tmp_dir("tree-priority-filter");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Test\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        r#"title: Test
+shell: standard
+components:
+  - type: tree
+    show_filter_toggle: true
+    default_filter: priority
+    nodes:
+      - label: "Phase 1"
+        status: completed
+      - label: "Phase 2"
+        status: active
+        children:
+          - label: "Key deliverable"
+            status: priority
+          - label: "Nice-to-have"
+            status: upcoming
+"#,
+    )
+    .unwrap();
+
+    let out = tmp_dir("tree-priority-filter-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success(), "kazam build failed");
+
+    let html = read(&out.join("index.html"));
+    // Priority filter class + toggle
+    assert_contains(&html, r#"class="c-tree filter-priority""#);
+    assert_contains(&html, r#"data-tree-filter-toggle"#);
+    assert_contains(&html, r#"data-filter="priority""#);
+    // Ancestor of priority node is marked
+    assert_contains(&html, r#"data-has-priority-descendant="true""#);
+    // Priority node itself has status
+    assert_contains(&html, r#"c-tree-node status-priority"#);
+}
+
+#[test]
+fn tree_without_toggle_prunes_at_build_time() {
+    let dir = tmp_dir("tree-prune");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("kazam.yaml"), "name: Test\ntheme: dark\n").unwrap();
+    std::fs::write(
+        dir.join("index.yaml"),
+        r#"title: Test
+shell: standard
+components:
+  - type: tree
+    default_filter: blocked
+    show_filter_toggle: false
+    nodes:
+      - label: "Phase 1"
+        status: completed
+        children:
+          - label: "Done item"
+            status: completed
+      - label: "Phase 2"
+        status: active
+        children:
+          - label: "Stuck item"
+            status: blocked
+          - label: "Moving item"
+            status: active
+"#,
+    )
+    .unwrap();
+
+    let out = tmp_dir("tree-prune-out");
+    let status = Command::new(bin())
+        .args(["build"])
+        .arg(&dir)
+        .arg("--out")
+        .arg(&out)
+        .status()
+        .expect("run kazam build");
+    assert!(status.success(), "kazam build failed");
+
+    let html = read(&out.join("index.html"));
+    // Blocked item and its parent (Phase 2) should be rendered
+    assert_contains(&html, "Stuck item");
+    assert_contains(&html, "Phase 2");
+    // Phase 1 and its completed children should NOT be rendered as tree nodes
+    // (check for the label inside a tree-node, not in the CSS comment)
+    assert!(
+        !html.contains(r#"><span class="c-tree-label">Phase 1</span>"#),
+        "unrelated branch should be pruned at build time"
+    );
+    assert!(
+        !html.contains(r#"><span class="c-tree-label">Done item</span>"#),
+        "completed items should be pruned at build time"
+    );
+    // "Moving item" is under Phase 2 but is not blocked — it should also be pruned
+    assert!(
+        !html.contains(r#"><span class="c-tree-label">Moving item</span>"#),
+        "non-blocked sibling should be pruned at build time"
+    );
+}
