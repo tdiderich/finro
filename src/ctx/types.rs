@@ -106,6 +106,23 @@ pub struct DirAnatomy {
     pub files: Vec<FileEntry>,
 }
 
+// ── Correction ledger ──
+
+#[derive(Serialize, Deserialize)]
+pub struct CorrectionStore {
+    pub corrections: Vec<Correction>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Correction {
+    pub id: String,
+    pub mistake: String,
+    pub correction: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub file_path: Option<String>,
+    pub created: String,
+}
+
 // ── Status summary (agent-first: one call gets everything) ──
 
 #[derive(Serialize)]
@@ -116,5 +133,6 @@ pub struct CtxStatus {
     pub learnings_count: usize,
     pub bugs_open: usize,
     pub bugs_resolved: usize,
+    pub corrections_count: usize,
     pub last_scan: String,
 }

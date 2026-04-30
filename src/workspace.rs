@@ -73,6 +73,7 @@ pub fn ensure(project: &Path) -> Result<PathBuf> {
         ("ctx/anatomy.flat.yaml", "scanned: \"\"\nfiles: []\n"),
         ("ctx/learnings.yaml", "learnings: []\n"),
         ("ctx/bugs.yaml", "bugs: []\n"),
+        ("ctx/corrections.yaml", "corrections: []\n"),
     ];
     for (rel, default) in empty_files {
         let p = r.join(rel);

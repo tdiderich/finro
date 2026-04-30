@@ -87,7 +87,8 @@ If resuming from a compacted context, this is how you re-establish what needs do
 
 ## Before starting work
 - Claim a task: `kazam track claim <ID> --name <your-name>`.
-- Check for known bugs: `kazam ctx bugs --file <path>`.
+- **MANDATORY: before fixing any error**, run `kazam ctx bugs --file <path>`
+  to check if it was solved before. Do not skip this step.
 
 ## During work — close tasks as you go, don't batch
 - **After each commit**, check if it completes an open task. If so, close it
@@ -99,6 +100,8 @@ If resuming from a compacted context, this is how you re-establish what needs do
   `kazam ctx describe <path> "what this file actually does"`.
 - Record non-obvious learnings: `kazam ctx learn "lesson" --category correction`.
 - Record bugs you find: `kazam ctx bug "symptom" --file <path>`.
+- When the user corrects your approach, record it immediately:
+  `kazam ctx correction "what you did wrong" "what to do instead" --file <path>`.
 
 ## Quick reference
 ```
@@ -110,6 +113,8 @@ kazam ctx describe <path> "description" # enrich file description
 kazam ctx bugs --file <path> # known bugs on a file
 kazam ctx learn "lesson" --category correction
 kazam ctx bug "symptom" --file <path>
+kazam ctx correction "mistake" "fix" --file <path>  # record a correction
+kazam ctx corrections --json   # view past corrections
 ```
 
 ## Direct YAML editing

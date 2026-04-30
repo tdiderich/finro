@@ -67,6 +67,27 @@ pub enum Command {
         #[arg(long)]
         json: bool,
     },
+    /// Record a correction (agent got something wrong)
+    Correction {
+        mistake: String,
+        correction: String,
+        #[arg(long)]
+        file: Option<String>,
+        #[arg(long)]
+        json: bool,
+    },
+    /// List all corrections
+    Corrections {
+        #[arg(long)]
+        json: bool,
+    },
+    /// Consolidate stale data (remove old resolved bugs, deduplicate learnings)
+    Consolidate {
+        #[arg(long, default_value = "30")]
+        days: u32,
+        #[arg(long)]
+        json: bool,
+    },
     /// Manage agent hooks (install/uninstall/status)
     Hooks {
         #[command(subcommand)]
@@ -106,6 +127,14 @@ pub fn run(cmd: Command, project: &Path) -> Result<()> {
         } => cmd_bug(project, symptom, file, json),
         Command::Bugs { file, json } => cmd_bugs(project, file, json),
         Command::Resolve { id, fix, json } => cmd_resolve(project, &id, &fix, json),
+        Command::Correction {
+            mistake,
+            correction,
+            file,
+            json,
+        } => cmd_correction(project, mistake, correction, file, json),
+        Command::Corrections { json } => cmd_corrections(project, json),
+        Command::Consolidate { days, json } => cmd_consolidate(project, days, json),
         Command::Hooks { action } => match action {
             HooksAction::Install { agent } => {
                 let skunkworks = crate::workspace::read_config(project)
@@ -142,6 +171,10 @@ fn learnings_path(project: &Path) -> std::path::PathBuf {
 
 fn bugs_path(project: &Path) -> std::path::PathBuf {
     crate::workspace::root(project).join("ctx/bugs.yaml")
+}
+
+fn corrections_path(project: &Path) -> std::path::PathBuf {
+    crate::workspace::root(project).join("ctx/corrections.yaml")
 }
 
 // ── Commands ─────────────────────────────────────
@@ -221,6 +254,10 @@ fn cmd_status(project: &Path, json: bool) -> Result<()> {
         .unwrap_or(LearningStore { learnings: vec![] });
     let bugs: BugStore =
         crate::workspace::read_yaml(&bugs_path(project)).unwrap_or(BugStore { bugs: vec![] });
+    let corrections: CorrectionStore = crate::workspace::read_yaml(&corrections_path(project))
+        .unwrap_or(CorrectionStore {
+            corrections: vec![],
+        });
 
     let status = CtxStatus {
         total_files: anatomy.files.len(),
@@ -229,6 +266,7 @@ fn cmd_status(project: &Path, json: bool) -> Result<()> {
         learnings_count: learnings.learnings.len(),
         bugs_open: bugs.bugs.iter().filter(|b| b.resolved.is_none()).count(),
         bugs_resolved: bugs.bugs.iter().filter(|b| b.resolved.is_some()).count(),
+        corrections_count: corrections.corrections.len(),
         last_scan: anatomy.scanned,
     };
 
@@ -248,6 +286,7 @@ fn cmd_status(project: &Path, json: bool) -> Result<()> {
             "  bugs: {} open / {} resolved",
             status.bugs_open, status.bugs_resolved
         );
+        println!("  corrections: {}", status.corrections_count);
         if !status.last_scan.is_empty() {
             println!("  last scan: {}", status.last_scan);
         }
@@ -388,6 +427,102 @@ fn cmd_bugs(project: &Path, file: Option<String>, json: bool) -> Result<()> {
                 println!("    fix: {fix}");
             }
         }
+    }
+    Ok(())
+}
+
+fn cmd_correction(
+    project: &Path,
+    mistake: String,
+    correction: String,
+    file: Option<String>,
+    json: bool,
+) -> Result<()> {
+    crate::workspace::ensure(project)?;
+    let entry = Correction {
+        id: crate::id::generate(),
+        mistake: mistake.clone(),
+        correction: correction.clone(),
+        file_path: file,
+        created: now(),
+    };
+
+    let path = corrections_path(project);
+    let mut store: CorrectionStore =
+        crate::workspace::read_yaml(&path).unwrap_or(CorrectionStore {
+            corrections: vec![],
+        });
+    store.corrections.push(entry.clone());
+    crate::workspace::write_yaml(&path, &store)?;
+
+    if json {
+        json_ok(&entry);
+    } else {
+        println!("  ✓ correction {} recorded: {mistake}", entry.id);
+    }
+    Ok(())
+}
+
+fn cmd_corrections(project: &Path, json: bool) -> Result<()> {
+    let store: CorrectionStore =
+        crate::workspace::read_yaml(&corrections_path(project)).unwrap_or(CorrectionStore {
+            corrections: vec![],
+        });
+
+    if json {
+        json_ok(&store.corrections);
+    } else if store.corrections.is_empty() {
+        println!("  no corrections recorded");
+    } else {
+        for c in &store.corrections {
+            let file_str = c
+                .file_path
+                .as_deref()
+                .map(|f| format!(" [{f}]"))
+                .unwrap_or_default();
+            println!("  {} {}{file_str}", c.id, c.mistake);
+            println!("    → {}", c.correction);
+        }
+    }
+    Ok(())
+}
+
+fn cmd_consolidate(project: &Path, days: u32, json: bool) -> Result<()> {
+    let cutoff = chrono::Local::now() - chrono::Duration::days(days as i64);
+    let cutoff_str = cutoff.to_rfc3339();
+
+    // Clean resolved bugs older than cutoff
+    let bugs_p = bugs_path(project);
+    let mut bugs: BugStore =
+        crate::workspace::read_yaml(&bugs_p).unwrap_or(BugStore { bugs: vec![] });
+    let before_bugs = bugs.bugs.len();
+    bugs.bugs.retain(|b| {
+        b.resolved
+            .as_ref()
+            .is_none_or(|r| r.as_str() > cutoff_str.as_str())
+    });
+    let removed_bugs = before_bugs - bugs.bugs.len();
+    crate::workspace::write_yaml(&bugs_p, &bugs)?;
+
+    // Deduplicate learnings
+    let learn_p = learnings_path(project);
+    let mut learnings: LearningStore =
+        crate::workspace::read_yaml(&learn_p).unwrap_or(LearningStore { learnings: vec![] });
+    let before_learn = learnings.learnings.len();
+    let mut seen = std::collections::HashSet::new();
+    learnings.learnings.retain(|l| seen.insert(l.text.clone()));
+    let deduped_learn = before_learn - learnings.learnings.len();
+    crate::workspace::write_yaml(&learn_p, &learnings)?;
+
+    if json {
+        json_ok(&serde_json::json!({
+            "removed_bugs": removed_bugs,
+            "deduped_learnings": deduped_learn,
+        }));
+    } else {
+        println!(
+            "  ✓ consolidated: removed {removed_bugs} resolved bugs, deduped {deduped_learn} learnings"
+        );
     }
     Ok(())
 }
