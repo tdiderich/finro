@@ -24,9 +24,9 @@ Tested on real codebases with real bug-fix tasks, comparing kazam-equipped vs va
 
 | Repo | Files | Task | Cost | Speed |
 |---|---|---|---|---|
-| juice-shop | 1,000 | 7 blind bug fixes | **37% cheaper** | **19% faster** |
-| atlas | 5,800 | Sankey click handler fix | **17% cheaper** | **36% faster** |
-| ops | 885 | Named threshold change | tie | tie |
+| Open-source Node app | 1,000 | 7 blind bug fixes | **37% cheaper** | **19% faster** |
+| Internal monorepo | 5,800+ | UI click handler fix | **17% cheaper** | **36% faster** |
+| Internal service repo | ~900 | Named config change | tie | tie |
 
 kazam's advantage scales with repo size and task ambiguity. Targeted tasks with named files are a wash. Navigation-heavy tasks in large codebases are where the savings compound.
 
@@ -89,7 +89,7 @@ One command, one populated deck. Works with Claude Code, Gemini CLI, Codex, and 
 
 `kazam ctx scan` walks your repo and builds a two-tier index:
 
-- **Summary** (`.kazam/ctx/anatomy.yaml`) — root files + top-level directory rollups with file counts, token estimates, and descriptions. Typically under 70 lines even for 5,800-file repos.
+- **Summary** (`.kazam/ctx/anatomy.yaml`) — root files + top-level directory rollups with file counts, token estimates, and descriptions. Typically under 70 lines even for repos with thousands of files.
 - **Detail** (`.kazam/ctx/anatomy/<dir>.yaml`) — individual files in each directory, with per-file descriptions and token counts.
 
 Agents read the summary first, then drill into the directory they need. No `find`. No `grep`. No wasted turns.

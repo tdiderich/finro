@@ -22,7 +22,7 @@ shifts: kazam is the tool your coding agent didn't know it needed.
 - **Two-tier anatomy** — `kazam ctx scan` produces a compact summary
   (`anatomy.yaml` — root files + top-level directory rollups) and
   per-directory detail files (`anatomy/<dir>.yaml`). Even 5,800-file
-  repos compress to a ~68-line summary. Agents read the summary first,
+  repos compress to a ~68-line summary even with thousands of files. Agents read the summary first,
   drill into the directory they need — no `find`, no `grep`, no wasted
   turns. Path-aware descriptions infer file roles from directory
   conventions (routes/, models/, lib/, etc.).

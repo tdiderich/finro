@@ -74,8 +74,9 @@ components:
 
           **Step 1 — summary.** `.kazam/ctx/anatomy.yaml` lists every root file
           with token counts and descriptions, plus a rollup for each directory
-          (file count, total tokens, one-line description). For a 5,800-file
-          repo this file is ~68 lines — one read, full orientation.
+          (file count, total tokens, one-line description). Even for repos
+          with thousands of files this summary is ~68 lines — one read, full
+          orientation.
 
           **Step 2 — detail.** `.kazam/ctx/anatomy/<dir>.yaml` lists every file
           in that directory with per-file metadata. Nested paths use `--` as
@@ -230,19 +231,19 @@ components:
             label: Speed
             sortable: true
         rows:
-          - repo: juice-shop
+          - repo: Open-source Node app
             files: "1,000"
             task: 7 blind bug fixes
             cost: 37% cheaper
             speed: 19% faster
-          - repo: atlas
-            files: "5,800"
-            task: Sankey click handler
+          - repo: Internal monorepo
+            files: "5,800+"
+            task: UI click handler fix
             cost: 17% cheaper
             speed: 36% faster
-          - repo: ops
-            files: 885
-            task: Named threshold change
+          - repo: Internal service repo
+            files: "~900"
+            task: Named config change
             cost: tie
             speed: tie
 
