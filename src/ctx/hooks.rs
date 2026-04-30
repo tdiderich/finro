@@ -201,10 +201,13 @@ pub fn uninstall(project: &Path) -> Result<()> {
                                 hooks_obj.get_mut(event).and_then(|v| v.as_array_mut())
                             {
                                 arr.retain(|item| {
-                                    !item
+                                    let nested = item
                                         .pointer("/hooks/0/description")
-                                        .and_then(|d| d.as_str())
-                                        .is_some_and(|d| d.starts_with("kazam-workspace:"))
+                                        .and_then(|d| d.as_str());
+                                    let flat =
+                                        item.pointer("/description").and_then(|d| d.as_str());
+                                    !nested.is_some_and(|d| d.starts_with("kazam-workspace:"))
+                                        && !flat.is_some_and(|d| d.starts_with("kazam-workspace:"))
                                 });
                                 if arr.is_empty() {
                                     hooks_obj.remove(event);
@@ -333,12 +336,15 @@ fn install_claude_hooks(project: &Path, skunkworks: bool) -> Result<()> {
             .as_array_mut()
             .unwrap();
 
-        // Remove any existing kazam entries (by description prefix) to avoid duplicates
+        // Remove any existing kazam entries (by description prefix) to avoid duplicates.
+        // Check both nested format (/hooks/0/description) and legacy flat format (/description).
         arr.retain(|item| {
-            !item
+            let nested = item
                 .pointer("/hooks/0/description")
-                .and_then(|d| d.as_str())
-                .is_some_and(|d| d.starts_with("kazam-workspace:"))
+                .and_then(|d| d.as_str());
+            let flat = item.pointer("/description").and_then(|d| d.as_str());
+            !nested.is_some_and(|d| d.starts_with("kazam-workspace:"))
+                && !flat.is_some_and(|d| d.starts_with("kazam-workspace:"))
         });
 
         arr.push(entry);
