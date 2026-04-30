@@ -87,11 +87,14 @@ pub fn ensure(project: &Path) -> Result<PathBuf> {
 pub fn apply_skunkworks(project: &Path) -> Result<()> {
     let gi = project.join(".gitignore");
     let content = fs::read_to_string(&gi).unwrap_or_default();
-    if !content
-        .lines()
-        .any(|l| l.trim() == ".kazam/" || l.trim() == ".kazam")
-    {
-        use std::io::Write;
+    let entries = [".kazam/", ".claude/rules/kazam-workspace.md"];
+    use std::io::Write;
+    let needs: Vec<&str> = entries
+        .iter()
+        .filter(|e| !content.lines().any(|l| l.trim() == **e))
+        .copied()
+        .collect();
+    if !needs.is_empty() {
         let mut f = fs::OpenOptions::new()
             .create(true)
             .append(true)
@@ -100,7 +103,9 @@ pub fn apply_skunkworks(project: &Path) -> Result<()> {
         if !content.is_empty() && !content.ends_with('\n') {
             writeln!(f)?;
         }
-        writeln!(f, ".kazam/")?;
+        for entry in &needs {
+            writeln!(f, "{entry}")?;
+        }
     }
     Ok(())
 }
@@ -123,9 +128,10 @@ pub fn disable_skunkworks(project: &Path) -> Result<()> {
 
     let gi = project.join(".gitignore");
     if let Ok(content) = fs::read_to_string(&gi) {
+        let remove = [".kazam/", ".kazam", ".claude/rules/kazam-workspace.md"];
         let filtered: Vec<&str> = content
             .lines()
-            .filter(|l| l.trim() != ".kazam/" && l.trim() != ".kazam")
+            .filter(|l| !remove.contains(&l.trim()))
             .collect();
         fs::write(&gi, filtered.join("\n") + "\n").context("rewrite .gitignore")?;
     }
