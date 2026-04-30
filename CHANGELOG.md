@@ -6,6 +6,52 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.3.0] — 2026-04-30
+
+kazam is no longer just a static site generator. This release adds a
+full agent workspace — codebase indexing, task tracking, a visual board,
+and invisible hooks that wire it all into Claude Code. The positioning
+shifts: kazam is the tool your coding agent didn't know it needed.
+
+### Added
+- **`kazam workspace init`** — one command to set up an agent workspace
+  in any repo. Scans the codebase, writes a two-tier anatomy index,
+  installs agent hooks, and writes workspace rules. `--agent claude`
+  registers Claude Code hooks in `.claude/settings.json`.
+  `--skunkworks` auto-creates tasks from TODOs and known patterns.
+- **Two-tier anatomy** — `kazam ctx scan` produces a compact summary
+  (`anatomy.yaml` — root files + top-level directory rollups) and
+  per-directory detail files (`anatomy/<dir>.yaml`). Even 5,800-file
+  repos compress to a ~68-line summary even with thousands of files. Agents read the summary first,
+  drill into the directory they need — no `find`, no `grep`, no wasted
+  turns. Path-aware descriptions infer file roles from directory
+  conventions (routes/, models/, lib/, etc.).
+- **Task tracking** — `kazam track add|claim|close|block|ready|list`.
+  Tasks live in `.kazam/track/tasks.yaml`, survive session restarts and
+  context compaction. `ready --json` returns unblocked tasks sorted by
+  priority — the entry point for any session start or context recovery.
+- **`kazam board`** — themed, auto-refreshing local dashboard showing
+  task status, codebase anatomy, and activity log. Built with kazam's
+  own rendering engine. Auto-refreshes on any `.kazam/*.yaml` change.
+- **Agent hooks** — three Claude Code hooks installed by
+  `workspace init`: session-start (surfaces drift + ready tasks),
+  post-write (logs file modifications), session-stop (rescans anatomy).
+  Silent when nothing is actionable.
+- **Workspace rules** — `.claude/rules/kazam-workspace.md` teaches the
+  agent to use anatomy-first navigation, structured task tracking, and
+  commit-triggered task closing. Suppresses built-in TaskCreate/TaskUpdate
+  in favor of kazam's tracking.
+- **Settings merge** — `workspace init` appends kazam hook entries to
+  existing `.claude/settings.json` arrays instead of replacing them.
+  Deduplicates by description prefix on re-init.
+- **Context enrichment** — `kazam ctx describe`, `kazam ctx learn`,
+  `kazam ctx bug` for agents to record what they discover during work.
+
+### Changed
+- README rewritten — workspace-first positioning, benchmark results,
+  dual quickstart (workspace + static sites).
+- `Cargo.toml` description and keywords reflect the dual identity.
+
 ## [1.2.2] — 2026-04-28
 
 Three new components plus a small set of polish fixes that surfaced

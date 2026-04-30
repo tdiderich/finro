@@ -4,7 +4,7 @@ favicon: /assets/favicon.svg
 view_source: true
 texture: dots
 glow: accent
-description: Beautiful static sites from simple YAML. One Rust binary. No framework, no npm, no runtime JS. Designed so AI agents can author your site end-to-end.
+description: Agent workspace and static site generator. Codebase indexing, task tracking, visual board — one Rust binary, no dependencies.
 url: https://tdiderich.github.io/kazam
 og_image: /assets/og.svg
 nav:
@@ -21,6 +21,8 @@ nav:
         href: /themes.html
       - label: Deploy
         href: /deploy.html
+  - label: Workspace
+    href: /workspace.html
   - label: Recipes
     href: /wishes.html
     children:

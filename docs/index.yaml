@@ -1,11 +1,11 @@
-title: kazam — beautiful sites from simple YAML
+title: kazam — the tool your coding agent didn't know it needed
 shell: standard
 
 components:
   - type: header
     title: kazam
-    eyebrow: YAML → beautiful sites
-    subtitle: One Rust binary. No framework, no npm, no runtime JS. Designed so AI agents can author your site end-to-end.
+    eyebrow: agent workspace + static site generator
+    subtitle: Codebase indexing, task tracking, and a visual board — plus beautiful static sites from YAML. One Rust binary, no dependencies.
 
   - type: section
     eyebrow: Why
@@ -100,6 +100,15 @@ components:
     components:
       - type: card_grid
         cards:
+          - title: Agent workspace
+            badge:
+              label: new
+              color: green
+            description: One command indexes your codebase, installs hooks, and gives your agent persistent context. 37% cheaper on navigation-heavy tasks.
+            links:
+              - label: Workspace docs →
+                href: workspace.html
+
           - title: Documentation sites
             badge:
               label: standard

@@ -3,18 +3,23 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
 mod agents;
+mod board;
 mod build;
+mod ctx;
 mod dev;
 mod freshness;
 mod icons;
+mod id;
 mod init;
 mod links;
 mod llms;
 mod minify;
 mod render;
 mod theme;
+mod track;
 mod types;
 mod wish;
+mod workspace;
 
 #[derive(Parser)]
 #[command(name = "kazam", about = "Beautiful sites from simple YAML", version)]
@@ -53,32 +58,51 @@ enum Command {
     /// Print the LLM authoring guide (full AGENTS.md to stdout)
     Agents,
     /// Grant a wish — populated YAML from a workspace full of your context.
-    /// First run scaffolds `./wish-<name>/` with `questions.md`, `README.md`,
-    /// and a `reference/` folder containing the schema and a worked example.
-    /// Fill in what you can, drop real context (docs, notes, transcripts)
-    /// into the workspace, then run again to grant: kazam shells out to the
-    /// first agent on $PATH with the workspace as CWD and writes the YAML.
-    /// `kazam wish list` shows available wishes.
     Wish {
         /// Name of the wish (e.g., "deck", or "list" to see all)
         name: String,
-        /// Where to write the populated YAML
         #[arg(short, long)]
         out: Option<PathBuf>,
-        /// Force a specific agent (otherwise auto-detect first one on $PATH)
         #[arg(long, value_enum)]
         agent: Option<wish::Agent>,
-        /// Print the portable wish markdown spec (no scaffold, no grant)
         #[arg(long)]
         stdout: bool,
-        /// Print the grant prompt instead of running the agent
         #[arg(long)]
         dry_run: bool,
-        /// YOLO mode: skip the workspace, let the agent invent everything.
-        /// Pass a topic (`--yolo "about me"`) or use bare `--yolo` for a
-        /// surprise.
         #[arg(long, value_name = "TOPIC", num_args = 0..=1, default_missing_value = "")]
         yolo: Option<String>,
+    },
+    /// Manage the work graph — tasks, dependencies, activity log.
+    Track {
+        #[command(subcommand)]
+        command: track::Command,
+        /// Project directory (default: current directory)
+        #[arg(short, long, default_value = ".", global = true)]
+        dir: PathBuf,
+    },
+    /// Manage context intelligence — file anatomy, learnings, bugs.
+    Ctx {
+        #[command(subcommand)]
+        command: ctx::Command,
+        /// Project directory (default: current directory)
+        #[arg(short, long, default_value = ".", global = true)]
+        dir: PathBuf,
+    },
+    /// Live dashboard — renders .kazam/ state as a visual board.
+    Board {
+        /// Project directory (default: current directory)
+        #[arg(default_value = ".")]
+        dir: PathBuf,
+        #[arg(short, long, default_value_t = 3001)]
+        port: u16,
+    },
+    /// Initialize the full agent workspace (track + ctx + hooks) in one shot.
+    Workspace {
+        #[command(subcommand)]
+        command: WorkspaceCommand,
+        /// Project directory (default: current directory)
+        #[arg(short, long, default_value = ".", global = true)]
+        dir: PathBuf,
     },
 }
 
@@ -101,5 +125,37 @@ fn main() -> Result<()> {
             dry_run,
             yolo,
         } => wish::run(&name, out, agent, stdout, dry_run, yolo),
+        Command::Track { command, dir } => track::run(command, &dir),
+        Command::Ctx { command, dir } => ctx::run(command, &dir),
+        Command::Board { dir, port } => board::run(&dir, port),
+        Command::Workspace { command, dir } => workspace::run_command(command, &dir),
     }
+}
+
+#[derive(Subcommand)]
+pub enum WorkspaceCommand {
+    /// Initialize track + ctx + scan + hooks in one shot
+    Init {
+        /// Agent to register hooks for
+        #[arg(long, default_value = "claude")]
+        agent: String,
+        /// Gitignore .kazam/ for shared repos
+        #[arg(long)]
+        skunkworks: bool,
+        /// Sass level for human blocker callouts (none, some, lots)
+        #[arg(long, default_value = "some")]
+        sass: String,
+    },
+    /// Show workspace status
+    Status,
+    /// Set the sass level for human blocker callouts
+    Sass {
+        /// none, some, or lots
+        level: String,
+    },
+    /// Toggle skunkworks mode (gitignore .kazam/)
+    Skunkworks {
+        /// enable or disable
+        action: String,
+    },
 }

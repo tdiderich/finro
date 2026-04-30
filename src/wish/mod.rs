@@ -30,6 +30,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 mod brief;
+mod dashboard;
 mod deck;
 
 /// Shared instruction block spliced into every wish's `--yolo` prompt. Tells
@@ -136,7 +137,7 @@ pub struct Wish {
 }
 
 fn all() -> &'static [&'static Wish] {
-    const ALL: &[&Wish] = &[&deck::DECK, &brief::BRIEF];
+    const ALL: &[&Wish] = &[&deck::DECK, &brief::BRIEF, &dashboard::DASHBOARD];
     ALL
 }
 

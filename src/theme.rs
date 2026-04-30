@@ -1457,6 +1457,22 @@ body.shell-document .doc-body strong { color: #fff; }
   position: relative;
   padding: 6px 0;
 }
+.c-tree-node.collapsed > .c-tree-children { display: none; }
+.c-tree-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  flex-shrink: 0;
+  font-size: 9px;
+  color: rgba(var(--text-rgb),0.4);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  transform: rotate(90deg);
+  user-select: none;
+}
+.c-tree-node.collapsed > .c-tree-row > .c-tree-chevron { transform: rotate(0deg); }
+.c-tree-chevron:hover { color: rgba(var(--text-rgb),0.8); }
 .c-tree-children > .c-tree-node::before {
   content: "";
   position: absolute;

@@ -210,6 +210,21 @@ document.querySelectorAll('[data-tree-filter-toggle]').forEach(function (toggle)
     });
   });
 });
+document.querySelectorAll('.c-tree').forEach(function (tree) {
+  var startCollapsed = tree.classList.contains('c-tree-collapsed');
+  tree.querySelectorAll('.c-tree-node').forEach(function (node) {
+    var children = node.querySelector(':scope > .c-tree-children');
+    if (!children) return;
+    if (startCollapsed) node.classList.add('collapsed');
+  });
+  tree.classList.remove('c-tree-collapsed');
+  tree.addEventListener('click', function (e) {
+    var chevron = e.target.closest('[data-tree-toggle]');
+    if (!chevron) return;
+    var node = chevron.closest('.c-tree-node');
+    if (node) node.classList.toggle('collapsed');
+  });
+});
 "#;
 
 const DECK: &str = r#"

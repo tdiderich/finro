@@ -1,10 +1,34 @@
 # kazam
 
-**Beautiful static sites from simple YAML. One Rust binary, no framework, no npm, no runtime JS. Designed so AI agents can author your site end-to-end.**
+**The tool your coding agent didn't know it needed.**
 
-**[▶ 3-minute demo](https://www.loom.com/share/528d98fef421443497753af86cd7d737)** · **[Docs + live examples](https://tdiderich.github.io/kazam/)** · **[60-second quickstart](https://tdiderich.github.io/kazam/guide.html)** · **[Full tour](https://tdiderich.github.io/kazam/about.html)**
+Codebase indexing, task tracking, and a visual board — one Rust binary, no dependencies.
 
 ---
+
+## Why
+
+Your agent re-reads files it already saw. It scans entire directories to find one function. It loses track of what it's done across sessions. And you watch all of this happen in a terminal you can barely follow.
+
+kazam fixes the three things that make agent-assisted coding slower and more expensive than it should be:
+
+| | Without kazam | With kazam |
+|---|---|---|
+| **Navigation** | Agent explores with `find`, `grep`, `ls` — burning tokens on every turn | Two-tier anatomy index. Agent reads a 68-line summary, drills into the directory it needs |
+| **Tracking** | Work disappears into terminal scroll. No record of what was done or what's left | Structured task tracking — add, claim, close, block. Persists across sessions |
+| **Visibility** | You read a terminal, or you don't | Visual board with live-updating task status, anatomy, and activity log |
+
+### Benchmarks
+
+Tested on real codebases with real bug-fix tasks, comparing kazam-equipped vs vanilla Claude Code:
+
+| Repo | Files | Task | Cost | Speed |
+|---|---|---|---|---|
+| Open-source Node app | 1,000 | 7 blind bug fixes | **37% cheaper** | **19% faster** |
+| Internal monorepo | 5,800+ | UI click handler fix | **17% cheaper** | **36% faster** |
+| Internal service repo | ~900 | Named config change | tie | tie |
+
+kazam's advantage scales with repo size and task ambiguity. Targeted tasks with named files are a wash. Navigation-heavy tasks in large codebases are where the savings compound.
 
 ## Install
 
@@ -19,7 +43,28 @@ cargo install kazam
 cargo install --git https://github.com/tdiderich/kazam
 ```
 
-## Quickstart
+## Quickstart — agent workspace
+
+```bash
+cd your-repo
+kazam workspace init --agent claude
+```
+
+That's it. kazam scans your codebase, writes a two-tier anatomy index to `.kazam/`, installs Claude Code hooks, and writes workspace rules. Your agent now:
+
+1. **Reads the anatomy index first** instead of exploring with `find`/`grep`
+2. **Tracks work** with `kazam track` — tasks persist across sessions
+3. **Logs activity** so you can see what changed
+
+Open the visual board:
+
+```bash
+kazam board
+```
+
+Live-updating task status, file anatomy, and activity log — served locally with auto-refresh on any `.kazam/` change.
+
+## Quickstart — static sites
 
 ```bash
 kazam init my-site && cd my-site
@@ -28,34 +73,59 @@ kazam dev . --port 3000    # → http://localhost:3000, live reload
 
 Edit `index.yaml`. Save. The browser reloads. That's the loop.
 
-To build a static bundle: `kazam build . --out dist --release`. Drop `dist/` on any static host — [deploy recipes](https://tdiderich.github.io/kazam/deploy.html) cover Vercel, Netlify, Cloudflare Pages, GitHub Pages, S3 + CloudFront, Firebase, and self-hosted nginx.
-
-## Let your agent write it
+kazam also builds beautiful static sites from simple YAML — 30+ themed components, three shell types (standard pages, print-ready documents, full-viewport decks), and zero runtime JS in the output. Let your agent write the content:
 
 ```bash
-kazam wish deck --yolo "about me, based on our interaction history"
+kazam wish deck --yolo "Q3 pipeline review"
 ```
 
-One command, one populated deck. Or drop real context into `wish-deck/` and run `kazam wish deck` without `--yolo` — the agent reads your files (notes, transcripts, prior decks, PDFs) and writes the deck from them. Works with Claude Code, Gemini CLI, Codex, and OpenCode. Full walkthrough: [wishes](https://tdiderich.github.io/kazam/wishes.html).
+One command, one populated deck. Works with Claude Code, Gemini CLI, Codex, and OpenCode.
 
-## Docs
+**[Docs + live examples](https://tdiderich.github.io/kazam/)** · **[Components](https://tdiderich.github.io/kazam/components/index.html)** · **[Themes](https://tdiderich.github.io/kazam/themes.html)** · **[Deploy recipes](https://tdiderich.github.io/kazam/deploy.html)**
 
-Everything lives at **[tdiderich.github.io/kazam](https://tdiderich.github.io/kazam/)**:
+## How the workspace works
 
-- **[Quickstart](https://tdiderich.github.io/kazam/guide.html)** — install, scaffold, run
-- **[Full tour](https://tdiderich.github.io/kazam/about.html)** — how pages are shaped, shells, kazam.yaml, starter pages
-- **[Components](https://tdiderich.github.io/kazam/components/index.html)** — every primitive with live examples
-- **[Themes](https://tdiderich.github.io/kazam/themes.html)** — stock palettes and overrides
-- **[Recipes](https://tdiderich.github.io/kazam/wishes.html)** — `kazam wish` for agent-authored artifacts, `freshness:` for KB review tracking
-- **[Deploy](https://tdiderich.github.io/kazam/deploy.html)** — copy-paste host configs
+### Anatomy — persistent codebase context
 
-## Built for AI agents
+`kazam ctx scan` walks your repo and builds a two-tier index:
 
-kazam's #1 audience isn't humans typing YAML — it's Claude, GPT, and Codex generating it. Run `kazam agents` to print the exact authoring guide for the installed version. `kazam init` scaffolds `AGENTS.md` and `llms.txt` into new sites so any agent opening the repo finds them without being told.
+- **Summary** (`.kazam/ctx/anatomy.yaml`) — root files + top-level directory rollups with file counts, token estimates, and descriptions. Typically under 70 lines even for repos with thousands of files.
+- **Detail** (`.kazam/ctx/anatomy/<dir>.yaml`) — individual files in each directory, with per-file descriptions and token counts.
+
+Agents read the summary first, then drill into the directory they need. No `find`. No `grep`. No wasted turns.
+
+### Task tracking — structured, persistent, session-spanning
+
+```bash
+kazam track add "Fix the auth middleware" --priority 1
+kazam track claim kz-a1b2 --name claude
+kazam track close kz-a1b2 --reason "patched token validation"
+kazam track ready --json    # what's unblocked, sorted by priority
+```
+
+Tasks live in `.kazam/track/tasks.yaml`. They survive session restarts, context compaction, and agent handoffs. The workspace rules tell agents to close tasks as they go — not batch at the end.
+
+### Board — visual workspace
+
+```bash
+kazam board
+```
+
+A themed, auto-refreshing local dashboard showing task status, codebase anatomy, and activity. Built with kazam's own rendering engine. More natural than watching a terminal scroll.
+
+### Hooks — invisible wiring
+
+`kazam workspace init --agent claude` installs three Claude Code hooks:
+
+- **Session start** — surfaces anatomy drift and ready tasks
+- **Post-write** — logs file modifications to the activity feed
+- **Session stop** — rescans anatomy and suggests enrichment
+
+No workflow changes. The hooks fire silently and only surface output when something is actionable.
 
 ## Security
 
-Zero runtime JS on the output, ~10 direct Rust crates, `Cargo.lock` committed, `cargo-audit` in CI, protected main, signed release tags. Full scope: [`SECURITY.md`](SECURITY.md). Report vulnerabilities privately via the [GitHub advisory form](https://github.com/tdiderich/kazam/security/advisories/new) — not a public issue.
+~10 direct Rust crates, `Cargo.lock` committed, `cargo-audit` in CI, protected main, signed release tags. Full scope: [`SECURITY.md`](SECURITY.md). Report vulnerabilities privately via the [GitHub advisory form](https://github.com/tdiderich/kazam/security/advisories/new).
 
 ## Contributing
 

@@ -234,6 +234,8 @@ pub enum Component {
         default_filter: TreeFilter,
         #[serde(default)]
         show_filter_toggle: bool,
+        #[serde(default)]
+        default_collapsed: bool,
     },
     Venn {
         sets: Vec<VennSet>,
