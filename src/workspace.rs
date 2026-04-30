@@ -74,6 +74,10 @@ pub fn ensure(project: &Path) -> Result<PathBuf> {
         ("ctx/learnings.yaml", "learnings: []\n"),
         ("ctx/bugs.yaml", "bugs: []\n"),
         ("ctx/corrections.yaml", "corrections: []\n"),
+        (
+            "ctx/rules-override.md",
+            "<!-- Team-specific workspace rules. Content here is appended to\n     .claude/rules/kazam-workspace.md on each `kazam workspace init`.\n     Add conventions, safety guards, or push policies your team needs. -->\n",
+        ),
     ];
     for (rel, default) in empty_files {
         let p = r.join(rel);

@@ -143,11 +143,22 @@ pub fn install(project: &Path, agent: &str, skunkworks: bool) -> Result<()> {
         install_claude_hooks(project, skunkworks)?;
     }
 
-    // Write workspace rules
+    // Write workspace rules (base + optional team override)
     let rules_dir = project.join(".claude").join("rules");
     fs::create_dir_all(&rules_dir).context("create .claude/rules")?;
-    fs::write(rules_dir.join("kazam-workspace.md"), WORKSPACE_RULES)
-        .context("write workspace rules")?;
+
+    let override_path = crate::workspace::root(project).join("ctx/rules-override.md");
+    let mut rules = WORKSPACE_RULES.to_string();
+    if override_path.exists() {
+        let custom = fs::read_to_string(&override_path).unwrap_or_default();
+        if !custom.trim().is_empty() {
+            rules.push_str("\n## Team overrides\n\n");
+            rules.push_str(&custom);
+            rules.push('\n');
+        }
+    }
+
+    fs::write(rules_dir.join("kazam-workspace.md"), &rules).context("write workspace rules")?;
 
     let settings_name = if skunkworks {
         "settings.local.json"
@@ -159,6 +170,9 @@ pub fn install(project: &Path, agent: &str, skunkworks: bool) -> Result<()> {
         println!("  ✓ Claude Code hooks registered in .claude/{settings_name}");
     }
     println!("  ✓ workspace rules written to .claude/rules/kazam-workspace.md");
+    if override_path.exists() {
+        println!("  ✓ team overrides applied from .kazam/ctx/rules-override.md");
+    }
     Ok(())
 }
 
