@@ -288,7 +288,7 @@ components:
                         ~340 failed transactions, all retried successfully.
 
   - type: callout
-    variant: accent
+    variant: info
     title: Agent workspace
     body: kazam also indexes your codebase, tracks tasks, and gives your coding agent persistent context — so it stops re-reading files and burning tokens. One command to set up.
     links:
