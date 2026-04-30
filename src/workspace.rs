@@ -207,7 +207,7 @@ pub fn run_command(cmd: crate::WorkspaceCommand, project: &Path) -> Result<()> {
                 store.files.len()
             );
 
-            crate::ctx::hooks::install(project, &agent)?;
+            crate::ctx::hooks::install(project, &agent, skunkworks)?;
             Ok(())
         }
         crate::WorkspaceCommand::Sass { level } => {

@@ -104,7 +104,7 @@ You may edit `.kazam/track/tasks.yaml` or `.kazam/ctx/*.yaml` directly.
 The board (`kazam board`) auto-refreshes on any `.kazam/*.yaml` change.
 "#;
 
-pub fn install(project: &Path, agent: &str) -> Result<()> {
+pub fn install(project: &Path, agent: &str, skunkworks: bool) -> Result<()> {
     let hooks_dir = crate::workspace::root(project).join("hooks");
     fs::create_dir_all(&hooks_dir).context("create hooks dir")?;
 
@@ -122,7 +122,7 @@ pub fn install(project: &Path, agent: &str) -> Result<()> {
     }
 
     if agent == "claude" || agent == "all" {
-        install_claude_hooks(project)?;
+        install_claude_hooks(project, skunkworks)?;
     }
 
     // Write workspace rules
@@ -131,9 +131,14 @@ pub fn install(project: &Path, agent: &str) -> Result<()> {
     fs::write(rules_dir.join("kazam-workspace.md"), WORKSPACE_RULES)
         .context("write workspace rules")?;
 
+    let settings_name = if skunkworks {
+        "settings.local.json"
+    } else {
+        "settings.json"
+    };
     println!("  ✓ hooks installed to .kazam/hooks/");
     if agent == "claude" || agent == "all" {
-        println!("  ✓ Claude Code hooks registered in .claude/settings.json");
+        println!("  ✓ Claude Code hooks registered in .claude/{settings_name}");
     }
     println!("  ✓ workspace rules written to .claude/rules/kazam-workspace.md");
     Ok(())
@@ -223,8 +228,13 @@ pub fn status(project: &Path) -> Result<()> {
     Ok(())
 }
 
-fn install_claude_hooks(project: &Path) -> Result<()> {
-    let settings_path = project.join(".claude").join("settings.json");
+fn install_claude_hooks(project: &Path, skunkworks: bool) -> Result<()> {
+    let settings_file = if skunkworks {
+        "settings.local.json"
+    } else {
+        "settings.json"
+    };
+    let settings_path = project.join(".claude").join(settings_file);
     fs::create_dir_all(project.join(".claude")).context("create .claude")?;
 
     let mut settings: serde_json::Value = if settings_path.exists() {
@@ -303,6 +313,6 @@ fn install_claude_hooks(project: &Path) -> Result<()> {
     }
 
     let json = serde_json::to_string_pretty(&settings)?;
-    fs::write(&settings_path, json).context("write .claude/settings.json")?;
+    fs::write(&settings_path, json).with_context(|| format!("write .claude/{settings_file}"))?;
     Ok(())
 }
