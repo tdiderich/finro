@@ -107,7 +107,12 @@ pub fn run(cmd: Command, project: &Path) -> Result<()> {
         Command::Bugs { file, json } => cmd_bugs(project, file, json),
         Command::Resolve { id, fix, json } => cmd_resolve(project, &id, &fix, json),
         Command::Hooks { action } => match action {
-            HooksAction::Install { agent } => hooks::install(project, &agent),
+            HooksAction::Install { agent } => {
+                let skunkworks = crate::workspace::read_config(project)
+                    .map(|c| c.skunkworks)
+                    .unwrap_or(false);
+                hooks::install(project, &agent, skunkworks)
+            }
             HooksAction::Uninstall => hooks::uninstall(project),
             HooksAction::Status => hooks::status(project),
         },
