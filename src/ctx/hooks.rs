@@ -71,10 +71,15 @@ Nested paths use `--` as separator: `frontend/src/app` → `anatomy/frontend--sr
 
 Summary → detail → source. Three reads, zero exploration.
 
-**When delegating to subagents:** always include the anatomy paths in the
-subagent prompt so it can read them instead of running grep/find. Example:
-"Read `.kazam/ctx/anatomy.yaml` first for project layout, then drill into
-`.kazam/ctx/anatomy/<dir>.yaml` for the directory you need."
+**When delegating to subagents:** subagents don't see these rules, so you
+must brief them. Include in every subagent prompt:
+1. **Anatomy:** "Read `.kazam/ctx/anatomy.yaml` for project layout, then
+   `.kazam/ctx/anatomy/<dir>.yaml` for the directory you need — don't
+   grep or find for structure."
+2. **Task context:** "You are working on task `<ID>`: <title>. When done,
+   run `kazam track close <ID> --reason '<what you did>'`."
+3. **Enrichment:** "After reading an unfamiliar file, run
+   `kazam ctx describe <path> '<description>'`."
 
 ## On session start or context recovery
 Run `kazam track ready --json` to orient — see unblocked tasks sorted by priority.
