@@ -1,0 +1,413 @@
+use anyhow::{Context, Result};
+use std::collections::HashMap;
+use std::path::Path;
+use walkdir::WalkDir;
+
+use crate::workspace;
+
+use super::types::{AnatomyStore, AnatomySummary, DirAnatomy, DirEntry, FileEntry};
+
+const SKIP_DIRS: &[&str] = &[
+    ".kazam",
+    "_site",
+    "target",
+    ".git",
+    "node_modules",
+    "__pycache__",
+    ".venv",
+];
+
+const BINARY_EXTS: &[&str] = &[
+    "png", "jpg", "jpeg", "gif", "webp", "ico", "svg", "woff", "woff2", "ttf", "eot", "otf", "mp3",
+    "mp4", "wav", "ogg", "pdf", "zip", "tar", "gz", "br", "exe", "dll", "so", "dylib", "o", "a",
+    "pyc", "class", "wasm",
+];
+
+pub fn scan(project: &Path) -> Result<AnatomyStore> {
+    // The flat store lives at anatomy.flat.yaml (used by board + check + describe).
+    // anatomy.yaml is the agent-facing layered summary written by write_layered().
+    let flat_path = workspace::root(project).join("ctx/anatomy.flat.yaml");
+    // Fall back to anatomy.yaml (legacy path) if flat doesn't exist yet
+    let anatomy_path = workspace::root(project).join("ctx/anatomy.yaml");
+    let existing: AnatomyStore = if flat_path.exists() {
+        workspace::read_yaml(&flat_path)?
+    } else if anatomy_path.exists() {
+        // Try to parse as flat AnatomyStore (legacy); if it fails (new summary format), start fresh
+        workspace::read_yaml::<AnatomyStore>(&anatomy_path).unwrap_or(AnatomyStore {
+            scanned: String::new(),
+            files: vec![],
+        })
+    } else {
+        AnatomyStore {
+            scanned: String::new(),
+            files: vec![],
+        }
+    };
+
+    // Index existing entries by path for description preservation
+    let existing_by_path: std::collections::HashMap<&str, &FileEntry> = existing
+        .files
+        .iter()
+        .map(|f| (f.path.as_str(), f))
+        .collect();
+
+    let mut files: Vec<FileEntry> = Vec::new();
+    let now = chrono::Local::now().to_rfc3339();
+
+    for entry in WalkDir::new(project)
+        .into_iter()
+        .filter_entry(|e| {
+            let name = e.file_name().to_str().unwrap_or("");
+            if name.starts_with('.') && name != "." {
+                return false;
+            }
+            !SKIP_DIRS.contains(&name)
+        })
+        .filter_map(|e| e.ok())
+    {
+        if !entry.file_type().is_file() {
+            continue;
+        }
+
+        let ext = entry
+            .path()
+            .extension()
+            .and_then(|e| e.to_str())
+            .unwrap_or("");
+        if BINARY_EXTS.contains(&ext) {
+            continue;
+        }
+
+        let rel = entry
+            .path()
+            .strip_prefix(project)
+            .unwrap_or(entry.path())
+            .to_string_lossy()
+            .to_string();
+
+        let size = entry.metadata().map(|m| m.len()).unwrap_or(0);
+        let tokens = size / 4;
+
+        // Preserve agent-enriched description if it exists
+        let description = existing_by_path
+            .get(rel.as_str())
+            .and_then(|f| f.description.clone())
+            .or_else(|| heuristic_description(&rel, ext));
+
+        let reads = existing_by_path
+            .get(rel.as_str())
+            .map(|f| f.reads)
+            .unwrap_or(0);
+        let last_read = existing_by_path
+            .get(rel.as_str())
+            .and_then(|f| f.last_read.clone());
+
+        files.push(FileEntry {
+            path: rel,
+            description,
+            tokens,
+            reads,
+            last_read,
+            last_scanned: now.clone(),
+        });
+    }
+
+    files.sort_by(|a, b| a.path.cmp(&b.path));
+
+    Ok(AnatomyStore {
+        scanned: now,
+        files,
+    })
+}
+
+/// Convert a directory path to a safe filename stem (replace `/` with `--`).
+fn dir_to_filename(dir_path: &str) -> String {
+    dir_path.replace('/', "--")
+}
+
+/// Derive a human-readable description for a directory given its files' descriptions.
+fn derive_dir_description(files: &[&FileEntry]) -> Option<String> {
+    // Collect non-None descriptions
+    let descs: Vec<&str> = files
+        .iter()
+        .filter_map(|f| f.description.as_deref())
+        .collect();
+    if descs.is_empty() {
+        return None;
+    }
+
+    // Find common suffix pattern: "X route handler", "X controller", etc.
+    let suffixes = [
+        "route handler",
+        "controller",
+        "model",
+        "middleware",
+        "service",
+        "library module",
+        "utility",
+        "component",
+        "view/page",
+        "migration",
+        "tests",
+        "configuration",
+        "data/seed file",
+    ];
+    for suffix in &suffixes {
+        let matching = descs.iter().filter(|d| d.ends_with(suffix)).count();
+        if matching > 0 && matching * 2 >= descs.len() {
+            // Majority (>= 50%) share this suffix pattern
+            let plural = match *suffix {
+                "route handler" => "route handlers",
+                "controller" => "controllers",
+                "model" => "models",
+                "middleware" => "middleware",
+                "service" => "services",
+                "library module" => "library modules",
+                "utility" => "utilities",
+                "component" => "components",
+                "view/page" => "views/pages",
+                "migration" => "migrations",
+                "tests" => "tests",
+                "configuration" => "configuration files",
+                "data/seed file" => "data/seed files",
+                _ => suffix,
+            };
+            return Some(plural.to_string());
+        }
+    }
+
+    None
+}
+
+/// Build and write the two-tier layered anatomy files.
+/// Writes:
+///   - `ctx/anatomy.yaml`  — summary (root files + directory rollups)
+///   - `ctx/anatomy/<dir>.yaml` — per-directory file listings
+pub fn write_layered(project: &Path, store: &AnatomyStore) -> Result<()> {
+    let ctx_dir = workspace::root(project).join("ctx");
+    let anatomy_dir = ctx_dir.join("anatomy");
+    std::fs::create_dir_all(&anatomy_dir).context("create ctx/anatomy dir")?;
+
+    // Separate root files from files in directories
+    let mut root_files: Vec<FileEntry> = Vec::new();
+    // Group by leaf directory (for detail files)
+    let mut by_leaf_dir: HashMap<String, Vec<&FileEntry>> = HashMap::new();
+    // Group by top-level directory (for summary)
+    let mut by_top_dir: HashMap<String, Vec<&FileEntry>> = HashMap::new();
+
+    for file in &store.files {
+        let path = &file.path;
+        if let Some(slash_pos) = path.find('/') {
+            let top_dir = &path[..slash_pos];
+            by_top_dir.entry(top_dir.to_string()).or_default().push(file);
+            if let Some(leaf_pos) = path.rfind('/') {
+                let leaf_dir = &path[..leaf_pos];
+                by_leaf_dir.entry(leaf_dir.to_string()).or_default().push(file);
+            }
+        } else {
+            root_files.push(file.clone());
+        }
+    }
+
+    root_files.sort_by(|a, b| a.path.cmp(&b.path));
+
+    // Summary uses top-level directories only (compact)
+    let mut directories: Vec<DirEntry> = Vec::new();
+    let mut sorted_top_dirs: Vec<String> = by_top_dir.keys().cloned().collect();
+    sorted_top_dirs.sort();
+
+    for dir_path in &sorted_top_dirs {
+        let files = by_top_dir.get(dir_path.as_str()).unwrap();
+        let file_count = files.len();
+        let total_tokens: u64 = files.iter().map(|f| f.tokens).sum();
+        let description = derive_dir_description(files);
+
+        directories.push(DirEntry {
+            path: dir_path.clone(),
+            file_count,
+            total_tokens,
+            description,
+        });
+    }
+
+    // Detail files use leaf directories (granular)
+    let mut sorted_leaf_dirs: Vec<String> = by_leaf_dir.keys().cloned().collect();
+    sorted_leaf_dirs.sort();
+
+    for dir_path in &sorted_leaf_dirs {
+        let files = by_leaf_dir.get(dir_path.as_str()).unwrap();
+        let mut sorted_files: Vec<FileEntry> = files.iter().map(|f| (*f).clone()).collect();
+        sorted_files.sort_by(|a, b| a.path.cmp(&b.path));
+        let dir_anatomy = DirAnatomy { files: sorted_files };
+        let filename = format!("{}.yaml", dir_to_filename(dir_path));
+        workspace::write_yaml(&anatomy_dir.join(&filename), &dir_anatomy)?;
+    }
+
+    // Write the summary anatomy.yaml
+    let summary = AnatomySummary {
+        scanned: store.scanned.clone(),
+        root_files,
+        directories,
+    };
+    workspace::write_yaml(&ctx_dir.join("anatomy.yaml"), &summary)?;
+
+    Ok(())
+}
+
+pub fn check(project: &Path) -> Result<ScanDiff> {
+    let flat_path = workspace::root(project).join("ctx/anatomy.flat.yaml");
+    let anatomy_path = workspace::root(project).join("ctx/anatomy.yaml");
+    // Prefer flat file; fall back to legacy anatomy.yaml
+    let stored_path = if flat_path.exists() {
+        flat_path
+    } else if anatomy_path.exists() {
+        anatomy_path
+    } else {
+        return Ok(ScanDiff {
+            new_files: vec![],
+            deleted_files: vec![],
+            changed_files: vec![],
+        });
+    };
+
+    // If parse fails (e.g., anatomy.yaml is now a summary not a flat store), return empty diff
+    let stored: AnatomyStore = match workspace::read_yaml(&stored_path).context("read anatomy") {
+        Ok(s) => s,
+        Err(_) => {
+            return Ok(ScanDiff {
+                new_files: vec![],
+                deleted_files: vec![],
+                changed_files: vec![],
+            })
+        }
+    };
+    let current = scan(project)?;
+
+    let stored_set: std::collections::HashMap<&str, &FileEntry> =
+        stored.files.iter().map(|f| (f.path.as_str(), f)).collect();
+    let current_set: std::collections::HashMap<&str, &FileEntry> =
+        current.files.iter().map(|f| (f.path.as_str(), f)).collect();
+
+    let new_files: Vec<String> = current
+        .files
+        .iter()
+        .filter(|f| !stored_set.contains_key(f.path.as_str()))
+        .map(|f| f.path.clone())
+        .collect();
+
+    let deleted_files: Vec<String> = stored
+        .files
+        .iter()
+        .filter(|f| !current_set.contains_key(f.path.as_str()))
+        .map(|f| f.path.clone())
+        .collect();
+
+    let changed_files: Vec<String> = current
+        .files
+        .iter()
+        .filter(|f| {
+            stored_set
+                .get(f.path.as_str())
+                .map(|s| s.tokens != f.tokens)
+                .unwrap_or(false)
+        })
+        .map(|f| f.path.clone())
+        .collect();
+
+    Ok(ScanDiff {
+        new_files,
+        deleted_files,
+        changed_files,
+    })
+}
+
+#[derive(serde::Serialize)]
+pub struct ScanDiff {
+    pub new_files: Vec<String>,
+    pub deleted_files: Vec<String>,
+    pub changed_files: Vec<String>,
+}
+
+impl ScanDiff {
+    pub fn is_empty(&self) -> bool {
+        self.new_files.is_empty() && self.deleted_files.is_empty() && self.changed_files.is_empty()
+    }
+}
+
+fn heuristic_description(path: &str, ext: &str) -> Option<String> {
+    let filename = path.rsplit('/').next().unwrap_or(path);
+
+    // Well-known filenames first
+    let desc: Option<&str> = match filename {
+        "Cargo.toml" => Some("Rust package manifest"),
+        "Cargo.lock" => Some("Rust dependency lock file"),
+        "package.json" => Some("Node.js package manifest"),
+        "package-lock.json" => Some("Node.js dependency lock file"),
+        "tsconfig.json" => Some("TypeScript configuration"),
+        "README.md" | "readme.md" => Some("Project readme"),
+        "CHANGELOG.md" | "changelog.md" => Some("Release changelog"),
+        "LICENSE" | "LICENSE.md" => Some("License file"),
+        "Makefile" => Some("Make build rules"),
+        "Dockerfile" => Some("Docker container definition"),
+        ".gitignore" => Some("Git ignore rules"),
+        "CLAUDE.md" => Some("Claude Code project instructions"),
+        "AGENTS.md" => Some("LLM authoring guide"),
+        _ => None,
+    };
+    if let Some(d) = desc {
+        return Some(d.to_string());
+    }
+
+    // Path-aware descriptions: use directory context to say *what* the file does
+    if let Some(d) = path_aware_description(path, filename, ext) {
+        return Some(d);
+    }
+
+    // Bare extension fallback
+    match ext {
+        "rs" => Some("Rust source".to_string()),
+        "ts" | "tsx" => Some("TypeScript source".to_string()),
+        "js" | "jsx" => Some("JavaScript source".to_string()),
+        "py" => Some("Python source".to_string()),
+        "go" => Some("Go source".to_string()),
+        "yaml" | "yml" => Some("YAML configuration/data".to_string()),
+        "json" => Some("JSON data".to_string()),
+        "toml" => Some("TOML configuration".to_string()),
+        "md" => Some("Markdown document".to_string()),
+        "html" => Some("HTML document".to_string()),
+        "css" => Some("Stylesheet".to_string()),
+        "sql" => Some("SQL query/migration".to_string()),
+        "sh" | "bash" | "zsh" => Some("Shell script".to_string()),
+        _ => None,
+    }
+}
+
+fn path_aware_description(path: &str, filename: &str, ext: &str) -> Option<String> {
+    let stem = filename.strip_suffix(&format!(".{ext}")).unwrap_or(filename);
+    let parts: Vec<&str> = path.split('/').collect();
+
+    // Detect parent directory patterns
+    let parent = if parts.len() >= 2 {
+        parts[parts.len() - 2]
+    } else {
+        ""
+    };
+
+    let label = match parent {
+        "routes" | "route" => format!("{stem} route handler"),
+        "controllers" | "controller" => format!("{stem} controller"),
+        "models" | "model" => format!("{stem} model"),
+        "middleware" | "middlewares" => format!("{stem} middleware"),
+        "services" | "service" => format!("{stem} service"),
+        "lib" => format!("{stem} library module"),
+        "utils" | "util" | "helpers" | "helper" => format!("{stem} utility"),
+        "components" => format!("{stem} component"),
+        "pages" | "views" => format!("{stem} view/page"),
+        "migrations" => format!("{stem} migration"),
+        "tests" | "test" | "__tests__" | "spec" => format!("{stem} tests"),
+        "config" | "configs" => format!("{stem} configuration"),
+        "data" => format!("{stem} data/seed file"),
+        _ => return None,
+    };
+    Some(label)
+}

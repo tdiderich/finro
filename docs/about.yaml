@@ -288,6 +288,15 @@ components:
                         ~340 failed transactions, all retried successfully.
 
   - type: callout
+    variant: accent
+    title: Agent workspace
+    body: kazam also indexes your codebase, tracks tasks, and gives your coding agent persistent context — so it stops re-reading files and burning tokens. One command to set up.
+    links:
+      - label: Workspace docs →
+        href: workspace.html
+        variant: primary
+
+  - type: callout
     variant: info
     title: Next up
     body: You've seen the shape. The components reference has every primitive you can drop into a page; the themes page covers palettes; deploy covers shipping.

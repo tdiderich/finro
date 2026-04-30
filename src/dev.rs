@@ -18,9 +18,14 @@ const PORT_FALLBACK_ATTEMPTS: u16 = 10;
 /// Try to bind `0.0.0.0:<port>`, walking forward on conflict. Returns the
 /// live server and the port it actually bound to.
 fn bind_next_available(start: u16) -> Result<(Server, u16)> {
+    use std::net::TcpListener;
     let mut last_err: Option<String> = None;
     for p in start..start.saturating_add(PORT_FALLBACK_ATTEMPTS) {
         let addr = format!("0.0.0.0:{p}");
+        if TcpListener::bind(&addr).is_err() {
+            last_err = Some(format!("port {p} already in use"));
+            continue;
+        }
         match Server::http(&addr) {
             Ok(s) => return Ok((s, p)),
             Err(e) => last_err = Some(e.to_string()),

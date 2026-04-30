@@ -20,7 +20,7 @@ Single Rust binary. No workspace, no features, no build script. ~7 direct crates
 
 ```
 src/
-  main.rs              CLI entry (clap derive): build, dev, init, agents, wish
+  main.rs              CLI entry (clap derive): build, dev, init, agents, wish, track, ctx, board, workspace
   types.rs             All YAML-facing serde structs (SiteConfig, Page, Component, …)
   theme.rs             Theme tokens + STATIC_CSS (giant const string)
   render/
@@ -43,6 +43,19 @@ src/
     mod.rs             kazam wish dispatch (list, scaffold, grant, yolo)
     deck.rs            Deck wish (workspace + prompt generation)
     brief.rs           Brief wish
+  workspace.rs         .kazam/ directory init, config read/write, atomic YAML persistence
+  id.rs                Hash-based ID gen (kz-XXXX, no rand dep)
+  board.rs             kazam board — live dashboard rendering .kazam/ state
+  track/
+    mod.rs             kazam track CLI dispatch (11 subcommands)
+    types.rs           Task, TaskStatus, TaskType, LogEntry, LogSeverity
+    store.rs           YAML read/write for tasks + log
+    graph.rs           Ready algorithm, dependency validation, cycle detection
+  ctx/
+    mod.rs             kazam ctx CLI dispatch (10 subcommands)
+    types.rs           FileEntry, AnatomyStore, Learning, BugEntry
+    scan.rs            Project file walker, token estimation, anatomy diff
+    hooks.rs           Agent hook install/uninstall, shell script templates
 docs/                  The hosted docs site (itself a kazam site)
 examples/kb/           Example site used by integration tests
 tests/integration.rs   E2e: invokes the binary, builds sites, asserts on HTML output
@@ -79,6 +92,34 @@ AGENTS.md.template     Authoring guide bundled via include_str! → kazam agents
 ## Testing
 
 All tests are e2e in `tests/integration.rs` — they invoke the compiled binary, build sites from scratch YAML, and assert on the rendered HTML. There are no unit tests in `src/`. Use `CARGO_BIN_EXE_kazam` env var (set by cargo test runner) to locate the binary. `KAZAM_TODAY=YYYY-MM-DD` env var simulates "today" for freshness tests.
+
+## Agent workspace (`track`, `ctx`, `board`)
+
+The `workspace.rs`, `track/`, `ctx/`, and `board.rs` modules implement agent
+task tracking and context intelligence. State lives in `.kazam/` as YAML.
+
+Key patterns:
+
+- **CLI dispatch**: `track/mod.rs` and `ctx/mod.rs` follow the same pattern —
+  `Command` enum via clap derive, `run()` match, private `cmd_*` functions.
+  Every command supports `--json` using the `json_ok`/`json_err` envelope.
+- **Atomic writes**: all YAML writes go through `workspace::write_yaml` (tmp +
+  rename). Never write `.kazam/*.yaml` directly with `fs::write`.
+- **ID generation**: `id::generate()` returns `kz-XXXX` (4 hex chars). Uses
+  `SystemTime` + `process::id()` + atomic counter through `DefaultHasher` — no
+  `rand` dependency.
+- **Board**: `board.rs` constructs `Page`/`Component` structs in memory (same
+  types from `types.rs`) and renders via `render::render_page()`. It never
+  writes YAML — read-only from `.kazam/`.
+- **Hook scripts**: embedded as `const &str` in `ctx/hooks.rs`. The `install`
+  fn writes them to `.kazam/hooks/` and patches `.claude/settings.json`.
+
+Adding a new `track` or `ctx` subcommand:
+1. Add the variant to the `Command` enum in the module's `mod.rs`
+2. Add the match arm in `run()`
+3. Write a `cmd_*` function following the `--json` envelope pattern
+4. If it mutates state, go through `store::*` helpers (track) or
+   `workspace::write_yaml` (ctx)
 
 ## Docs site
 

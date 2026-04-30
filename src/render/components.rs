@@ -64,7 +64,13 @@ pub fn render(c: &Component, base: &str) -> Rendered {
             nodes,
             default_filter,
             show_filter_toggle,
-        } => tree(nodes, *default_filter, *show_filter_toggle),
+            default_collapsed,
+        } => tree(
+            nodes,
+            *default_filter,
+            *show_filter_toggle,
+            *default_collapsed,
+        ),
         Component::Venn {
             sets,
             overlaps,
@@ -859,11 +865,22 @@ fn event_timeline(
 
 // ── Tree ──────────────────────────────────────────
 
-fn tree(nodes: &[TreeNode], default_filter: TreeFilter, show_filter_toggle: bool) -> Rendered {
+fn tree(
+    nodes: &[TreeNode],
+    default_filter: TreeFilter,
+    show_filter_toggle: bool,
+    default_collapsed: bool,
+) -> Rendered {
     let mut r = Rendered::default();
+    let collapsed_class = if default_collapsed {
+        " c-tree-collapsed"
+    } else {
+        ""
+    };
     r.html.push_str(&format!(
-        r#"<div class="c-tree {}" data-filter="{}">"#,
+        r#"<div class="c-tree {}{}" data-filter="{}">"#,
         default_filter.class(),
+        collapsed_class,
         default_filter.label(),
     ));
 
@@ -1001,7 +1018,13 @@ fn render_tree_level(nodes: &[TreeNode], h: &mut String, list_class: &str) {
             blocked_desc = blocked_desc_attr,
             priority_desc = priority_desc_attr,
         ));
+        let has_children = !node.children.is_empty();
         h.push_str(r#"<div class="c-tree-row">"#);
+        if has_children {
+            h.push_str(
+                r#"<span class="c-tree-chevron" aria-hidden="true" data-tree-toggle>&#9654;</span>"#,
+            );
+        }
         h.push_str(&format!(
             r#"<span class="c-tree-glyph" aria-hidden="true">{}</span>"#,
             node.status.glyph()
@@ -1019,7 +1042,7 @@ fn render_tree_level(nodes: &[TreeNode], h: &mut String, list_class: &str) {
             }
         }
         h.push_str("</div>");
-        if !node.children.is_empty() {
+        if has_children {
             render_tree_level(&node.children, h, "c-tree-children");
         }
         h.push_str("</li>");

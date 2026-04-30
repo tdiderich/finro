@@ -1,0 +1,120 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)]
+pub struct AnatomyStore {
+    #[serde(default)]
+    pub scanned: String,
+    pub files: Vec<FileEntry>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct FileEntry {
+    pub path: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    pub tokens: u64,
+    #[serde(default)]
+    pub reads: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_read: Option<String>,
+    pub last_scanned: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct LearningStore {
+    pub learnings: Vec<Learning>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Learning {
+    pub id: String,
+    pub text: String,
+    #[serde(default)]
+    pub category: LearningCategory,
+    pub created: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum LearningCategory {
+    #[default]
+    Preference,
+    Correction,
+    Bug,
+}
+
+impl LearningCategory {
+    pub fn label(&self) -> &'static str {
+        match self {
+            Self::Preference => "preference",
+            Self::Correction => "correction",
+            Self::Bug => "bug",
+        }
+    }
+}
+
+impl std::str::FromStr for LearningCategory {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "preference" => Ok(Self::Preference),
+            "correction" => Ok(Self::Correction),
+            "bug" => Ok(Self::Bug),
+            _ => Err(format!("unknown category: {s}")),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct BugStore {
+    pub bugs: Vec<BugEntry>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct BugEntry {
+    pub id: String,
+    pub symptom: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub file_path: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resolution: Option<String>,
+    pub created: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resolved: Option<String>,
+}
+
+// ── Layered anatomy (two-tier: summary + per-directory detail) ──
+
+#[derive(Serialize, Deserialize)]
+pub struct AnatomySummary {
+    pub scanned: String,
+    pub root_files: Vec<FileEntry>,
+    pub directories: Vec<DirEntry>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct DirEntry {
+    pub path: String,
+    pub file_count: usize,
+    pub total_tokens: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct DirAnatomy {
+    pub files: Vec<FileEntry>,
+}
+
+// ── Status summary (agent-first: one call gets everything) ──
+
+#[derive(Serialize)]
+pub struct CtxStatus {
+    pub total_files: usize,
+    pub total_tokens: u64,
+    pub total_reads: u64,
+    pub learnings_count: usize,
+    pub bugs_open: usize,
+    pub bugs_resolved: usize,
+    pub last_scan: String,
+}

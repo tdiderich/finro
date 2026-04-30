@@ -5,10 +5,15 @@ Read this before generating or editing any `.yaml` file.
 
 ## What kazam is
 
-kazam is a Rust CLI that turns YAML files into themed static HTML. Every `.yaml`
-file in the source directory becomes one page of output. The format is designed
-for you — the machine — to generate easily: consistent `type:` tags, no nested
-conditionals, no templating logic.
+kazam is a Rust CLI that does two things: (1) turns YAML files into themed
+static HTML, and (2) provides an agent workspace with codebase indexing, task
+tracking, and a visual board. This guide covers the site-generation side. For
+the workspace side, run `kazam workspace init --agent claude` in any repo —
+it indexes your codebase, installs hooks, and writes workspace rules so your
+agent navigates faster and tracks its work.
+
+The site format is designed for you — the machine — to generate easily:
+consistent `type:` tags, no nested conditionals, no templating logic.
 
 ## File structure
 
@@ -604,6 +609,166 @@ components:
 kazam dev .              # watch + serve at localhost:3000 (live reload)
 kazam build .            # one-shot build to _site/
 kazam build . --release  # minified production build
+```
+
+## Agent workspace
+
+kazam includes a built-in workspace for agent task tracking and context
+intelligence. State lives in `.kazam/` as YAML files. Install kazam first:
+
+```bash
+cargo install --git https://github.com/tdiderich/kazam
+```
+
+### Setup
+
+```bash
+kazam workspace init          # one-shot: track + ctx + scan + hooks (recommended)
+```
+
+Or piecemeal:
+```bash
+kazam track init              # create .kazam/ with empty task + log stores
+kazam ctx init --scan         # scan project files into anatomy index
+kazam ctx hooks install       # register session hooks for Claude Code
+```
+
+Use `--skunkworks` with init commands to gitignore `.kazam/` (for shared repos
+where teammates don't use it).
+
+### Task tracking (`kazam track`)
+
+```bash
+kazam track add "title" [--priority 0-4] [--type task|bug|feature|epic] [--parent ID] [--blocks ID,...] [--assign NAME] [--note "..."] [--json]
+kazam track ready [--json]                 # unblocked tasks sorted by priority
+kazam track claim ID [--name NAME] [--json]  # atomic claim (fails if already taken)
+kazam track close ID [--reason "..."] [--json]
+kazam track block ID [--reason "..."] [--json]
+kazam track list [--status S] [--assignee N] [--json]
+kazam track tree [--filter all|incomplete|blocked|priority] [--json]
+kazam track show ID [--json]
+kazam track import PLAN.md [--dry-run] [--json]  # ## headings → epics, - bullets → tasks
+kazam track dep add BLOCKER BLOCKED
+kazam track dep rm BLOCKER BLOCKED
+kazam track log add "message" [--source NAME] [--severity major|minor|info] [--task ID]
+kazam track log [--limit N] [--json]
+```
+
+### Context intelligence (`kazam ctx`)
+
+```bash
+kazam ctx scan [--check] [--json]          # rescan anatomy (--check = diff only)
+kazam ctx status [--json]                  # file count, token total, learning count
+kazam ctx describe FILE "description"      # enrich a file's anatomy description
+kazam ctx learn "lesson" [--category preference|correction|bug] [--json]
+kazam ctx learnings [--json]
+kazam ctx bug "symptom" [--file PATH] [--json]
+kazam ctx bugs [--file PATH] [--json]
+kazam ctx resolve BUG_ID --fix "..." [--json]
+```
+
+### Live dashboard
+
+```bash
+kazam board [--port 3001]    # serve .kazam/ state as a visual board (live-reload)
+```
+
+### YAML schemas
+
+**`.kazam/track/tasks.yaml`**
+```yaml
+tasks:
+  - id: kz-a1b2
+    title: Implement auth middleware
+    status: open          # open | active | closed | blocked | deferred
+    priority: 1           # 0 (critical) – 4 (backlog)
+    task_type: feature    # task | bug | feature | epic
+    assignee: null
+    parent: null          # parent task ID
+    blocks: []            # IDs this task blocks
+    related: []
+    note: null
+    created: '2026-04-30T10:00:00-05:00'
+    updated: '2026-04-30T10:00:00-05:00'
+    closed: null
+    close_reason: null
+```
+
+**`.kazam/track/log.yaml`**
+```yaml
+events:
+  - date: '2026-04-30T10:15:00-05:00'
+    title: Claimed kz-a1b2
+    detail: null
+    severity: info        # major | minor | info
+    source: claude        # agent name
+    task_id: kz-a1b2
+```
+
+**`.kazam/ctx/anatomy.yaml`**
+```yaml
+scanned: '2026-04-30T10:00:00-05:00'
+files:
+  - path: src/main.rs
+    description: CLI entry point   # agent-enrichable
+    tokens: 850                    # bytes / 4
+    reads: 0
+    last_read: null
+    last_scanned: '2026-04-30T10:00:00-05:00'
+```
+
+**`.kazam/ctx/learnings.yaml`**
+```yaml
+learnings:
+  - id: kz-c3d4
+    text: Prefer snake_case for all YAML keys
+    category: preference  # preference | correction | bug
+    created: '2026-04-30T10:20:00-05:00'
+```
+
+**`.kazam/ctx/bugs.yaml`**
+```yaml
+bugs:
+  - id: kz-e5f6
+    symptom: Tree nodes don't render note text
+    file_path: src/render/components.rs
+    resolution: null
+    created: '2026-04-30T10:25:00-05:00'
+    resolved: null
+```
+
+Agents can edit these YAML files directly. The board auto-refreshes on any
+`.kazam/*.yaml` change.
+
+### Workflow
+
+If `.kazam/` exists in the project, follow this loop:
+
+1. **Pick work**: `kazam track ready --json` → pick the highest-priority task.
+2. **Claim it**: `kazam track claim <ID> --name <your-name>` (fails if another
+   agent already claimed it — pick a different task).
+3. **Check context before editing**: `kazam ctx bugs --file <path>` for known
+   bugs on files you're about to touch. Skim `.kazam/ctx/anatomy.yaml` for
+   token budgets and descriptions.
+4. **Work normally.** Hooks log file writes automatically.
+5. **Enrich as you go**: After reading an unfamiliar file, run
+   `kazam ctx describe <path> "what this file actually does"`. Record surprises
+   with `kazam ctx learn "lesson" --category correction`.
+6. **Close**: `kazam track close <ID> --reason "what you did"`.
+7. **If blocked**: `kazam track block <ID> --reason "why"` and pick the next
+   ready task.
+
+If `.kazam/` does not exist and you want to use it:
+```bash
+kazam workspace init    # creates .kazam/, scans files, installs hooks
+```
+
+### Importing plans
+
+If you have a markdown plan (from `/plan` mode or a design doc), import it:
+```bash
+kazam track import plan.md --dry-run   # preview what would be created
+kazam track import plan.md             # ## headings → epics, - bullets → tasks
 ```
 
 ## If you hit a kazam bug

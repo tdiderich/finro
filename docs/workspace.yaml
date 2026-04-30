@@ -1,0 +1,266 @@
+title: Agent Workspace
+shell: standard
+
+components:
+  - type: header
+    title: Agent Workspace
+    eyebrow: Make your agent faster
+    subtitle: Codebase indexing, task tracking, and a visual board — one command to set up.
+
+  # ── Why ───────────────────────────────────
+  - type: section
+    eyebrow: The problem
+    heading: Your agent wastes tokens navigating
+    components:
+      - type: columns
+        equal_heights: true
+        columns:
+          - - type: callout
+              variant: warn
+              title: Without workspace
+              body: |
+                The agent runs `find`, `ls`, and `grep` to map the repo — burning
+                hundreds of tokens per turn. Context compaction wipes all that
+                work. The next session starts from zero. Task progress is
+                invisible: no handoff, no history, no way to know what's done.
+          - - type: callout
+              variant: success
+              title: With workspace
+              body: |
+                A two-tier anatomy index answers "what's where" in one read.
+                Structured task tracking survives sessions, compaction, and agent
+                handoffs. A visual board shows status at a glance. Git hooks fire
+                silently — no workflow changes.
+
+  # ── Quickstart ────────────────────────────
+  - type: section
+    eyebrow: Setup
+    heading: One command
+    components:
+      - type: code
+        language: bash
+        code: |
+          kazam workspace init
+
+      - type: markdown
+        body: |
+          That single command does four things:
+
+          1. Scans the codebase and writes `.kazam/ctx/anatomy.yaml` (root files)
+             and `.kazam/ctx/anatomy/<dir>.yaml` (per-directory detail files).
+          2. Installs git hooks — session-start, post-write, session-stop.
+          3. Writes `.claude/rules/kazam-workspace.md` (or equivalent) so your
+             agent knows the conventions automatically.
+          4. Creates `.kazam/track/tasks.yaml` ready for task entries.
+
+      - type: markdown
+        body: |
+          Once initialized, open the visual board in a separate terminal while
+          your agent works:
+
+      - type: code
+        language: bash
+        code: |
+          kazam board
+
+  # ── Anatomy ───────────────────────────────
+  - type: section
+    eyebrow: Navigation
+    heading: Two-tier codebase index
+    components:
+      - type: markdown
+        body: |
+          Navigation is a two-step read, not a filesystem crawl.
+
+          **Step 1 — summary.** `.kazam/ctx/anatomy.yaml` lists every root file
+          with token counts and descriptions, plus a rollup for each directory
+          (file count, total tokens, one-line description). For a 5,800-file
+          repo this file is ~68 lines — one read, full orientation.
+
+          **Step 2 — detail.** `.kazam/ctx/anatomy/<dir>.yaml` lists every file
+          in that directory with per-file metadata. Nested paths use `--` as
+          separator: `frontend/src/app` → `anatomy/frontend--src--app.yaml`.
+
+          Go summary → detail file → source file. No `ls`, no `find`, no `grep`
+          for structure.
+
+      - type: code
+        language: yaml
+        code: |
+          # .kazam/ctx/anatomy.yaml (excerpt)
+          scanned: 2026-04-30T15:07:11Z
+          root_files:
+            - path: README.md
+              description: Project overview and install instructions
+              tokens: 1367
+            - path: Cargo.toml
+              description: Rust package manifest
+              tokens: 209
+          directories:
+            - path: src
+              file_count: 33
+              total_tokens: 123608
+              description: Core rendering and build pipeline
+            - path: docs
+              file_count: 26
+              total_tokens: 44858
+              description: kazam documentation site source
+
+      - type: markdown
+        body: |
+          After reading an unfamiliar file, enrich its description so future
+          reads skip it:
+
+      - type: code
+        language: bash
+        code: |
+          kazam ctx describe src/render/components.rs "renders every component type to HTML"
+
+  # ── Task tracking ─────────────────────────
+  - type: section
+    eyebrow: Tracking
+    heading: Structured and persistent
+    components:
+      - type: markdown
+        body: |
+          Tasks live in `.kazam/track/tasks.yaml`. They survive session ends,
+          context compaction, and agent handoffs. The workspace rules file
+          instructs agents to close tasks immediately after each commit — no
+          batching, no forgetting.
+
+      - type: code
+        language: bash
+        code: |
+          # See what's ready to work on (unblocked, sorted by priority)
+          kazam track ready --json
+
+          # Claim a task before starting
+          kazam track claim TASK-12 --name claude
+
+          # Close it after the commit lands
+          kazam track close TASK-12 --reason "added retry logic in src/client.rs"
+
+          # Mark blocked if something is in the way
+          kazam track block TASK-14 --reason "waiting on human approval for schema change"
+
+          # Full list with status
+          kazam track list --json
+
+      - type: markdown
+        body: |
+          Tasks with `--owner human` are not for agents to close. If one blocks
+          progress, mark it blocked and move on. When the human resolves it,
+          close it for them.
+
+  # ── Board ─────────────────────────────────
+  - type: section
+    eyebrow: Visibility
+    heading: Visual workspace
+    components:
+      - type: markdown
+        body: |
+          `kazam board` opens a themed, auto-refreshing dashboard in the browser.
+          It watches `.kazam/` for changes and updates without a page reload.
+
+          The board shows:
+          - Task list by status (open, claimed, blocked, closed)
+          - Anatomy index with file counts and token budgets
+          - Recent activity from the post-write hook log
+
+          Run it in a separate terminal while the agent works. No config needed
+          — it picks up the site theme from `kazam.yaml` if one exists.
+
+      - type: code
+        language: bash
+        code: |
+          kazam board     # opens at localhost:3000, watches .kazam/ for changes
+
+  # ── Hooks ─────────────────────────────────
+  - type: section
+    eyebrow: Wiring
+    heading: Invisible hooks
+    components:
+      - type: markdown
+        body: |
+          Three hooks install automatically. They fire silently — no prompts,
+          no workflow changes required.
+
+      - type: columns
+        equal_heights: true
+        columns:
+          - - type: callout
+              variant: info
+              title: session-start
+              body: Checks anatomy freshness and surfaces ready tasks. If the
+                anatomy is stale (files changed since last scan), it rescans
+                before the agent's first read.
+          - - type: callout
+              variant: info
+              title: post-write
+              body: Logs each file modification to `.kazam/activity.yaml` with
+                a timestamp and path. The board and anatomy stay current without
+                a manual rescan after every edit.
+          - - type: callout
+              variant: info
+              title: session-stop
+              body: Rescans the anatomy on exit so the next session — human or
+                agent — opens with a fresh index. No manual `kazam workspace scan`
+                needed between sessions.
+
+  # ── Benchmarks ────────────────────────────
+  - type: section
+    eyebrow: Results
+    heading: Real-world benchmarks
+    components:
+      - type: table
+        columns:
+          - key: repo
+            label: Repo
+            sortable: true
+          - key: files
+            label: Files
+            sortable: true
+            align: right
+          - key: task
+            label: Task
+          - key: cost
+            label: Cost
+            sortable: true
+          - key: speed
+            label: Speed
+            sortable: true
+        rows:
+          - repo: juice-shop
+            files: "1,000"
+            task: 7 blind bug fixes
+            cost: 37% cheaper
+            speed: 19% faster
+          - repo: atlas
+            files: "5,800"
+            task: Sankey click handler
+            cost: 17% cheaper
+            speed: 36% faster
+          - repo: ops
+            files: 885
+            task: Named threshold change
+            cost: tie
+            speed: tie
+
+      - type: markdown
+        body: |
+          kazam's advantage scales with repo size and task ambiguity.
+
+  # ── Next up ───────────────────────────────
+  - type: callout
+    variant: info
+    title: Next up
+    body: "Get the binary and run `kazam workspace init` in any repo. Then see
+      the components reference for the static site gen side — every primitive
+      you can drop into a kazam page."
+    links:
+      - label: Quickstart guide →
+        href: guide.html
+        variant: primary
+      - label: Components reference
+        href: components/index.html
+        variant: secondary
