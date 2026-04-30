@@ -160,7 +160,9 @@ pub fn uninstall(project: &Path) -> Result<()> {
                 if let Some(hooks) = obj.get_mut("hooks") {
                     if let Some(hooks_obj) = hooks.as_object_mut() {
                         for event in ["SessionStart", "PostToolUse", "Stop"] {
-                            if let Some(arr) = hooks_obj.get_mut(event).and_then(|v| v.as_array_mut()) {
+                            if let Some(arr) =
+                                hooks_obj.get_mut(event).and_then(|v| v.as_array_mut())
+                            {
                                 arr.retain(|item| {
                                     !item
                                         .pointer("/hooks/0/description")

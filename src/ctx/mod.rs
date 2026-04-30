@@ -271,9 +271,8 @@ fn cmd_describe(project: &Path, file: &str, description: &str) -> Result<()> {
                 .join(&filename);
             if dir_file_path.exists() {
                 let mut dir_anatomy: crate::ctx::types::DirAnatomy =
-                    crate::workspace::read_yaml(&dir_file_path).unwrap_or(
-                        crate::ctx::types::DirAnatomy { files: vec![] },
-                    );
+                    crate::workspace::read_yaml(&dir_file_path)
+                        .unwrap_or(crate::ctx::types::DirAnatomy { files: vec![] });
                 if let Some(e) = dir_anatomy.files.iter_mut().find(|f| f.path == file) {
                     e.description = Some(description.to_string());
                     crate::workspace::write_yaml(&dir_file_path, &dir_anatomy)?;

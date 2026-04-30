@@ -66,7 +66,10 @@ pub fn ensure(project: &Path) -> Result<PathBuf> {
         ("track/tasks.yaml", "tasks: []\n"),
         ("track/log.yaml", "events: []\n"),
         // anatomy.yaml is the agent-facing layered summary; anatomy.flat.yaml is the internal flat store
-        ("ctx/anatomy.yaml", "scanned: \"\"\nroot_files: []\ndirectories: []\n"),
+        (
+            "ctx/anatomy.yaml",
+            "scanned: \"\"\nroot_files: []\ndirectories: []\n",
+        ),
         ("ctx/anatomy.flat.yaml", "scanned: \"\"\nfiles: []\n"),
         ("ctx/learnings.yaml", "learnings: []\n"),
         ("ctx/bugs.yaml", "bugs: []\n"),

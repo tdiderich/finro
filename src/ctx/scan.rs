@@ -199,10 +199,16 @@ pub fn write_layered(project: &Path, store: &AnatomyStore) -> Result<()> {
         let path = &file.path;
         if let Some(slash_pos) = path.find('/') {
             let top_dir = &path[..slash_pos];
-            by_top_dir.entry(top_dir.to_string()).or_default().push(file);
+            by_top_dir
+                .entry(top_dir.to_string())
+                .or_default()
+                .push(file);
             if let Some(leaf_pos) = path.rfind('/') {
                 let leaf_dir = &path[..leaf_pos];
-                by_leaf_dir.entry(leaf_dir.to_string()).or_default().push(file);
+                by_leaf_dir
+                    .entry(leaf_dir.to_string())
+                    .or_default()
+                    .push(file);
             }
         } else {
             root_files.push(file.clone());
@@ -238,7 +244,9 @@ pub fn write_layered(project: &Path, store: &AnatomyStore) -> Result<()> {
         let files = by_leaf_dir.get(dir_path.as_str()).unwrap();
         let mut sorted_files: Vec<FileEntry> = files.iter().map(|f| (*f).clone()).collect();
         sorted_files.sort_by(|a, b| a.path.cmp(&b.path));
-        let dir_anatomy = DirAnatomy { files: sorted_files };
+        let dir_anatomy = DirAnatomy {
+            files: sorted_files,
+        };
         let filename = format!("{}.yaml", dir_to_filename(dir_path));
         workspace::write_yaml(&anatomy_dir.join(&filename), &dir_anatomy)?;
     }
@@ -383,7 +391,9 @@ fn heuristic_description(path: &str, ext: &str) -> Option<String> {
 }
 
 fn path_aware_description(path: &str, filename: &str, ext: &str) -> Option<String> {
-    let stem = filename.strip_suffix(&format!(".{ext}")).unwrap_or(filename);
+    let stem = filename
+        .strip_suffix(&format!(".{ext}"))
+        .unwrap_or(filename);
     let parts: Vec<&str> = path.split('/').collect();
 
     // Detect parent directory patterns
