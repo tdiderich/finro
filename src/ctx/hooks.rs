@@ -55,13 +55,9 @@ State lives in `.kazam/` as YAML files.
 - If `kazam` is not on PATH, install it before using any workspace commands.
 
 ## Navigating the codebase — MANDATORY
-**STOP. Before you run `grep`, `find`, `ls`, or spawn an Explore/search agent,
-read the anatomy index.** This is not optional. The index exists so you don't
-waste tokens scanning the filesystem.
-
-**Do NOT use Explore agents, `grep`, `find`, or `ls` to locate files or
-understand project structure.** Read the anatomy files directly with the
-Read tool instead.
+**Before you `grep`, `find`, `ls`, or spawn a subagent to explore, read the
+anatomy index.** This is not optional. The index exists so you don't waste
+tokens scanning the filesystem.
 
 **Step 1 — Read the summary:**
 `.kazam/ctx/anatomy.yaml` — compact index with root files and directory rollups
@@ -73,7 +69,12 @@ Nested paths use `--` as separator: `frontend/src/app` → `anatomy/frontend--sr
 
 **Step 3 — Read the source file you need.**
 
-That's it: summary → detail → source. Three reads, zero exploration.
+Summary → detail → source. Three reads, zero exploration.
+
+**When delegating to subagents:** always include the anatomy paths in the
+subagent prompt so it can read them instead of running grep/find. Example:
+"Read `.kazam/ctx/anatomy.yaml` first for project layout, then drill into
+`.kazam/ctx/anatomy/<dir>.yaml` for the directory you need."
 
 ## On session start or context recovery
 Run `kazam track ready --json` to orient — see unblocked tasks sorted by priority.
