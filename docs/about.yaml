@@ -1,9 +1,9 @@
-title: Full Tour
+title: Site Guide
 shell: standard
 
 components:
   - type: header
-    title: Full Tour
+    title: Site Guide
     eyebrow: 3 minutes
     subtitle: How a kazam site is shaped — file tree, shells, components, kazam.yaml. Everything you need to start writing real pages.
 
@@ -286,15 +286,6 @@ components:
 
                         ## Impact
                         ~340 failed transactions, all retried successfully.
-
-  - type: callout
-    variant: info
-    title: Agent workspace
-    body: kazam also indexes your codebase, tracks tasks, and gives your coding agent persistent context — so it stops re-reading files and burning tokens. One command to set up.
-    links:
-      - label: Workspace docs →
-        href: workspace.html
-        variant: primary
 
   - type: callout
     variant: info

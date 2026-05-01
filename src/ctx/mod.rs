@@ -2,7 +2,7 @@ pub mod hooks;
 pub mod scan;
 pub mod types;
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use clap::Subcommand;
 use std::path::Path;
 
@@ -233,7 +233,7 @@ fn cmd_scan(project: &Path, check: bool, json: bool) -> Result<()> {
         let store = scan::scan(project)?;
         // Write flat store (for board.rs + describe + status)
         crate::workspace::write_yaml(&anatomy_path(project), &store)?;
-        // Write layered summary (anatomy.yaml) + per-directory files (anatomy/<dir>.yaml)
+        // Write layered summary (anatomy.tsv) + per-directory files (anatomy/<dir>.tsv)
         scan::write_layered(project, &store)?;
         if json {
             json_ok(&serde_json::json!({ "files": store.files.len() }));
@@ -306,20 +306,47 @@ fn cmd_describe(project: &Path, file: &str, description: &str) -> Result<()> {
         entry.description = Some(description.to_string());
         crate::workspace::write_yaml(&path, &store)?;
 
-        // Also update the per-directory anatomy file if one exists
+        // Also update the per-directory anatomy TSV file if one exists
         if let Some(slash_pos) = file.rfind('/') {
             let dir = &file[..slash_pos];
-            let filename = format!("{}.yaml", dir.replace('/', "--"));
+            let filename = format!("{}.tsv", dir.replace('/', "--"));
             let dir_file_path = crate::workspace::root(project)
                 .join("ctx/anatomy")
                 .join(&filename);
             if dir_file_path.exists() {
-                let mut dir_anatomy: crate::ctx::types::DirAnatomy =
-                    crate::workspace::read_yaml(&dir_file_path)
-                        .unwrap_or(crate::ctx::types::DirAnatomy { files: vec![] });
-                if let Some(e) = dir_anatomy.files.iter_mut().find(|f| f.path == file) {
-                    e.description = Some(description.to_string());
-                    crate::workspace::write_yaml(&dir_file_path, &dir_anatomy)?;
+                let content = std::fs::read_to_string(&dir_file_path)
+                    .with_context(|| format!("read {}", dir_file_path.display()))?;
+                let mut new_lines: Vec<String> = Vec::new();
+                let mut found = false;
+                for line in content.lines() {
+                    // Skip comment lines and header row unchanged
+                    if line.starts_with('#') || line.starts_with("path\t") {
+                        new_lines.push(line.to_string());
+                        continue;
+                    }
+                    let mut cols: Vec<&str> = line.splitn(4, '\t').collect();
+                    if !cols.is_empty() && cols[0] == file {
+                        // Ensure we have at least 4 columns
+                        while cols.len() < 4 {
+                            cols.push("");
+                        }
+                        let safe_desc = description.replace('\t', "  ");
+                        new_lines.push(format!("{}\t{}\t{}\t{}", cols[0], cols[1], cols[2], safe_desc));
+                        found = true;
+                    } else {
+                        new_lines.push(line.to_string());
+                    }
+                }
+                if found {
+                    let mut out = new_lines.join("\n");
+                    if !out.ends_with('\n') {
+                        out.push('\n');
+                    }
+                    let tmp = dir_file_path.with_extension("tsv.tmp");
+                    std::fs::write(&tmp, &out)
+                        .with_context(|| format!("write {}", tmp.display()))?;
+                    std::fs::rename(&tmp, &dir_file_path)
+                        .with_context(|| format!("rename to {}", dir_file_path.display()))?;
                 }
             }
         }

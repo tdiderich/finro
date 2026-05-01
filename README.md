@@ -20,15 +20,16 @@ kazam fixes the three things that make agent-assisted coding slower and more exp
 
 ### Benchmarks
 
-Tested on real codebases with real bug-fix tasks, comparing kazam-equipped vs vanilla Claude Code:
+Tested with Sonnet 4.6, identical prompts, git worktrees — kazam-equipped vs vanilla Claude Code:
 
 | Repo | Files | Task | Cost | Speed |
 |---|---|---|---|---|
-| Open-source Node app | 1,000 | 7 blind bug fixes | **37% cheaper** | **19% faster** |
-| Internal monorepo | 5,800+ | UI click handler fix | **17% cheaper** | **36% faster** |
-| Internal service repo | ~900 | Named config change | tie | tie |
+| Internal tools repo | 8,000+ | Add CLI flag + thread to SQL | **45% cheaper** | **41% faster** |
+| Plugin repo | 126 | Add config field to skill | **44% cheaper** | **59% faster** |
+| React/TS app | 89 | Add loading skeleton | **46% cheaper** | **47% faster** |
+| Python service | 233 | Cross-cutting model change | **45% cheaper** | **44% faster** |
 
-kazam's advantage scales with repo size and task ambiguity. Targeted tasks with named files are a wash. Navigation-heavy tasks in large codebases are where the savings compound.
+Input tokens per turn dropped 81–94% across the board. The anatomy index eliminates exploratory file reads — the agent navigates instead of scanning.
 
 ## Install
 
@@ -68,18 +69,14 @@ Live-updating task status, file anatomy, and activity log — served locally wit
 
 ```bash
 kazam init my-site && cd my-site
-kazam dev . --port 3000    # → http://localhost:3000, live reload
+kazam dev .    # live reload at localhost:3000
 ```
 
-Edit `index.yaml`. Save. The browser reloads. That's the loop.
-
-kazam also builds beautiful static sites from simple YAML — 30+ themed components, three shell types (standard pages, print-ready documents, full-viewport decks), and zero runtime JS in the output. Let your agent write the content:
+Edit `index.yaml`, save, browser reloads. 30+ themed components, three shell types (standard, document, deck), zero runtime JS. Let your agent write the content:
 
 ```bash
 kazam wish deck --yolo "Q3 pipeline review"
 ```
-
-One command, one populated deck. Works with Claude Code, Gemini CLI, Codex, and OpenCode.
 
 **[Docs + live examples](https://tdiderich.github.io/kazam/)** · **[Components](https://tdiderich.github.io/kazam/components/index.html)** · **[Themes](https://tdiderich.github.io/kazam/themes.html)** · **[Deploy recipes](https://tdiderich.github.io/kazam/deploy.html)**
 
@@ -89,8 +86,8 @@ One command, one populated deck. Works with Claude Code, Gemini CLI, Codex, and 
 
 `kazam ctx scan` walks your repo and builds a two-tier index:
 
-- **Summary** (`.kazam/ctx/anatomy.yaml`) — root files + top-level directory rollups with file counts, token estimates, and descriptions. Typically under 70 lines even for repos with thousands of files.
-- **Detail** (`.kazam/ctx/anatomy/<dir>.yaml`) — individual files in each directory, with per-file descriptions and token counts.
+- **Summary** (`.kazam/ctx/anatomy.tsv`) — root files + top-level directory rollups with file counts, token estimates, and descriptions. TSV format — ~60% fewer tokens than the previous YAML format.
+- **Detail** (`.kazam/ctx/anatomy/<dir>.tsv`) — individual files in each directory, with per-file descriptions and token counts.
 
 Agents read the summary first, then drill into the directory they need. No `find`. No `grep`. No wasted turns.
 
@@ -112,6 +109,26 @@ kazam board
 ```
 
 A themed, auto-refreshing local dashboard showing task status, codebase anatomy, and activity. Built with kazam's own rendering engine. More natural than watching a terminal scroll.
+
+### Corrections — agents that learn from mistakes
+
+```bash
+kazam ctx correction "assumed Express middleware" "it's custom Koa" --file src/auth.rs
+kazam ctx corrections --json
+```
+
+When an agent gets something wrong, record it. Corrections are surfaced in workspace rules so future sessions don't repeat the same mistakes.
+
+### Consolidation — keep context lean
+
+```bash
+kazam ctx consolidate          # remove resolved bugs >30 days old, deduplicate learnings
+kazam ctx consolidate --days 14
+```
+
+### Rules override — project-specific conventions
+
+Create `.kazam/ctx/rules-override.md` and its contents are appended to the generated agent rules on every workspace init. Version-controlled, team-wide.
 
 ### Hooks — invisible wiring
 

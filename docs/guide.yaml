@@ -1,11 +1,11 @@
-title: Guide
+title: Get Started
 shell: standard
 
 components:
   - type: header
-    title: Guide
+    title: Get Started
     eyebrow: 60 seconds
-    subtitle: Install the binary, scaffold a site, run the dev server.
+    subtitle: Install the binary, then pick your path — agent workspace or static sites.
 
   - type: section
     eyebrow: Install
@@ -66,52 +66,66 @@ components:
                   cp target/release/kazam /usr/local/bin/kazam
 
   - type: section
-    eyebrow: Scaffold
-    heading: Live on localhost in 30 seconds
+    eyebrow: Two paths
+    heading: What are you building?
     components:
-      - type: code
-        language: bash
-        code: |
-          kazam init my-site       # scaffolds kazam.yaml + index.yaml + AGENTS.md
-          cd my-site
-          kazam dev .              # watch + serve at localhost:3000, live reload
+      - type: tabs
+        tabs:
+          - label: Agent workspace
+            components:
+              - type: markdown
+                body: |
+                  Give your coding agent persistent codebase context, task tracking, and a visual board.
+              - type: code
+                language: bash
+                code: |
+                  cd your-repo && kazam workspace init --agent claude
+              - type: markdown
+                body: |
+                  That's it. Your agent now reads the codebase index instead of running find/grep,
+                  tracks work with `kazam track`, and logs activity. Open the board in a separate terminal:
+              - type: code
+                language: bash
+                code: |
+                  kazam board
+              - type: callout
+                variant: info
+                title: Next up
+                body: The workspace guide covers anatomy, tracking, hooks, corrections, and benchmarks in detail.
+                links:
+                  - label: Workspace guide →
+                    href: workspace.html
+                    variant: primary
 
-      - type: markdown
-        body: |
-          Edit `index.yaml` — the browser reloads on save. Add new `.yaml`
-          files for new pages. That's the whole dev loop.
-
-      - type: callout
-        variant: info
-        title: Or skip the scaffold — let your agent write it
-        body: "Drop a folder of real context (notes, transcripts, prior decks, PDFs) and run `kazam wish deck`. Your agent — Claude, Gemini, Codex, or OpenCode — reads everything with its own file tools and writes a populated deck. Or `kazam wish deck --yolo \"about me\"` to skip the folder entirely and let the agent invent the whole thing."
-        links:
-          - label: Read the wishes guide →
-            href: wishes.html
-            variant: primary
-
-  - type: section
-    eyebrow: Ship
-    heading: Build a static bundle
-    components:
-      - type: code
-        language: bash
-        code: |
-          kazam build . --out dist --release    # one-shot build to ./dist
-
-      - type: markdown
-        body: |
-          The output is plain HTML, CSS, and copied assets — no runtime, no
-          framework bundle. Any static host works.
-
-  - type: callout
-    variant: info
-    title: Next up
-    body: You've got a site running. The full tour walks through how pages are shaped — shells, components, and a full kazam.yaml — then deploy recipes cover the handful of hosts most people pick.
-    links:
-      - label: Take the full tour →
-        href: about.html
-        variant: primary
-      - label: Deploy recipes
-        href: deploy.html
-        variant: secondary
+          - label: Static sites
+            components:
+              - type: markdown
+                body: |
+                  Build beautiful static sites from YAML — 30+ themed components, zero runtime JS.
+              - type: code
+                language: bash
+                code: |
+                  kazam init my-site && cd my-site && kazam dev .
+              - type: markdown
+                body: |
+                  Edit `index.yaml` — the browser reloads on save. That's the loop.
+              - type: code
+                language: bash
+                code: |
+                  kazam build . --out dist --release
+              - type: callout
+                variant: info
+                title: Or let your agent write it
+                body: "Run `kazam wish deck --yolo` and your agent scaffolds and populates the whole site for you."
+                links:
+                  - label: Read the wishes guide →
+                    href: wishes.html
+                    variant: primary
+              - type: callout
+                variant: info
+                title: Next up
+                body: The site guide walks through shells, components, and kazam.yaml config.
+                links:
+                  - label: Site guide →
+                    href: about.html
+                    variant: primary

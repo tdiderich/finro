@@ -46,8 +46,8 @@ components:
         body: |
           That single command does four things:
 
-          1. Scans the codebase and writes `.kazam/ctx/anatomy.yaml` (root files)
-             and `.kazam/ctx/anatomy/<dir>.yaml` (per-directory detail files).
+          1. Scans the codebase and writes `.kazam/ctx/anatomy.tsv` (root files)
+             and `.kazam/ctx/anatomy/<dir>.tsv` (per-directory detail files).
           2. Installs git hooks — session-start, post-write, session-stop.
           3. Writes `.claude/rules/kazam-workspace.md` (or equivalent) so your
              agent knows the conventions automatically.
@@ -72,40 +72,33 @@ components:
         body: |
           Navigation is a two-step read, not a filesystem crawl.
 
-          **Step 1 — summary.** `.kazam/ctx/anatomy.yaml` lists every root file
+          **Step 1 — summary.** `.kazam/ctx/anatomy.tsv` lists every root file
           with token counts and descriptions, plus a rollup for each directory
           (file count, total tokens, one-line description). Even for repos
           with thousands of files this summary is ~68 lines — one read, full
           orientation.
 
-          **Step 2 — detail.** `.kazam/ctx/anatomy/<dir>.yaml` lists every file
+          **Step 2 — detail.** `.kazam/ctx/anatomy/<dir>.tsv` lists every file
           in that directory with per-file metadata. Nested paths use `--` as
-          separator: `frontend/src/app` → `anatomy/frontend--src--app.yaml`.
+          separator: `frontend/src/app` → `anatomy/frontend--src--app.tsv`.
 
           Go summary → detail file → source file. No `ls`, no `find`, no `grep`
           for structure.
 
       - type: code
-        language: yaml
+        language: text
         code: |
-          # .kazam/ctx/anatomy.yaml (excerpt)
-          scanned: 2026-04-30T15:07:11Z
-          root_files:
-            - path: README.md
-              description: Project overview and install instructions
-              tokens: 1367
-            - path: Cargo.toml
-              description: Rust package manifest
-              tokens: 209
-          directories:
-            - path: src
-              file_count: 33
-              total_tokens: 123608
-              description: Core rendering and build pipeline
-            - path: docs
-              file_count: 26
-              total_tokens: 44858
-              description: kazam documentation site source
+          # .kazam/ctx/anatomy.tsv (excerpt)
+          # scanned: 2026-04-30T15:07:11Z
+          # root_files
+          path	tokens	reads	description
+          README.md	1367	0	Project overview and install instructions
+          Cargo.toml	209	0	Rust package manifest
+
+          # directories
+          path	files	tokens	description
+          src	33	123608	Core rendering and build pipeline
+          docs	26	44858	kazam documentation site source
 
       - type: markdown
         body: |
@@ -231,25 +224,117 @@ components:
             label: Speed
             sortable: true
         rows:
-          - repo: Open-source Node app
-            files: "1,000"
-            task: 7 blind bug fixes
-            cost: 37% cheaper
-            speed: 19% faster
-          - repo: Internal monorepo
-            files: "5,800+"
-            task: UI click handler fix
-            cost: 17% cheaper
-            speed: 36% faster
-          - repo: Internal service repo
-            files: "~900"
-            task: Named config change
-            cost: tie
-            speed: tie
+          - repo: Internal tools repo
+            files: "8,000+"
+            task: Add CLI flag + thread to SQL
+            cost: 45% cheaper
+            speed: 41% faster
+          - repo: Plugin repo
+            files: "126"
+            task: Add config field to skill
+            cost: 44% cheaper
+            speed: 59% faster
+          - repo: React/TS app
+            files: "89"
+            task: Add loading skeleton
+            cost: 46% cheaper
+            speed: 47% faster
+          - repo: Python service
+            files: "233"
+            task: Cross-cutting model change
+            cost: 45% cheaper
+            speed: 44% faster
 
       - type: markdown
         body: |
-          kazam's advantage scales with repo size and task ambiguity.
+          Tested with Sonnet 4.6, identical prompts, git worktrees. Input tokens
+          per turn dropped 81–94% across the board — the anatomy index eliminates
+          exploratory file reads.
+
+  # ── Corrections ──────────────────────────
+  - type: section
+    eyebrow: Learning
+    heading: Correction ledger
+    components:
+      - type: markdown
+        body: |
+          When an agent gets something wrong — misreads a file, applies the wrong
+          pattern, makes a false assumption — record it so future sessions don't
+          repeat the mistake.
+
+      - type: code
+        language: bash
+        code: |
+          # Record a correction
+          kazam ctx correction "assumed auth middleware was Express" "it's a custom Koa middleware" --file src/auth.rs
+
+          # List all corrections
+          kazam ctx corrections --json
+
+      - type: markdown
+        body: |
+          Corrections are surfaced in the workspace rules file. Agents read them
+          at session start and avoid repeating the same mistakes. Over time this
+          builds a project-specific error log that makes every session smarter
+          than the last.
+
+  # ── Consolidation ────────────────────────
+  - type: section
+    eyebrow: Maintenance
+    heading: Consolidation
+    components:
+      - type: markdown
+        body: |
+          Over time, resolved bugs pile up and learnings duplicate. `consolidate`
+          cleans house — removes resolved bugs older than N days and deduplicates
+          learnings.
+
+      - type: code
+        language: bash
+        code: |
+          # Default: remove resolved bugs older than 30 days
+          kazam ctx consolidate
+
+          # Custom window
+          kazam ctx consolidate --days 14
+
+      - type: markdown
+        body: |
+          Run this periodically (or let a scheduled agent do it) to keep
+          `.kazam/ctx/` lean. Less stale data means fewer tokens spent on
+          context that no longer matters.
+
+  # ── Rules override ───────────────────────
+  - type: section
+    eyebrow: Customization
+    heading: Rules override
+    components:
+      - type: markdown
+        body: |
+          `kazam workspace init` writes a default rules file for your agent
+          (e.g. `.claude/rules/kazam-workspace.md`). If the defaults don't fit,
+          create `.kazam/ctx/rules-override.md` — its contents are appended to
+          the generated rules on every workspace init or rescan.
+
+      - type: code
+        language: bash
+        code: |
+          # Create an override file
+          cat > .kazam/ctx/rules-override.md << 'EOF'
+          ## Project-specific rules
+
+          - Always run `make lint` before committing.
+          - The `legacy/` directory is frozen — never modify files there.
+          - Prefer integration tests over unit tests in this repo.
+          EOF
+
+          # Re-init to pick up the override
+          kazam workspace init --agent claude
+
+      - type: markdown
+        body: |
+          The override file is plain markdown. It's version-controlled with the
+          rest of `.kazam/`, so team-wide conventions propagate through git.
 
   # ── Next up ───────────────────────────────
   - type: callout

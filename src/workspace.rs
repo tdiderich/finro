@@ -65,10 +65,10 @@ pub fn ensure(project: &Path) -> Result<PathBuf> {
     let empty_files = [
         ("track/tasks.yaml", "tasks: []\n"),
         ("track/log.yaml", "events: []\n"),
-        // anatomy.yaml is the agent-facing layered summary; anatomy.flat.yaml is the internal flat store
+        // anatomy.tsv is the agent-facing layered summary; anatomy.flat.yaml is the internal flat store
         (
-            "ctx/anatomy.yaml",
-            "scanned: \"\"\nroot_files: []\ndirectories: []\n",
+            "ctx/anatomy.tsv",
+            "# scanned:\n# root_files\npath\ttokens\treads\tdescription\n\n# directories\npath\tfiles\ttokens\tdescription\n",
         ),
         ("ctx/anatomy.flat.yaml", "scanned: \"\"\nfiles: []\n"),
         ("ctx/learnings.yaml", "learnings: []\n"),

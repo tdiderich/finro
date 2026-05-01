@@ -705,16 +705,26 @@ events:
     task_id: kz-a1b2
 ```
 
-**`.kazam/ctx/anatomy.yaml`**
+**`.kazam/ctx/anatomy.tsv`** (agent-facing, compact TSV)
+```
+# scanned: 2026-04-30T10:00:00-05:00
+# root_files
+path	tokens	reads	description
+src/main.rs	850	0	CLI entry point
+
+# directories
+path	files	tokens	description
+src	12	45000	Core source
+```
+
+**`.kazam/ctx/anatomy.flat.yaml`** (internal, used by board)
 ```yaml
 scanned: '2026-04-30T10:00:00-05:00'
 files:
   - path: src/main.rs
-    description: CLI entry point   # agent-enrichable
-    tokens: 850                    # bytes / 4
+    description: CLI entry point
+    tokens: 850
     reads: 0
-    last_read: null
-    last_scanned: '2026-04-30T10:00:00-05:00'
 ```
 
 **`.kazam/ctx/learnings.yaml`**
@@ -748,7 +758,7 @@ If `.kazam/` exists in the project, follow this loop:
 2. **Claim it**: `kazam track claim <ID> --name <your-name>` (fails if another
    agent already claimed it — pick a different task).
 3. **Check context before editing**: `kazam ctx bugs --file <path>` for known
-   bugs on files you're about to touch. Skim `.kazam/ctx/anatomy.yaml` for
+   bugs on files you're about to touch. Skim `.kazam/ctx/anatomy.tsv` for
    token budgets and descriptions.
 4. **Work normally.** Hooks log file writes automatically.
 5. **Enrich as you go**: After reading an unfamiliar file, run

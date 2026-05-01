@@ -6,6 +6,49 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.3.1] — 2026-05-01
+
+### Changed
+- **Anatomy format: YAML → TSV** — agent-facing anatomy files
+  (`anatomy.tsv`, `anatomy/<dir>.tsv`) now use tab-separated values
+  instead of YAML. ~60–80% fewer tokens per read. The internal flat
+  store (`anatomy.flat.yaml`) remains YAML for the board and tooling.
+  Descriptions are sanitized (tabs replaced with double spaces).
+  Old YAML anatomy files are cleaned up automatically on scan.
+- **Dropped `last_scanned` from anatomy output** — agents never used it;
+  removing it cuts per-entry size further.
+- **Removed dead layered anatomy structs** — `AnatomySummary`,
+  `DirEntry`, `DirAnatomy` types deleted since TSV replaced YAML
+  serialization for the agent-facing layer.
+- **Updated benchmarks** — re-ran with Sonnet 4.6, identical prompts,
+  git worktrees. Results: 44–46% cheaper, 41–59% faster, 81–94% fewer
+  input tokens per turn across 4 real codebases.
+
+### Added
+- **Benchmark harness** — `benchmarks/run.sh` and `benchmarks/run-all.sh`
+  automate A/B comparisons (kazam vs vanilla) using `claude -p` with
+  JSON output. Test definitions in `benchmarks/tests/`.
+
+### Fixed
+- **Hook format matching** — `retain` logic now matches both nested and
+  legacy flat hook formats (from 1.3.0 fix on this branch).
+
+### Docs
+- **Nav restructured** — Home → Get Started → Workspace → Sites (Site
+  Guide, Themes, Deploy) → Recipes → Components. Workspace promoted to
+  top-level nav item.
+- **Landing page rewritten** — workspace-first hero, three pillars
+  (tokens, tracking, visibility), updated benchmark stats, condensed
+  site-gen section, dual quickstart callouts.
+- **Get Started rewritten** — dual-path tabs (workspace vs sites) with
+  next-up callouts to deep-dive pages.
+- **Site Guide** — `about.yaml` retitled from "Full Tour", workspace
+  callout removed (workspace has its own page).
+- **Workspace docs polished** — added corrections, consolidation, and
+  rules-override sections. Anatomy examples updated to TSV format.
+- **README updated** — tighter site-gen section, new workspace features
+  (corrections, consolidation, rules-override), updated benchmarks.
+
 ## [1.3.0] — 2026-04-30
 
 kazam is no longer just a static site generator. This release adds a
