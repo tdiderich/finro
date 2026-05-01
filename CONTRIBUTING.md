@@ -17,12 +17,13 @@ If you're unsure whether a change fits, open a small issue first and describe th
 ```bash
 git clone https://github.com/YOUR-FORK/kazam
 cd kazam
+git config core.hooksPath .githooks   # enable pre-commit checks
 cargo build --release
 cargo test --release
 ./target/release/kazam dev docs --port 3002   # live-edit the docs site
 ```
 
-Use the latest stable Rust toolchain via [rustup](https://rustup.rs). The repo pins nothing — if stable works, we support it.
+The `core.hooksPath` line activates the repo's pre-commit hook (`.githooks/pre-commit`), which runs `cargo fmt --check` and `cargo clippy` before every commit. Use the latest stable Rust toolchain via [rustup](https://rustup.rs). The repo pins nothing — if stable works, we support it.
 
 ## Fork + PR flow
 

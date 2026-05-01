@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -e
+
+cargo fmt --all --check
+cargo clippy --release --all-targets -- -D warnings

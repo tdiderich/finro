@@ -5,7 +5,7 @@ use walkdir::WalkDir;
 
 use crate::workspace;
 
-use super::types::{AnatomyStore, AnatomySummary, DirAnatomy, DirEntry, FileEntry};
+use super::types::{AnatomyStore, FileEntry};
 
 const SKIP_DIRS: &[&str] = &[
     ".kazam",
@@ -125,6 +125,11 @@ fn dir_to_filename(dir_path: &str) -> String {
     dir_path.replace('/', "--")
 }
 
+/// Strip tabs from a string so it's safe to embed in a TSV field.
+fn sanitize_tsv(s: &str) -> String {
+    s.replace('\t', "  ")
+}
+
 /// Derive a human-readable description for a directory given its files' descriptions.
 fn derive_dir_description(files: &[&FileEntry]) -> Option<String> {
     // Collect non-None descriptions
@@ -179,10 +184,11 @@ fn derive_dir_description(files: &[&FileEntry]) -> Option<String> {
     None
 }
 
-/// Build and write the two-tier layered anatomy files.
+/// Build and write the two-tier layered anatomy files (TSV format).
 /// Writes:
-///   - `ctx/anatomy.yaml`  — summary (root files + directory rollups)
-///   - `ctx/anatomy/<dir>.yaml` — per-directory file listings
+///   - `ctx/anatomy.tsv`  — summary (root files + directory rollups)
+///   - `ctx/anatomy/<dir>.tsv` — per-directory file listings
+///   - Also removes stale `.yaml` anatomy files (except `anatomy.flat.yaml`).
 pub fn write_layered(project: &Path, store: &AnatomyStore) -> Result<()> {
     let ctx_dir = workspace::root(project).join("ctx");
     let anatomy_dir = ctx_dir.join("anatomy");
@@ -218,23 +224,8 @@ pub fn write_layered(project: &Path, store: &AnatomyStore) -> Result<()> {
     root_files.sort_by(|a, b| a.path.cmp(&b.path));
 
     // Summary uses top-level directories only (compact)
-    let mut directories: Vec<DirEntry> = Vec::new();
     let mut sorted_top_dirs: Vec<String> = by_top_dir.keys().cloned().collect();
     sorted_top_dirs.sort();
-
-    for dir_path in &sorted_top_dirs {
-        let files = by_top_dir.get(dir_path.as_str()).unwrap();
-        let file_count = files.len();
-        let total_tokens: u64 = files.iter().map(|f| f.tokens).sum();
-        let description = derive_dir_description(files);
-
-        directories.push(DirEntry {
-            path: dir_path.clone(),
-            file_count,
-            total_tokens,
-            description,
-        });
-    }
 
     // Detail files use leaf directories (granular)
     let mut sorted_leaf_dirs: Vec<String> = by_leaf_dir.keys().cloned().collect();
@@ -244,20 +235,79 @@ pub fn write_layered(project: &Path, store: &AnatomyStore) -> Result<()> {
         let files = by_leaf_dir.get(dir_path.as_str()).unwrap();
         let mut sorted_files: Vec<FileEntry> = files.iter().map(|f| (*f).clone()).collect();
         sorted_files.sort_by(|a, b| a.path.cmp(&b.path));
-        let dir_anatomy = DirAnatomy {
-            files: sorted_files,
-        };
-        let filename = format!("{}.yaml", dir_to_filename(dir_path));
-        workspace::write_yaml(&anatomy_dir.join(&filename), &dir_anatomy)?;
+
+        let mut tsv = String::new();
+        tsv.push_str("path\ttokens\treads\tdescription\n");
+        for f in &sorted_files {
+            let desc = f.description.as_deref().unwrap_or("");
+            tsv.push_str(&format!(
+                "{}\t{}\t{}\t{}\n",
+                f.path,
+                f.tokens,
+                f.reads,
+                sanitize_tsv(desc)
+            ));
+        }
+
+        let filename = format!("{}.tsv", dir_to_filename(dir_path));
+        let tsv_path = anatomy_dir.join(&filename);
+        let tmp = tsv_path.with_extension("tsv.tmp");
+        std::fs::write(&tmp, &tsv).with_context(|| format!("write {}", tmp.display()))?;
+        std::fs::rename(&tmp, &tsv_path)
+            .with_context(|| format!("rename to {}", tsv_path.display()))?;
     }
 
-    // Write the summary anatomy.yaml
-    let summary = AnatomySummary {
-        scanned: store.scanned.clone(),
-        root_files,
-        directories,
-    };
-    workspace::write_yaml(&ctx_dir.join("anatomy.yaml"), &summary)?;
+    // Build and write summary TSV
+    let mut summary_tsv = String::new();
+    summary_tsv.push_str(&format!("# scanned: {}\n", store.scanned));
+    summary_tsv.push_str("# root_files\n");
+    summary_tsv.push_str("path\ttokens\treads\tdescription\n");
+    for f in &root_files {
+        let desc = f.description.as_deref().unwrap_or("");
+        summary_tsv.push_str(&format!(
+            "{}\t{}\t{}\t{}\n",
+            f.path,
+            f.tokens,
+            f.reads,
+            sanitize_tsv(desc)
+        ));
+    }
+    summary_tsv.push_str("\n# directories\n");
+    summary_tsv.push_str("path\tfiles\ttokens\tdescription\n");
+    for dir_path in &sorted_top_dirs {
+        let files = by_top_dir.get(dir_path.as_str()).unwrap();
+        let file_count = files.len();
+        let total_tokens: u64 = files.iter().map(|f| f.tokens).sum();
+        let description = derive_dir_description(files);
+        let desc = description.as_deref().unwrap_or("");
+        summary_tsv.push_str(&format!(
+            "{}\t{}\t{}\t{}\n",
+            dir_path,
+            file_count,
+            total_tokens,
+            sanitize_tsv(desc)
+        ));
+    }
+
+    let summary_path = ctx_dir.join("anatomy.tsv");
+    let tmp = summary_path.with_extension("tsv.tmp");
+    std::fs::write(&tmp, &summary_tsv).with_context(|| format!("write {}", tmp.display()))?;
+    std::fs::rename(&tmp, &summary_path)
+        .with_context(|| format!("rename to {}", summary_path.display()))?;
+
+    // Remove stale YAML anatomy files (anatomy.yaml summary and all anatomy/<dir>.yaml detail files)
+    let old_summary = ctx_dir.join("anatomy.yaml");
+    if old_summary.exists() {
+        let _ = std::fs::remove_file(&old_summary);
+    }
+    if let Ok(entries) = std::fs::read_dir(&anatomy_dir) {
+        for entry in entries.flatten() {
+            let p = entry.path();
+            if p.extension().and_then(|e| e.to_str()) == Some("yaml") {
+                let _ = std::fs::remove_file(&p);
+            }
+        }
+    }
 
     Ok(())
 }

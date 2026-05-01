@@ -10,19 +10,19 @@ og_image: /assets/og.svg
 nav:
   - label: Home
     href: /index.html
-  - label: Handbook
+  - label: Get Started
     href: /guide.html
+  - label: Workspace
+    href: /workspace.html
+  - label: Sites
+    href: /about.html
     children:
-      - label: Quickstart
-        href: /guide.html
-      - label: Full Tour
+      - label: Site Guide
         href: /about.html
       - label: Themes
         href: /themes.html
       - label: Deploy
         href: /deploy.html
-  - label: Workspace
-    href: /workspace.html
   - label: Recipes
     href: /wishes.html
     children:

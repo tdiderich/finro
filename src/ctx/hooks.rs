@@ -60,12 +60,12 @@ anatomy index.** This is not optional. The index exists so you don't waste
 tokens scanning the filesystem.
 
 **Step 1 — Read the summary:**
-`.kazam/ctx/anatomy.yaml` — compact index with root files and directory rollups
+`.kazam/ctx/anatomy.tsv` — compact index with root files and directory rollups
 (file count, total tokens, description). ~68 lines even for huge repos.
 
 **Step 2 — Drill into a directory:**
-`.kazam/ctx/anatomy/<dir>.yaml` — individual files in that directory.
-Nested paths use `--` as separator: `frontend/src/app` → `anatomy/frontend--src--app.yaml`.
+`.kazam/ctx/anatomy/<dir>.tsv` — individual files in that directory.
+Nested paths use `--` as separator: `frontend/src/app` → `anatomy/frontend--src--app.tsv`.
 
 **Step 3 — Read the source file you need.**
 
@@ -73,8 +73,8 @@ Summary → detail → source. Three reads, zero exploration.
 
 **When delegating to subagents:** subagents don't see these rules, so you
 must brief them. Include in every subagent prompt:
-1. **Anatomy:** "Read `.kazam/ctx/anatomy.yaml` for project layout, then
-   `.kazam/ctx/anatomy/<dir>.yaml` for the directory you need — don't
+1. **Anatomy:** "Read `.kazam/ctx/anatomy.tsv` for project layout, then
+   `.kazam/ctx/anatomy/<dir>.tsv` for the directory you need — don't
    grep or find for structure."
 2. **Task context:** "You are working on task `<ID>`: <title>. When done,
    run `kazam track close <ID> --reason '<what you did>'`."
@@ -201,10 +201,13 @@ pub fn uninstall(project: &Path) -> Result<()> {
                                 hooks_obj.get_mut(event).and_then(|v| v.as_array_mut())
                             {
                                 arr.retain(|item| {
-                                    !item
+                                    let nested = item
                                         .pointer("/hooks/0/description")
-                                        .and_then(|d| d.as_str())
-                                        .is_some_and(|d| d.starts_with("kazam-workspace:"))
+                                        .and_then(|d| d.as_str());
+                                    let flat =
+                                        item.pointer("/description").and_then(|d| d.as_str());
+                                    !nested.is_some_and(|d| d.starts_with("kazam-workspace:"))
+                                        && !flat.is_some_and(|d| d.starts_with("kazam-workspace:"))
                                 });
                                 if arr.is_empty() {
                                     hooks_obj.remove(event);
@@ -333,12 +336,15 @@ fn install_claude_hooks(project: &Path, skunkworks: bool) -> Result<()> {
             .as_array_mut()
             .unwrap();
 
-        // Remove any existing kazam entries (by description prefix) to avoid duplicates
+        // Remove any existing kazam entries (by description prefix) to avoid duplicates.
+        // Check both nested format (/hooks/0/description) and legacy flat format (/description).
         arr.retain(|item| {
-            !item
+            let nested = item
                 .pointer("/hooks/0/description")
-                .and_then(|d| d.as_str())
-                .is_some_and(|d| d.starts_with("kazam-workspace:"))
+                .and_then(|d| d.as_str());
+            let flat = item.pointer("/description").and_then(|d| d.as_str());
+            !nested.is_some_and(|d| d.starts_with("kazam-workspace:"))
+                && !flat.is_some_and(|d| d.starts_with("kazam-workspace:"))
         });
 
         arr.push(entry);

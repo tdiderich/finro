@@ -5,252 +5,119 @@ components:
   - type: header
     title: kazam
     eyebrow: agent workspace + static site generator
-    subtitle: Codebase indexing, task tracking, and a visual board — plus beautiful static sites from YAML. One Rust binary, no dependencies.
+    subtitle: Give your coding agent a persistent codebase index, structured task tracking, and a visual board — one Rust binary, no dependencies.
 
   - type: section
     eyebrow: Why
-    heading: Markdown isn't enough. Next.js is too much.
+    heading: Three things your agent is missing
     components:
       - type: columns
         equal_heights: true
         columns:
           - - type: callout
               variant: info
-              title: Markdown is too simple
-              body: Plain pages — grey text on white, no cards, no badges, no interactive tables. Fine for a blog post, wastes what the web can do.
+              title: Tokens
+              body: "Your agent explores with `find`, `grep`, and `ls` — burning hundreds of tokens per turn. kazam's two-tier anatomy index answers \"what's where\" in one read."
           - - type: callout
               variant: info
-              title: Next.js is too heavy
-              body: A thousand-package npm tree, a webpack build, a client runtime, and a supply chain you'll never audit — for a site that renders static content.
+              title: Tracking
+              body: Work disappears into terminal scroll. kazam gives agents structured tasks that survive sessions, compaction, and handoffs. Close after each commit — no batching.
           - - type: callout
               variant: info
-              title: kazam is the middle path
-              body: Typed YAML components, LLM-friendly schema, themed output. Ships as pure HTML and CSS. One Rust binary.
-
-  - type: section
-    eyebrow: Beyond docs
-    heading: If it's a structured artifact, kazam makes it.
-    components:
-      - type: markdown
-        body: |
-          Slide decks, one-page briefs, landing pages, internal dashboards, API references —
-          all the structured artifacts a team produces in a week, from the same typed
-          components. The format LLMs generate correctly; the output you actually ship.
-
-      - type: card_grid
-        cards:
-          - title: Agents can produce it
-            description: Hand Claude a brief and get a populated deck, one-pager, or landing page back — edit-ready.
-          - title: Output is the deliverable
-            description: The HTML kazam writes is the HTML you ship. No PNG export, no CSS shim.
-          - title: Git-versionable
-            description: Every change is a diff in a PR. Review design the way you review code.
-
-  - type: section
-    eyebrow: 30 seconds
-    heading: This YAML…
-    components:
-      - type: code
-        language: yaml
-        code: |
-          title: Q2 Pipeline Review
-          shell: standard
-
-          components:
-            - type: header
-              title: Q2 Pipeline Review
-              subtitle: Three active opportunities
-
-            - type: stat_grid
-              columns: 3
-              stats:
-                - label: Total ACV
-                  value: $1.2M
-                  color: green
-                - label: Weighted
-                  value: $480K
-                  color: default
-                - label: At risk
-                  value: $200K
-                  color: yellow
-
-      - type: markdown
-        body: "…renders to this:"
-
-      - type: header
-        title: Q2 Pipeline Review
-        subtitle: Three active opportunities
+              title: Visibility
+              body: You're watching a terminal you can barely follow. kazam's visual board shows live task status, codebase anatomy, and activity at a glance.
 
       - type: stat_grid
         columns: 3
         stats:
-          - label: Total ACV
-            value: $1.2M
+          - label: Cost savings
+            value: 45% cheaper
             color: green
-          - label: Weighted
-            value: $480K
-            color: default
-          - label: At risk
-            value: $200K
-            color: yellow
-            
+          - label: Speed gain
+            value: 48% faster
+            color: green
+          - label: Input tokens/turn
+            value: 81–94% fewer
+            color: green
+
   - type: section
-    eyebrow: Use cases
-    heading: What to build with it
+    eyebrow: Setup
+    heading: One command
     components:
+      - type: code
+        language: bash
+        code: kazam workspace init --agent claude [--skunkworks]
+
+      - type: markdown
+        body: |
+          That indexes your codebase, writes the agent rules file, and installs git hooks.
+          Your agent picks up context automatically on the next session.
+
+      - type: code
+        language: bash
+        code: kazam board
+
+  - type: section
+    eyebrow: Static sites
+    heading: Beautiful artifacts from YAML
+    components:
+      - type: markdown
+        body: |
+          kazam also builds static sites — 30+ themed components, three shell types, zero runtime JS.
+          The same binary that runs your workspace renders your docs, decks, and dashboards.
+
       - type: card_grid
         cards:
-          - title: Agent workspace
-            badge:
-              label: new
-              color: green
-            description: One command indexes your codebase, installs hooks, and gives your agent persistent context. 37% cheaper on navigation-heavy tasks.
-            links:
-              - label: Workspace docs →
-                href: workspace.html
-
           - title: Documentation sites
-            badge:
-              label: standard
-              color: default
-            description: API refs, guides, onboarding docs. Tabs for code samples, sortable tables for references.
+            description: API refs, guides, onboarding docs. Tabs, sortable tables, card grids.
             links:
               - label: See example →
                 href: examples/doc.html
 
-          - title: API references
-            badge:
-              label: standard
-              color: default
-            description: OpenAPI-style endpoint docs — request/response, parameters, code samples — without the Scalar/Stoplight/Redoc runtime. All from YAML.
-            links:
-              - label: See example →
-                href: examples/api.html
-
-          - title: Internal KBs & wikis
-            badge:
-              label: standard
-              color: default
-            description: Handbooks, runbooks, service catalogs. Card grids for navigation, tables for operational data.
-            links:
-              - label: See example →
-                href: examples/kb.html
-
-          - title: Meeting agendas & briefs
-            badge:
-              label: document
-              color: default
-            description: One-pagers and pre-reads. Centered card layout, print-optimized, exports clean to PDF.
-            links:
-              - label: Agenda example →
-                href: examples/agenda.html
-              - label: Brief example →
-                href: examples/brief.html
-
           - title: Decks & presentations
-            badge:
-              label: deck
-              color: default
-            description: QBRs, strategy reviews, pitch decks. Full-viewport slides with keyboard nav and PDF export.
+            description: Full-viewport slides with keyboard nav and PDF export. QBRs, strategy reviews, pitch decks.
             links:
               - label: See example →
                 href: examples/deck.html
 
+          - title: Briefs & agendas
+            description: Centered card layout, print-optimized. Exports cleanly to PDF.
+            links:
+              - label: See example →
+                href: examples/brief.html
+
+          - title: Dashboards from APIs
+            description: Scripts emit YAML, kazam renders. Live-ish data from any JSON source, zero runtime.
+            links:
+              - label: See walkthrough →
+                href: examples/hackernews.html
+
           - title: Landing pages
-            badge:
-              label: standard
-              color: default
-            description: Hero, features, stats, CTA — all native components. Not its specialty, but it ships one fine.
+            description: Hero, features, stats, CTA — all native components. Ships pure HTML and CSS.
             links:
               - label: See example →
                 href: examples/landing.html
 
-          - title: Dashboards from APIs
-            badge:
-              label: pattern
-              color: teal
-            description: Scripts emit YAML, kazam renders. Live data from HN, GitHub, Linear, Sheets, or any JSON endpoint.
-            links:
-              - label: See walkthrough →
-                href: examples/hackernews.html
-              - label: Live HN top 30 →
-                href: examples/hackernews-live.html
-
   - type: section
-    eyebrow: Fit
-    heading: Is this the right tool for what you're building?
+    eyebrow: Get started
+    heading: Pick your path
     components:
-      - type: markdown
-        body: |
-          kazam is narrow on purpose. It replaces the toolchain around
-          **static content** — docs, references, internal pages, decks,
-          briefs. It's **not** a replacement for a real web app framework.
-          Here's the honest line.
-
-      - type: tabs
-        tabs:
-          - label: Use kazam for
-            components:
-              - type: table
-                columns:
-                  - key: use_case
-                    label: Use case
-                  - key: why
-                    label: Why it fits
-                rows:
-                  - use_case: Documentation sites & API references
-                    why: Structured content, client-side table filter/sort, themed output. What kazam was built for.
-                  - use_case: Personal sites & portfolios
-                    why: Low interactivity, SEO-friendly static HTML. The tool's author replaced their CRA site this way.
-                  - use_case: Internal KBs, runbooks, handbooks
-                    why: YAML in git = reviewable in PRs. Card grids and tables cover most navigation patterns.
-                  - use_case: Pitch decks, QBRs, strategy reviews
-                    why: "`shell: deck` gives full-viewport slides with keyboard nav and clean PDF export."
-                  - use_case: Meeting agendas, briefs, one-pagers
-                    why: "`shell: document` centers a printable card. Exports cleanly to PDF."
-                  - use_case: Build-time dashboards
-                    why: Cron a script that emits YAML from your API, rebuild, deploy. Live-ish data, zero runtime.
-                  - use_case: Simple landing pages
-                    why: Hero, features, stats, CTA — all native components. Not its specialty, but it ships one fine.
-
-          - label: Reach for something else
-            components:
-              - type: table
-                columns:
-                  - key: use_case
-                    label: Use case
-                  - key: instead
-                    label: Reach for instead
-                rows:
-                  - use_case: Apps with logged-in state or user accounts
-                    instead: Next.js, Remix, Rails, Django — kazam has no auth, no sessions, no server.
-                  - use_case: E-commerce checkout & payments
-                    instead: Shopify, or a real app framework with a backend.
-                  - use_case: Real-time feeds, chat, collaborative editing
-                    instead: Anything with a websocket. Static output can't push.
-                  - use_case: CMSes for non-technical authors
-                    instead: Notion, Sanity, Contentful. Authoring kazam content means editing YAML in git.
-                  - use_case: Per-request personalized pages
-                    instead: Next.js / Remix SSR. kazam builds once, serves the same bytes to everyone.
-                  - use_case: Rich client-side SPAs & admin dashboards
-                    instead: React / Vue / Svelte. kazam emits zero JS by design.
-                  - use_case: Blogs with comments or user-generated content
-                    instead: Ghost, WordPress, or any app with a real backend. A read-only blog is fine.
-
-  - type: section
-    eyebrow: Read more
-    heading: Two ways in
-    components:
-      - type: card_grid
-        cards:
-          - title: 60-second quickstart
-            description: "`cargo install`, `kazam init`, `kazam dev`. You're live on localhost before your coffee's cold."
-            links:
-              - label: Start the guide →
-                href: guide.html
-
-          - title: Full tour
-            description: How pages are shaped — shells, components, and a full kazam.yaml. Copy-paste starting points for your first real page.
-            links:
-              - label: Take the tour →
-                href: about.html
+      - type: columns
+        equal_heights: true
+        columns:
+          - - type: callout
+              variant: info
+              title: Agent workspace
+              body: Set up codebase indexing, task tracking, and the visual board in any repo.
+              links:
+                - label: Workspace quickstart →
+                  href: guide.html
+                  variant: primary
+          - - type: callout
+              variant: info
+              title: Static sites
+              body: Build docs, decks, briefs, and dashboards from YAML — zero runtime JS.
+              links:
+                - label: Site quickstart →
+                  href: guide.html
+                  variant: primary

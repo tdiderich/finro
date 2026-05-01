@@ -83,29 +83,6 @@ pub struct BugEntry {
     pub resolved: Option<String>,
 }
 
-// ── Layered anatomy (two-tier: summary + per-directory detail) ──
-
-#[derive(Serialize, Deserialize)]
-pub struct AnatomySummary {
-    pub scanned: String,
-    pub root_files: Vec<FileEntry>,
-    pub directories: Vec<DirEntry>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct DirEntry {
-    pub path: String,
-    pub file_count: usize,
-    pub total_tokens: u64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct DirAnatomy {
-    pub files: Vec<FileEntry>,
-}
-
 // ── Correction ledger ──
 
 #[derive(Serialize, Deserialize)]
