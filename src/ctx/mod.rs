@@ -331,7 +331,10 @@ fn cmd_describe(project: &Path, file: &str, description: &str) -> Result<()> {
                             cols.push("");
                         }
                         let safe_desc = description.replace('\t', "  ");
-                        new_lines.push(format!("{}\t{}\t{}\t{}", cols[0], cols[1], cols[2], safe_desc));
+                        new_lines.push(format!(
+                            "{}\t{}\t{}\t{}",
+                            cols[0], cols[1], cols[2], safe_desc
+                        ));
                         found = true;
                     } else {
                         new_lines.push(line.to_string());

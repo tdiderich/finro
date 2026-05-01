@@ -188,7 +188,7 @@ fn derive_dir_description(files: &[&FileEntry]) -> Option<String> {
 /// Writes:
 ///   - `ctx/anatomy.tsv`  — summary (root files + directory rollups)
 ///   - `ctx/anatomy/<dir>.tsv` — per-directory file listings
-/// Also removes stale `.yaml` anatomy files (except `anatomy.flat.yaml`).
+///   - Also removes stale `.yaml` anatomy files (except `anatomy.flat.yaml`).
 pub fn write_layered(project: &Path, store: &AnatomyStore) -> Result<()> {
     let ctx_dir = workspace::root(project).join("ctx");
     let anatomy_dir = ctx_dir.join("anatomy");
@@ -240,14 +240,19 @@ pub fn write_layered(project: &Path, store: &AnatomyStore) -> Result<()> {
         tsv.push_str("path\ttokens\treads\tdescription\n");
         for f in &sorted_files {
             let desc = f.description.as_deref().unwrap_or("");
-            tsv.push_str(&format!("{}\t{}\t{}\t{}\n", f.path, f.tokens, f.reads, sanitize_tsv(desc)));
+            tsv.push_str(&format!(
+                "{}\t{}\t{}\t{}\n",
+                f.path,
+                f.tokens,
+                f.reads,
+                sanitize_tsv(desc)
+            ));
         }
 
         let filename = format!("{}.tsv", dir_to_filename(dir_path));
         let tsv_path = anatomy_dir.join(&filename);
         let tmp = tsv_path.with_extension("tsv.tmp");
-        std::fs::write(&tmp, &tsv)
-            .with_context(|| format!("write {}", tmp.display()))?;
+        std::fs::write(&tmp, &tsv).with_context(|| format!("write {}", tmp.display()))?;
         std::fs::rename(&tmp, &tsv_path)
             .with_context(|| format!("rename to {}", tsv_path.display()))?;
     }
@@ -259,7 +264,13 @@ pub fn write_layered(project: &Path, store: &AnatomyStore) -> Result<()> {
     summary_tsv.push_str("path\ttokens\treads\tdescription\n");
     for f in &root_files {
         let desc = f.description.as_deref().unwrap_or("");
-        summary_tsv.push_str(&format!("{}\t{}\t{}\t{}\n", f.path, f.tokens, f.reads, sanitize_tsv(desc)));
+        summary_tsv.push_str(&format!(
+            "{}\t{}\t{}\t{}\n",
+            f.path,
+            f.tokens,
+            f.reads,
+            sanitize_tsv(desc)
+        ));
     }
     summary_tsv.push_str("\n# directories\n");
     summary_tsv.push_str("path\tfiles\ttokens\tdescription\n");
@@ -269,13 +280,18 @@ pub fn write_layered(project: &Path, store: &AnatomyStore) -> Result<()> {
         let total_tokens: u64 = files.iter().map(|f| f.tokens).sum();
         let description = derive_dir_description(files);
         let desc = description.as_deref().unwrap_or("");
-        summary_tsv.push_str(&format!("{}\t{}\t{}\t{}\n", dir_path, file_count, total_tokens, sanitize_tsv(desc)));
+        summary_tsv.push_str(&format!(
+            "{}\t{}\t{}\t{}\n",
+            dir_path,
+            file_count,
+            total_tokens,
+            sanitize_tsv(desc)
+        ));
     }
 
     let summary_path = ctx_dir.join("anatomy.tsv");
     let tmp = summary_path.with_extension("tsv.tmp");
-    std::fs::write(&tmp, &summary_tsv)
-        .with_context(|| format!("write {}", tmp.display()))?;
+    std::fs::write(&tmp, &summary_tsv).with_context(|| format!("write {}", tmp.display()))?;
     std::fs::rename(&tmp, &summary_path)
         .with_context(|| format!("rename to {}", summary_path.display()))?;
 
